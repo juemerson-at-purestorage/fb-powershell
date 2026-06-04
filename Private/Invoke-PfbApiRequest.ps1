@@ -40,6 +40,8 @@ function Invoke-PfbApiRequest {
     $queryString = ConvertTo-PfbQueryString -Parameters $QueryParams
     $uri = "${baseUrl}/${Endpoint}${queryString}"
 
+    Write-Verbose "FlashBlade API: $Method $uri"
+
     $headers = @{
         'Content-Type' = 'application/json'
     }
@@ -70,7 +72,10 @@ function Invoke-PfbApiRequest {
     $hasMore = $true
     $isFirstRequest = $true
 
+    $pageIndex = 0
     while ($hasMore) {
+        $pageIndex++
+        if ($pageIndex -gt 1) { Write-Verbose "FlashBlade API: $Method $uri (page $pageIndex)" }
         try {
             $response = Invoke-RestMethod @restParams -ErrorAction Stop
         }

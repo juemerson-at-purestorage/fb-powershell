@@ -5,7 +5,6 @@ PowerShell module for managing Pure Storage FlashBlade arrays via the REST API 2
 ## Requirements
 
 - **PowerShell 5.1** or later (Windows PowerShell or PowerShell 7+)
-- **Posh-SSH** (optional) — required only for username/password authentication on Purity//FB 4.x+ where REST 1.x login is unavailable
 
 ## Installation
 
@@ -48,23 +47,13 @@ $array = Connect-PfbArray -Endpoint 10.0.0.1 -Username "pureuser" -Password $pas
 
 **How it works under the hood:**
 
-When you provide `-Username` and `-Password`, the module attempts authentication in this order:
+When you provide `-Username` and `-Password`, the module POSTs to the FlashBlade's native REST 2.x `/api/login` endpoint with `{ username, password }` as a JSON body. The array returns a session token (`x-auth-token`) used for subsequent calls.
 
-1. **REST 1.x login** — Sends credentials to the legacy `/api/login` endpoint. This works on older Purity//FB versions that still expose REST 1.x. If successful, the module retrieves an API token and upgrades to a REST 2.x session.
-
-2. **SSH fallback** — If REST 1.x is unavailable (common on Purity//FB 4.x+), the module automatically connects to the FlashBlade over SSH and runs `pureadmin list --api-token --expose` to retrieve an existing API token for the user. If no token exists, it creates one with `pureadmin create --api-token`. This mirrors the behavior of `Connect-Pfa2Array` from the FlashArray SDK.
-
-The SSH fallback requires the **Posh-SSH** module. Install it once:
-
-```powershell
-Install-Module -Name Posh-SSH -Scope CurrentUser -Force
-```
-
-If Posh-SSH is not installed and REST 1.x login fails, the cmdlet will display clear instructions explaining your options.
+After successful login, the module attempts to retrieve a long-lived API token from `/api/<ver>/admins/api-tokens?expose_api_token=true` for the connected user. If none exists and the user has admin privileges, the module mints one with a POST to the same endpoint. The cached API token enables automatic reconnection if the session expires mid-run. This mirrors `Connect-Pfa2Array` from the FlashArray SDK — without requiring SSH or any external module.
 
 ### PSCredential
 
-Same as username/password, but using a standard PowerShell credential object. Follows the same REST 1.x → SSH fallback flow described above.
+Same as username/password, but using a standard PowerShell credential object.
 
 ```powershell
 $cred = Get-Credential
@@ -241,7 +230,7 @@ v2.0.0 was validated against a live FlashBlade S200R2 (Purity//FB 4.6.8, API 2.2
 | **Parameter consistency** | All cmdlets have `-Array`, correct parameter sets |
 | **Live API — read-only cmdlets** | 199/205 passed, 0 failed, 6 skipped (unconfigured features or model-specific) |
 | **Live array — mutation lifecycle** | File system + snapshot create/update/delete ✅ |
-| **Live array — Connect-PfbArray** | ApiToken, Username/Password, PSCredential, SSH fallback ✅ |
+| **Live array — Connect-PfbArray** | ApiToken, Username/Password (/api/login), PSCredential, Certificate ✅ |
 | **Build consistency** | Built `.psm1` exports identical 496 cmdlets |
 | **Code quality** | No `Write-Host` in cmdlets, no hardcoded IPs |
 
@@ -259,6 +248,8 @@ This is a complete rewrite. Key changes:
 - **API**: REST 2.x only (v1.x targeted REST 1.x)
 - **Authentication**: Session-based via `Connect-PfbArray` / `Disconnect-PfbArray`
 - **Cmdlet naming**: `Verb-PfbNoun` pattern with `Get`, `New`, `Update`, `Remove` verbs
+
+The legacy v1.x module is preserved in the `legacy/` folder of this repository.
 
 ## License
 

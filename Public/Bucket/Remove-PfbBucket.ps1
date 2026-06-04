@@ -18,6 +18,7 @@ function Remove-PfbBucket {
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
     param(
         [Parameter(ParameterSetName = 'ByName', Mandatory, ValueFromPipeline, ValueFromPipelineByPropertyName)]
+        [ValidateScript({ Assert-PfbSafeName $_ })]
         [string]$Name,
 
         [Parameter(ParameterSetName = 'ById', Mandatory)]

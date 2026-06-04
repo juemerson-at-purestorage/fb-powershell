@@ -13,15 +13,11 @@ function Connect-PfbArray {
         - OAuth2/JWT certificate-based authentication (Certificate parameter set)
 
         Username/Password Authentication Flow:
-        When using -Password or -Credential, the cmdlet attempts authentication
-        in the following order:
-          1. REST API 1.x login (native username/password endpoint)
-          2. SSH fallback via Posh-SSH (OPTIONAL — retrieves or creates an API token
-             using the 'pureadmin' CLI over SSH, similar to Connect-Pfa2Array)
-
-        The SSH fallback requires the optional Posh-SSH module: Install-Module Posh-SSH
-        If Posh-SSH is not installed and REST 1.x login fails, the cmdlet will display
-        instructions for installing Posh-SSH or using alternative authentication methods.
+        When using -Password or -Credential, the cmdlet POSTs the credentials to the
+        unversioned /api/login endpoint, which is the REST 2.x native username/password
+        login. A session token (x-auth-token) is returned and used for subsequent calls.
+        The optional long-lived API token can be retrieved from /admins/api-tokens for
+        future passwordless reconnects.
 
         Auto-negotiates the highest supported API version unless explicitly specified.
         The connection is cached and becomes the default for subsequent cmdlet calls.
@@ -65,8 +61,7 @@ function Connect-PfbArray {
         $pw = ConvertTo-SecureString "MyPassword" -AsPlainText -Force
         $array = Connect-PfbArray -Endpoint fb01.example.com -Username "pureuser" -Password $pw -IgnoreCertificateError
 
-        Connect using username and password. If REST 1.x login is unavailable, falls back
-        to SSH via Posh-SSH (optional) to retrieve an API token, similar to Connect-Pfa2Array.
+        Connect using username and password via the native REST 2.x /api/login endpoint.
     .EXAMPLE
         $cred = Get-Credential
         $array = Connect-PfbArray -Endpoint fb01.example.com -Credential $cred -IgnoreCertificateError
@@ -266,97 +261,87 @@ function Connect-PfbArray {
         $ApiToken = $null  # No API token in Certificate flow
     }
     elseif ($PSCmdlet.ParameterSetName -eq 'Credential' -or $PSCmdlet.ParameterSetName -eq 'PSCredential') {
-        # Username/Password login via 1.x API
-        $plainPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto(
-            [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($Password)
-        )
-
-        $loginBody = @{
-            username = $Username
-            password = $plainPassword
-        } | ConvertTo-Json -Compress
-
-        # Try 1.x API login (supports username/password)
-        $loginSuccess = $false
-        foreach ($v1ver in @('1.12', '1.11', '1.10', '1.9', '1.8')) {
-            $loginUri = "https://${Endpoint}/api/${v1ver}/login"
-            $loginParams = @{
-                Method      = 'POST'
-                Uri         = $loginUri
-                Body        = $loginBody
-                ContentType = 'application/json'
-            }
-            if ($IgnoreCertificateError -and $PSVersionTable.PSVersion.Major -ge 6) {
-                $loginParams['SkipCertificateCheck'] = $true
-            }
-
-            try {
-                $loginResponse = Invoke-WebRequest @loginParams -UseBasicParsing -ErrorAction Stop
-                $authToken = $loginResponse.Headers['x-auth-token']
-                if ($authToken -is [array]) { $authToken = $authToken[0] }
-
-                # Generate API token for auto-reconnect
-                try {
-                    $tokenResponse = Invoke-RestMethod -Uri "https://${Endpoint}/api/${v1ver}/api_token" -Method POST -Headers @{ 'x-auth-token' = $authToken } -ErrorAction Stop
-                    $ApiToken = $tokenResponse.api_token
-                }
-                catch {
-                    Write-Warning "Connected but could not generate API token for auto-reconnect: $($_.Exception.Message)"
-                    $ApiToken = $null
-                }
-
-                $loginSuccess = $true
-                break
-            }
-            catch {
-                continue
-            }
+        # Native REST 2.x username/password login — POST /api/login with JSON body.
+        # /api/login is unversioned and is part of REST 2.x. No SSH required.
+        $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($Password)
+        try {
+            $plainPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
+            $loginBody = @{ username = $Username; password = $plainPassword } | ConvertTo-Json -Compress
+        }
+        finally {
+            [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr) | Out-Null
+            $plainPassword = $null
         }
 
-        # Clear plaintext password
-        $plainPassword = $null
+        $loginParams = @{
+            Method      = 'POST'
+            Uri         = "https://${Endpoint}/api/login"
+            Body        = $loginBody
+            ContentType = 'application/json'
+        }
+        if ($IgnoreCertificateError -and $PSVersionTable.PSVersion.Major -ge 6) {
+            $loginParams['SkipCertificateCheck'] = $true
+        }
+        $loginBody = $null  # release the JSON body containing the password
 
-        # If REST 1.x login failed, try SSH fallback (requires optional Posh-SSH module)
-        if (-not $loginSuccess) {
-            Write-Verbose "REST 1.x login failed. Attempting SSH fallback for API token generation..."
+        try {
+            $loginResponse = Invoke-WebRequest @loginParams -UseBasicParsing -ErrorAction Stop
+        }
+        catch {
+            $detail = if ($_.ErrorDetails.Message) { " ($($_.ErrorDetails.Message))" } else { '' }
+            throw "Username/password authentication failed for FlashBlade '${Endpoint}': $($_.Exception.Message)${detail}"
+        }
+
+        $authToken = $loginResponse.Headers['x-auth-token']
+        if ($authToken -is [array]) { $authToken = $authToken[0] }
+
+        # Try to retrieve (or mint) a long-lived API token for auto-reconnect.
+        # Best-effort: succeeds for users with admin privileges; falls through silently otherwise.
+        # Use a local variable since the $ApiToken parameter retains its [ValidateNotNullOrEmpty]
+        # constraint and would reject a $null reassignment.
+        $cachedApiToken  = $null
+        $tokenHeaders    = @{ 'x-auth-token' = $authToken }
+        $encodedName     = [System.Uri]::EscapeDataString($Username)
+        $tokenBaseUri    = "https://${Endpoint}/api/${negotiatedVersion}/admins/api-tokens"
+        $tokenInvokeArgs = @{}
+        if ($IgnoreCertificateError -and $PSVersionTable.PSVersion.Major -ge 6) {
+            $tokenInvokeArgs['SkipCertificateCheck'] = $true
+        }
+        # Pick the item whose admin matches our username. The /admins/api-tokens endpoint
+        # silently ignores the names= / ids= filters and returns all admins, with the
+        # caller's own token unmasked and other admins' tokens redacted to '****'. We must
+        # filter client-side to avoid grabbing a peer admin's masked entry.
+        $isOurAdmin = { param($item) $item.admin -and $item.admin.name -eq $Username }
+        $isRealToken = { param($t) $t -and $t -ne '****' -and -not ($t -match '^\*+$') }
+
+        try {
+            $existing = Invoke-RestMethod -Uri "${tokenBaseUri}?expose_api_token=true" `
+                                          -Headers $tokenHeaders -ErrorAction Stop @tokenInvokeArgs
+            $mine = $existing.items | Where-Object { & $isOurAdmin $_ } | Select-Object -First 1
+            if ($mine -and $mine.api_token -and (& $isRealToken $mine.api_token.token)) {
+                $cachedApiToken = $mine.api_token.token
+            }
+        }
+        catch {
+            Write-Verbose "Could not read existing API token for '$Username': $($_.Exception.Message)"
+        }
+        if (-not $cachedApiToken) {
             try {
-                $sshApiToken = Get-PfbApiTokenViaSsh -Endpoint $Endpoint -Username $Username -Password $Password -Verbose:$VerbosePreference
-                $ApiToken = $sshApiToken
-                Write-Verbose "API token obtained via SSH (Posh-SSH)."
-
-                # Now login to REST 2.0 with the retrieved API token
-                $loginUri = "https://${Endpoint}/api/login"
-                $loginHeaders = @{ 'api-token' = $ApiToken }
-                $loginParams = @{
-                    Method  = 'POST'
-                    Uri     = $loginUri
-                    Headers = $loginHeaders
+                $minted = Invoke-RestMethod -Uri "${tokenBaseUri}?names=${encodedName}" `
+                                            -Method POST -Headers $tokenHeaders -ErrorAction Stop @tokenInvokeArgs
+                $mine = $minted.items | Where-Object { & $isOurAdmin $_ } | Select-Object -First 1
+                if ($mine -and $mine.api_token -and (& $isRealToken $mine.api_token.token)) {
+                    $cachedApiToken = $mine.api_token.token
                 }
-                if ($IgnoreCertificateError -and $PSVersionTable.PSVersion.Major -ge 6) {
-                    $loginParams['SkipCertificateCheck'] = $true
-                }
-
-                $loginResponse = Invoke-WebRequest @loginParams -UseBasicParsing -ErrorAction Stop
-                $authToken = $loginResponse.Headers['x-auth-token']
-                if ($authToken -is [array]) { $authToken = $authToken[0] }
-                $loginSuccess = $true
             }
             catch {
-                # SSH also failed — provide comprehensive error with alternatives
-                throw @"
-Username/password authentication failed for FlashBlade '${Endpoint}'.
-Both REST 1.x login and SSH fallback were unsuccessful.
-
-SSH error: $($_.Exception.Message)
-
-To enable SSH-based authentication (similar to Connect-Pfa2Array):
-  Install-Module -Name Posh-SSH -Scope CurrentUser -Force
-
-Alternative authentication methods:
-  1. Use -ApiToken (generate via FlashBlade GUI or CLI: pureadmin create --api-token)
-  2. Use OAuth2 certificate auth: -ClientId -Issuer -KeyId -PrivateKeyFile -Username
-"@
+                Write-Verbose "Could not mint API token for '$Username': $($_.Exception.Message)"
             }
+        }
+        if ($cachedApiToken) {
+            $ApiToken = $cachedApiToken
+        } else {
+            Write-Verbose "Connected without a cached API token. Auto-reconnect on 401 will be unavailable for this session."
         }
     }
 
@@ -382,6 +367,19 @@ Alternative authentication methods:
         HttpTimeoutMs        = $HttpTimeout
         ConnectedAt          = [datetime]::UtcNow
     }
+
+    # Hide secrets from default display. Sensitive fields (ApiToken, AuthToken,
+    # BearerToken) are still accessible programmatically — Format-List * / direct
+    # property access ($conn.ApiToken) work — but they no longer appear in the
+    # default Format-List view that runs when a user just types $conn at the prompt.
+    $defaultProps = @(
+        'HttpEndpoint', 'Endpoint', 'Username', 'AuthMethod',
+        'ApiVersion', 'RestApiVersion', 'SkipCertificateCheck', 'ConnectedAt'
+    )
+    $psStandardMembers = [System.Management.Automation.PSMemberInfo[]]@(
+        [System.Management.Automation.PSPropertySet]::new('DefaultDisplayPropertySet', [string[]]$defaultProps)
+    )
+    Add-Member -InputObject $connection -MemberType MemberSet -Name PSStandardMembers -Value $psStandardMembers
 
     # Cache the connection
     $script:PfbDefaultArray = $connection

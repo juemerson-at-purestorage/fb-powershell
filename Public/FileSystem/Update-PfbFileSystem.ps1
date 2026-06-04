@@ -16,8 +16,16 @@ function Update-PfbFileSystem {
         Enable or disable NFS protocol access.
     .PARAMETER NfsRules
         NFS export rules.
+    .PARAMETER NfsExportPolicy
+        Name of an existing NFS Export Policy to attach.
     .PARAMETER SmbEnabled
         Enable or disable SMB protocol access.
+    .PARAMETER SmbSharePolicy
+        Name of an existing SMB Share Policy to attach. Used by the lockdown->production
+        flip pattern: create the FS with a restrictive policy, then PATCH to the production
+        policy after applying NTFS ACLs.
+    .PARAMETER SmbClientPolicy
+        Name of an existing SMB Client Policy (IP / hostname allowlist) to attach.
     .PARAMETER HttpEnabled
         Enable or disable HTTP protocol access.
     .PARAMETER Destroyed
@@ -52,7 +60,16 @@ function Update-PfbFileSystem {
         [string]$NfsRules,
 
         [Parameter()]
+        [string]$NfsExportPolicy,
+
+        [Parameter()]
         [Nullable[bool]]$SmbEnabled,
+
+        [Parameter()]
+        [string]$SmbSharePolicy,
+
+        [Parameter()]
+        [string]$SmbClientPolicy,
 
         [Parameter()]
         [Nullable[bool]]$HttpEnabled,
@@ -81,13 +98,21 @@ function Update-PfbFileSystem {
             if ($PSBoundParameters.ContainsKey('HardLimitEnabled')) { $body['hard_limit_enabled'] = [bool]$HardLimitEnabled }
             if ($PSBoundParameters.ContainsKey('Destroyed'))        { $body['destroyed'] = [bool]$Destroyed }
 
-            $nfs = @{}
-            if ($PSBoundParameters.ContainsKey('NfsEnabled'))       { $nfs['v3_enabled'] = [bool]$NfsEnabled; $nfs['v4_1_enabled'] = [bool]$NfsEnabled }
-            if ($NfsRules)                   { $nfs['rules'] = $NfsRules }
-            if ($nfs.Count -gt 0)            { $body['nfs'] = $nfs }
+            # NFS - local var name avoids collision with parameters (same as New-PfbFileSystem)
+            $nfsBody = @{}
+            if ($PSBoundParameters.ContainsKey('NfsEnabled')) { $nfsBody['v3_enabled'] = [bool]$NfsEnabled; $nfsBody['v4_1_enabled'] = [bool]$NfsEnabled }
+            if ($NfsRules)                                    { $nfsBody['rules'] = $NfsRules }
+            if ($NfsExportPolicy)                             { $nfsBody['export_policy'] = @{ name = $NfsExportPolicy } }
+            if ($nfsBody.Count -gt 0)                         { $body['nfs'] = $nfsBody }
 
-            if ($PSBoundParameters.ContainsKey('SmbEnabled'))       { $body['smb'] = @{ enabled = [bool]$SmbEnabled } }
-            if ($PSBoundParameters.ContainsKey('HttpEnabled'))      { $body['http'] = @{ enabled = [bool]$HttpEnabled } }
+            # SMB - flip share / client policy here (lockdown -> production workflow)
+            $smbBody = @{}
+            if ($PSBoundParameters.ContainsKey('SmbEnabled')) { $smbBody['enabled'] = [bool]$SmbEnabled }
+            if ($SmbSharePolicy)                              { $smbBody['share_policy']  = @{ name = $SmbSharePolicy } }
+            if ($SmbClientPolicy)                             { $smbBody['client_policy'] = @{ name = $SmbClientPolicy } }
+            if ($smbBody.Count -gt 0)                         { $body['smb'] = $smbBody }
+
+            if ($PSBoundParameters.ContainsKey('HttpEnabled')) { $body['http'] = @{ enabled = [bool]$HttpEnabled } }
         }
 
         $queryParams = @{}

@@ -3,33 +3,44 @@ function Update-PfbServer {
     .SYNOPSIS
         Updates an existing server on the FlashBlade.
     .DESCRIPTION
-        Modifies server attributes such as DNS, directory services, and realm configurations.
+        Modifies server attributes: DNS config and local directory service.
     .PARAMETER Name
-        The name of the server to update.
+        Name of the server to update.
     .PARAMETER Id
-        The ID of the server to update.
+        ID of the server to update.
+    .PARAMETER DnsName
+        Name(s) of DNS configs to attach. FlashBlade accepts at most one.
+    .PARAMETER LocalDirectoryService
+        Name of the Local Directory Service to associate.
     .PARAMETER Attributes
-        A hashtable of attributes to update on the server.
+        Full request body as a hashtable. Mutually exclusive with typed parameters.
     .PARAMETER Array
-        The FlashBlade connection object. If not specified, uses the default connection.
+        FlashBlade connection.
     .EXAMPLE
-        Update-PfbServer -Name "server1" -Attributes @{ dns = @{ domain = "example.com" } }
-
-        Updates the DNS domain for server1.
+        Update-PfbServer -Name "server5" -DnsName "management"
     .EXAMPLE
-        Update-PfbServer -Id "10314f42-020d-7080-8013-000ddt400012" -Attributes @{ dns = @{ domain = "newdomain.com" } }
-
-        Updates the server identified by ID.
+        Update-PfbServer -Name "server5" -LocalDirectoryService "newds"
     #>
-    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium', DefaultParameterSetName = 'IndividualByName')]
     param(
-        [Parameter(ParameterSetName = 'ByName', Mandatory, ValueFromPipelineByPropertyName)]
+        [Parameter(Mandatory, ParameterSetName = 'IndividualByName', ValueFromPipelineByPropertyName)]
+        [Parameter(Mandatory, ParameterSetName = 'AttributesByName')]
         [string]$Name,
 
-        [Parameter(ParameterSetName = 'ById', Mandatory)]
+        [Parameter(Mandatory, ParameterSetName = 'IndividualById')]
+        [Parameter(Mandatory, ParameterSetName = 'AttributesById')]
         [string]$Id,
 
-        [Parameter()]
+        [Parameter(ParameterSetName = 'IndividualByName')]
+        [Parameter(ParameterSetName = 'IndividualById')]
+        [string[]]$DnsName,
+
+        [Parameter(ParameterSetName = 'IndividualByName')]
+        [Parameter(ParameterSetName = 'IndividualById')]
+        [string]$LocalDirectoryService,
+
+        [Parameter(Mandatory, ParameterSetName = 'AttributesByName')]
+        [Parameter(Mandatory, ParameterSetName = 'AttributesById')]
         [hashtable]$Attributes,
 
         [Parameter()]
@@ -41,17 +52,22 @@ function Update-PfbServer {
     }
 
     process {
-        if ($Attributes) {
+        if ($PSCmdlet.ParameterSetName -like 'Attributes*') {
             $body = $Attributes
         }
         else {
             $body = @{}
+            if ($PSBoundParameters.ContainsKey('DnsName')) {
+                $body['dns'] = @($DnsName | ForEach-Object { @{ name = $_ } })
+            }
+            if ($PSBoundParameters.ContainsKey('LocalDirectoryService')) {
+                $body['local_directory_service'] = @{ name = $LocalDirectoryService }
+            }
         }
 
         $queryParams = @{}
         if ($Name) { $queryParams['names'] = $Name }
         if ($Id)   { $queryParams['ids']   = $Id }
-
         $target = if ($Name) { $Name } else { $Id }
 
         if ($PSCmdlet.ShouldProcess($target, 'Update server')) {
