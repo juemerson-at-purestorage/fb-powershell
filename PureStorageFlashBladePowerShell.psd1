@@ -1,6 +1,6 @@
 ﻿@{
     RootModule        = 'PureStorageFlashBladePowerShell.psm1'
-    ModuleVersion     = '2.0.3'
+    ModuleVersion     = '2.0.4'
     GUID              = 'b25473b3-9eb7-414d-8da1-264e10f73d86'
     Author            = 'Pure Storage, Inc.'
     CompanyName       = 'Pure Storage, Inc.'
@@ -507,7 +507,32 @@
         'Update-PfbSyslogServerSettings',
         'Update-PfbTarget',
         'Update-PfbTlsPolicy',
-        'Update-PfbWormPolicy'
+        'Update-PfbWormPolicy',
+        # Workloads (v2.0.4)
+        'Get-PfbWorkload',
+        'New-PfbWorkload',
+        'Update-PfbWorkload',
+        'Remove-PfbWorkload',
+        'Get-PfbWorkloadPlacementRecommendation',
+        'New-PfbWorkloadPlacementRecommendation',
+        'Get-PfbWorkloadTag',
+        'Set-PfbWorkloadTag',
+        'Remove-PfbWorkloadTag',
+        # Workload presets (v2.0.4)
+        'Get-PfbPresetWorkload',
+        'New-PfbPresetWorkload',
+        'Set-PfbPresetWorkload',
+        'Update-PfbPresetWorkload',
+        'Remove-PfbPresetWorkload',
+        # Data eviction policies (v2.0.4)
+        'Get-PfbDataEvictionPolicy',
+        'New-PfbDataEvictionPolicy',
+        'Update-PfbDataEvictionPolicy',
+        'Remove-PfbDataEvictionPolicy',
+        'Get-PfbDataEvictionPolicyFileSystem',
+        'Add-PfbDataEvictionPolicyFileSystem',
+        'Remove-PfbDataEvictionPolicyFileSystem',
+        'Get-PfbDataEvictionPolicyMember'
     )
     CmdletsToExport   = @()
     VariablesToExport  = @()

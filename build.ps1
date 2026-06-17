@@ -15,12 +15,14 @@ param(
 $ErrorActionPreference = 'Stop'
 $moduleName = 'PureStorageFlashBladePowerShell'
 
-# Resolve script root (works for both -File and dot-sourcing)
-$scriptRoot = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
-if (-not $scriptRoot) { $scriptRoot = (Get-Location).Path }
+# This script lives in <repo>/scripts/; the source files (Public/, Private/, .psd1,
+# .psm1, LICENSE) live in <repo>/. Resolve repoRoot one level up.
+$scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
+if (-not $scriptDir) { $scriptDir = (Get-Location).Path }
+$repoRoot = Split-Path -Parent $scriptDir
 
 if (-not $OutputPath) {
-    $OutputPath = Join-Path (Join-Path $scriptRoot 'build') $moduleName
+    $OutputPath = Join-Path (Join-Path $repoRoot 'build') $moduleName
 }
 
 Write-Host "Building $moduleName..." -ForegroundColor Cyan
@@ -51,7 +53,7 @@ $psm1Builder = [System.Text.StringBuilder]::new()
 [void]$psm1Builder.AppendLine('')
 
 # Private functions
-$privatePath = Join-Path $scriptRoot 'Private'
+$privatePath = Join-Path $repoRoot 'Private'
 $privateFiles = Get-ChildItem -Path $privatePath -Filter '*.ps1' -Recurse | Sort-Object Name
 Write-Host "  Private functions: $($privateFiles.Count)" -ForegroundColor Gray
 
@@ -68,7 +70,7 @@ foreach ($file in $privateFiles) {
 }
 
 # Public functions
-$publicPath = Join-Path $scriptRoot 'Public'
+$publicPath = Join-Path $repoRoot 'Public'
 $publicFiles = Get-ChildItem -Path $publicPath -Filter '*.ps1' -Recurse | Sort-Object FullName
 Write-Host "  Public functions:  $($publicFiles.Count)" -ForegroundColor Gray
 
@@ -100,12 +102,12 @@ $lineCount = ($psm1Builder.ToString() -split "`n").Count
 Write-Host "  Generated $psm1Path ($lineCount lines)" -ForegroundColor Green
 
 # --- Copy .psd1 ---
-$psd1Source = Join-Path $scriptRoot "$moduleName.psd1"
+$psd1Source = Join-Path $repoRoot "$moduleName.psd1"
 Copy-Item -Path $psd1Source -Destination $OutputPath
 Write-Host "  Copied $moduleName.psd1" -ForegroundColor Green
 
 # --- Copy LICENSE ---
-$licenseSource = Join-Path $scriptRoot 'LICENSE'
+$licenseSource = Join-Path $repoRoot 'LICENSE'
 if (Test-Path $licenseSource) {
     Copy-Item -Path $licenseSource -Destination $OutputPath
     Write-Host "  Copied LICENSE" -ForegroundColor Green
