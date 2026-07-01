@@ -30,6 +30,16 @@ function Update-PfbFileSystem {
         Enable or disable HTTP protocol access.
     .PARAMETER Destroyed
         Set to $true to destroy or $false to recover the file system.
+    .PARAMETER RequestedPromotionState
+        The requested promotion state of the file system: 'promoted' (read-write) or
+        'demoted' (read-only replication target). Demoting is only allowed when the file
+        system is in a replica-link relationship and requires -DiscardNonSnapshottedData.
+        Mutually exclusive with -Attributes (supply the field via -Attributes instead if you
+        are already passing a raw attribute hashtable).
+    .PARAMETER DiscardNonSnapshottedData
+        When demoting a file system (requested_promotion_state = 'demoted'), acknowledge and
+        discard any data written since the last replicated snapshot. Sent as the
+        discard_non_snapshotted_data=true query parameter. Has no effect on a promote.
     .PARAMETER Attributes
         A hashtable of attributes to update.
     .PARAMETER Array
@@ -38,6 +48,12 @@ function Update-PfbFileSystem {
         Update-PfbFileSystem -Name "fs1" -Provisioned 2147483648
     .EXAMPLE
         Update-PfbFileSystem -Name "fs1" -Attributes @{ provisioned = 2147483648 }
+    .EXAMPLE
+        # Demote a file system to a read-only replication target, discarding un-replicated writes
+        Update-PfbFileSystem -Name "fs1" -RequestedPromotionState demoted -DiscardNonSnapshottedData
+    .EXAMPLE
+        # Equivalent demote using a raw attribute hashtable
+        Update-PfbFileSystem -Name "fs1" -Attributes @{ requested_promotion_state = 'demoted' } -DiscardNonSnapshottedData
     #>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
     param(
@@ -78,6 +94,13 @@ function Update-PfbFileSystem {
         [Nullable[bool]]$Destroyed,
 
         [Parameter()]
+        [ValidateSet('promoted', 'demoted')]
+        [string]$RequestedPromotionState,
+
+        [Parameter()]
+        [switch]$DiscardNonSnapshottedData,
+
+        [Parameter()]
         [hashtable]$Attributes,
 
         [Parameter()]
@@ -89,6 +112,10 @@ function Update-PfbFileSystem {
     }
 
     process {
+        if ($Attributes -and $RequestedPromotionState) {
+            throw "-Attributes and -RequestedPromotionState are mutually exclusive. Set 'requested_promotion_state' inside -Attributes, or use -RequestedPromotionState on its own."
+        }
+
         if ($Attributes) {
             $body = $Attributes
         }
@@ -113,11 +140,14 @@ function Update-PfbFileSystem {
             if ($smbBody.Count -gt 0)                         { $body['smb'] = $smbBody }
 
             if ($PSBoundParameters.ContainsKey('HttpEnabled')) { $body['http'] = @{ enabled = [bool]$HttpEnabled } }
+
+            if ($RequestedPromotionState) { $body['requested_promotion_state'] = $RequestedPromotionState }
         }
 
         $queryParams = @{}
         if ($Name) { $queryParams['names'] = $Name }
         if ($Id)   { $queryParams['ids']   = $Id }
+        if ($DiscardNonSnapshottedData) { $queryParams['discard_non_snapshotted_data'] = 'true' }
 
         $target = if ($Name) { $Name } else { $Id }
 
