@@ -167,14 +167,7 @@ function Connect-PfbArray {
     }
     else {
         # Pick the highest 2.x version
-        $v2Versions = $supportedVersions | Where-Object { $_ -match '^2\.' } | ForEach-Object {
-            $parts = $_ -split '\.'
-            [PSCustomObject]@{
-                Version = $_
-                Major   = [int]$parts[0]
-                Minor   = [int]$parts[1]
-            }
-        } | Sort-Object Major, Minor -Descending
+        $v2Versions = ConvertTo-PfbVersionObject -Versions $supportedVersions | Where-Object { $_.Major -eq 2 }
 
         if (-not $v2Versions) {
             throw "No REST API 2.x versions supported by this FlashBlade. Supported: $($supportedVersions -join ', ')"
