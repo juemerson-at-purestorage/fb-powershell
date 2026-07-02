@@ -1,6 +1,6 @@
 ﻿@{
     RootModule        = 'PureStorageFlashBladePowerShell.psm1'
-    ModuleVersion     = '2.0.4'
+    ModuleVersion     = '2.0.5'
     GUID              = 'b25473b3-9eb7-414d-8da1-264e10f73d86'
     Author            = 'Pure Storage, Inc.'
     CompanyName       = 'Pure Storage, Inc.'
@@ -544,6 +544,14 @@
             ProjectUri   = 'https://github.com/PureStorage-OpenConnect/flashblade-powershell-toolkit'
             LicenseUri   = 'https://github.com/PureStorage-OpenConnect/flashblade-powershell-toolkit/blob/master/LICENSE'
             ReleaseNotes = @'
+v2.0.5 - File-system demote support. See CHANGELOG.md.
+  Changed:
+  - Update-PfbFileSystem: added -DiscardNonSnapshottedData switch (sends the
+    discard_non_snapshotted_data=true query param) and a typed -RequestedPromotionState
+    ('promoted' | 'demoted') parameter to support demoting a file system to a read-only
+    replication target without dropping to raw REST. -RequestedPromotionState is mutually
+    exclusive with -Attributes (throws if both supplied). Promote was already supported.
+
 v2.0.3 - Real-AD test suite + HTML report generator. See CHANGELOG.md.
   Added:
   - Tests/SmbShareScript.AD.Tests.ps1: 8 live tests with a real AD identity as
