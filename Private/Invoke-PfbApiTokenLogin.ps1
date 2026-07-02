@@ -36,7 +36,7 @@ function Invoke-PfbApiTokenLogin {
         $loginResponse = Invoke-WebRequest @loginParams -UseBasicParsing -ErrorAction Stop
     }
     catch {
-        throw "Authentication failed for FlashBlade '${Endpoint}': $($_.Exception.Message)"
+        throw "Authentication failed for FlashBlade '${Endpoint}': $(ConvertTo-PfbApiError -Method 'POST' -Endpoint 'login' -ErrorRecord $_)"
     }
 
     $authToken = $loginResponse.Headers['x-auth-token']

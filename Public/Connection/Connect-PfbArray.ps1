@@ -163,7 +163,7 @@ function Connect-PfbArray {
         $versionResponse = Invoke-RestMethod @versionParams -ErrorAction Stop
     }
     catch {
-        throw "Failed to connect to FlashBlade at '${Endpoint}': $($_.Exception.Message)"
+        throw "Failed to connect to FlashBlade at '${Endpoint}': $(ConvertTo-PfbApiError -Method 'GET' -Endpoint 'api_version' -ErrorRecord $_)"
     }
 
     $supportedVersions = $versionResponse.versions
@@ -277,8 +277,7 @@ function Connect-PfbArray {
                 $loginResponse = Invoke-WebRequest @loginParams -UseBasicParsing -ErrorAction Stop
             }
             catch {
-                $detail = if ($_.ErrorDetails.Message) { " ($($_.ErrorDetails.Message))" } else { '' }
-                throw "Username/password authentication failed for FlashBlade '${Endpoint}': $($_.Exception.Message)${detail}"
+                throw "Username/password authentication failed for FlashBlade '${Endpoint}': $(ConvertTo-PfbApiError -Method 'POST' -Endpoint 'login' -ErrorRecord $_)"
             }
 
             $authToken = $loginResponse.Headers['x-auth-token']

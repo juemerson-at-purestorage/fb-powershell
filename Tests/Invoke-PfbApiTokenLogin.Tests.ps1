@@ -56,3 +56,20 @@ Describe 'Invoke-PfbApiTokenLogin - TimeoutSec' {
         Should -Invoke -ModuleName PureStorageFlashBladePowerShell Invoke-WebRequest -Times 1 -Exactly -ParameterFilter { $TimeoutSec -eq 5 }
     }
 }
+
+Describe 'Invoke-PfbApiTokenLogin - errors reuse ConvertTo-PfbApiError' {
+    It 'includes the unpacked API error message when the array returns a structured error body' {
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-WebRequest {
+            $errorDetails = [System.Management.Automation.ErrorDetails]::new('{"errors":[{"message":"Invalid API token."}]}')
+            $exception = [System.Exception]::new('Response status code does not indicate success: 401 ()')
+            $errorRecord = [System.Management.Automation.ErrorRecord]::new($exception, 'Err', 'InvalidOperation', $null)
+            $errorRecord.ErrorDetails = $errorDetails
+            throw $errorRecord
+        } -ParameterFilter { $Uri -eq 'https://fb.test/api/login' }
+
+        { InModuleScope PureStorageFlashBladePowerShell {
+            Invoke-PfbApiTokenLogin -Endpoint 'fb.test' -ApiToken 'T-bad'
+        } } |
+            Should -Throw -ExpectedMessage '*Invalid API token.*'
+    }
+}
