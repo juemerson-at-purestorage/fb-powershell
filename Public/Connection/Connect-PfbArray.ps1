@@ -182,26 +182,7 @@ function Connect-PfbArray {
 
     if ($PSCmdlet.ParameterSetName -eq 'ApiToken') {
         # Direct API token login
-        $loginUri = "https://${Endpoint}/api/login"
-        $loginHeaders = @{ 'api-token' = $ApiToken }
-        $loginParams = @{
-            Method  = 'POST'
-            Uri     = $loginUri
-            Headers = $loginHeaders
-        }
-        if ($IgnoreCertificateError -and $PSVersionTable.PSVersion.Major -ge 6) {
-            $loginParams['SkipCertificateCheck'] = $true
-        }
-
-        try {
-            $loginResponse = Invoke-WebRequest @loginParams -UseBasicParsing -ErrorAction Stop
-        }
-        catch {
-            throw "Authentication failed for FlashBlade '${Endpoint}': $($_.Exception.Message)"
-        }
-
-        $authToken = $loginResponse.Headers['x-auth-token']
-        if ($authToken -is [array]) { $authToken = $authToken[0] }
+        $authToken = Invoke-PfbApiTokenLogin -Endpoint $Endpoint -ApiToken $ApiToken -SkipCertificateCheck:$IgnoreCertificateError
     }
     elseif ($PSCmdlet.ParameterSetName -eq 'Certificate') {
         # OAuth2 JWT certificate-based authentication
