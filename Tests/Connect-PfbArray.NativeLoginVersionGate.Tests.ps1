@@ -215,3 +215,36 @@ Describe 'Connect-PfbArray - TLS 1.2 enforcement decoupled from cert-bypass' {
         Should -Invoke -ModuleName PureStorageFlashBladePowerShell Set-PfbCertificatePolicy -Times 1 -Exactly
     }
 }
+
+Describe 'Connect-PfbArray - errors reuse ConvertTo-PfbApiError' {
+    It 'includes the unpacked API error message when /api/api_version returns a structured error body' {
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+            $errorDetails = [System.Management.Automation.ErrorDetails]::new('{"errors":[{"message":"array unreachable"}]}')
+            $exception = [System.Exception]::new('Response status code does not indicate success: 503 ()')
+            $errorRecord = [System.Management.Automation.ErrorRecord]::new($exception, 'Err', 'InvalidOperation', $null)
+            $errorRecord.ErrorDetails = $errorDetails
+            throw $errorRecord
+        } -ParameterFilter { $Uri -like '*api_version*' }
+
+        { Connect-PfbArray -Endpoint 'fb.test' -ApiToken 'T-fake' } |
+            Should -Throw -ExpectedMessage '*array unreachable*'
+    }
+
+    It 'includes the unpacked API error message when native login returns a structured error body' {
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+            [PSCustomObject]@{ versions = @('2.26') }
+        } -ParameterFilter { $Uri -like '*api_version*' }
+
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-WebRequest {
+            $errorDetails = [System.Management.Automation.ErrorDetails]::new('{"errors":[{"message":"Invalid credentials."}]}')
+            $exception = [System.Exception]::new('Response status code does not indicate success: 400 ()')
+            $errorRecord = [System.Management.Automation.ErrorRecord]::new($exception, 'Err', 'InvalidOperation', $null)
+            $errorRecord.ErrorDetails = $errorDetails
+            throw $errorRecord
+        } -ParameterFilter { $Uri -eq 'https://fb.test/api/login' }
+
+        $pw = ConvertTo-SecureString 'hunter2' -AsPlainText -Force
+        { Connect-PfbArray -Endpoint 'fb.test' -Username 'pureuser' -Password $pw } |
+            Should -Throw -ExpectedMessage '*Invalid credentials.*'
+    }
+}
