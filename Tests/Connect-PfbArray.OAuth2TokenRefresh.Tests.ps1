@@ -171,13 +171,43 @@ Describe 'Invoke-PfbApiRequest - Certificate/OAuth2 token refresh' {
             } -ParameterFilter { $Uri -like '*file-systems*' }
 
             InModuleScope PureStorageFlashBladePowerShell -Parameters @{ array = $array } {
-                InModuleScope PureStorageFlashBladePowerShell -Parameters @{ array = $array } {
                 Invoke-PfbApiRequest -Array $array -Method GET -Endpoint 'file-systems' | Out-Null
-            }
             }
 
             Should -Invoke -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login -Times 1 -Exactly
             $array.AuthToken | Should -Be 'refreshed-token'
+        }
+
+        It 'syncs $script:PfbDefaultArray and $script:PfbArrays to the refreshed connection after a proactive refresh' {
+            $array = New-CertificateConnection -TokenExpiresAt ((Get-Date).ToUniversalTime().AddMinutes(-5))
+            # A distinct object with the same Endpoint but a different identity/token stands in for
+            # whatever the module's cache held before this call. This proves the cache is genuinely
+            # re-pointed at the refreshed $array -- merely asserting on $array.AuthToken (as the
+            # sibling test above does) would pass even if the module's cache-sync code were deleted,
+            # because $array itself is a reference type mutated in place regardless of caching.
+            $staleCachedClone = New-CertificateConnection -TokenExpiresAt ((Get-Date).ToUniversalTime().AddMinutes(-5)) -AuthToken 'stale-cached-token'
+
+            Mock -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login {
+                [PSCustomObject]@{ AccessToken = 'refreshed-token'; ExpiresAt = (Get-Date).ToUniversalTime().AddHours(1); TtlSeconds = 3600 }
+            }
+            Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+                [PSCustomObject]@{ items = @() }
+            } -ParameterFilter { $Uri -like '*file-systems*' }
+
+            InModuleScope PureStorageFlashBladePowerShell -Parameters @{ staleCachedClone = $staleCachedClone } {
+                $script:PfbArrays = @{ $staleCachedClone.Endpoint = $staleCachedClone }
+                $script:PfbDefaultArray = $staleCachedClone
+            }
+
+            InModuleScope PureStorageFlashBladePowerShell -Parameters @{ array = $array } {
+                Invoke-PfbApiRequest -Array $array -Method GET -Endpoint 'file-systems' | Out-Null
+            }
+
+            $cachedDefaultToken = InModuleScope PureStorageFlashBladePowerShell { $script:PfbDefaultArray.AuthToken }
+            $cachedArraysToken  = InModuleScope PureStorageFlashBladePowerShell -Parameters @{ array = $array } { $script:PfbArrays[$array.Endpoint].AuthToken }
+
+            $cachedDefaultToken | Should -Be 'refreshed-token'
+            $cachedArraysToken  | Should -Be 'refreshed-token'
         }
 
         It 'does not refresh when the token is comfortably within its TTL' {
@@ -234,8 +264,15 @@ Describe 'Invoke-PfbApiRequest - Certificate/OAuth2 token refresh' {
     Context 'Reactive fallback on 401' {
         It 'refreshes and retries once when the array returns 401 despite a locally-valid token' {
             $array = New-CertificateConnection -TokenExpiresAt ((Get-Date).ToUniversalTime().AddHours(1))
-            $script:PfbArrays = @{ 'fb.test' = $array }
-            $script:PfbDefaultArray = $array
+            # Seeding must happen via InModuleScope: a bare $script: assignment made directly in
+            # this It block would set a variable in this test file's own script scope, not the
+            # module's -- $script: resolves relative to where a scriptblock is defined, and this
+            # scriptblock is defined here, not inside the module. See the empirical check recorded
+            # in .superpowers/sdd/task-3-report.md for confirmation.
+            InModuleScope PureStorageFlashBladePowerShell -Parameters @{ array = $array } {
+                $script:PfbArrays = @{ 'fb.test' = $array }
+                $script:PfbDefaultArray = $array
+            }
 
             Mock -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login {
                 [PSCustomObject]@{ AccessToken = 'refreshed-token'; ExpiresAt = (Get-Date).ToUniversalTime().AddHours(1); TtlSeconds = 3600 }
