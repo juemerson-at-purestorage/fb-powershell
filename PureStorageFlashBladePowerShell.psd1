@@ -12,7 +12,6 @@
     FunctionsToExport = @(
         'Clear-PfbCredential',
         'Connect-PfbArray',
-        'ConvertTo-PfbVersionObject',
         'Disconnect-PfbArray',
         'Get-PfbCredential',
         'Get-PfbActiveDirectory',
