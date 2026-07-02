@@ -43,4 +43,23 @@ Describe 'Invoke-PfbApiRequest - HttpTimeoutMs is applied' {
             $Uri -like '*file-systems*' -and $TimeoutSec -eq 30
         }
     }
+
+    It 'passes TimeoutSec to Connect-PfbArrayInternal on 401 auto-reconnect' {
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-WebRequest {
+            $mockResponse = @{
+                Headers = @{ 'x-auth-token' = 'new-token' }
+            }
+            return $mockResponse
+        } -ParameterFilter { $Uri -like '*login*' -and $TimeoutSec -eq 45 }
+
+        InModuleScope PureStorageFlashBladePowerShell {
+            # Test Connect-PfbArrayInternal directly
+            $result = Connect-PfbArrayInternal -Endpoint 'fb.test' -ApiToken 'test-token' -ApiVersion '2.26' -TimeoutSec 45
+            $result.AuthToken | Should -Be 'new-token'
+        }
+
+        Should -Invoke -ModuleName PureStorageFlashBladePowerShell Invoke-WebRequest -Times 1 -Exactly -ParameterFilter {
+            $Uri -like '*login*' -and $TimeoutSec -eq 45
+        }
+    }
 }
