@@ -67,6 +67,9 @@ function Invoke-PfbApiRequest {
         $restParams['SkipCertificateCheck'] = $true
     }
 
+    # HTTP timeout handling — default to 30s if the connection object predates this field
+    $restParams['TimeoutSec'] = if ($Array.HttpTimeoutMs) { [int][Math]::Ceiling($Array.HttpTimeoutMs / 1000.0) } else { 30 }
+
     $allItems = [System.Collections.Generic.List[object]]::new()
     $totalItemCount = $null
     $hasMore = $true

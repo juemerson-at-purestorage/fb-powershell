@@ -128,6 +128,11 @@ function Connect-PfbArray {
         Set-PfbCertificatePolicy
     }
 
+    # Convert -HttpTimeout (milliseconds) to the whole seconds Invoke-RestMethod/
+    # Invoke-WebRequest expect via -TimeoutSec. Round up so a sub-1000ms value never
+    # collapses to 0 (TimeoutSec 0 means "no timeout" on some PowerShell versions).
+    $timeoutSec = [int][Math]::Ceiling($HttpTimeout / 1000.0)
+
     # Resolve PSCredential to username/password
     if ($PSCmdlet.ParameterSetName -eq 'PSCredential') {
         $Username = $Credential.UserName
@@ -142,8 +147,9 @@ function Connect-PfbArray {
     # Discover supported API versions
     $versionUri = "https://${Endpoint}/api/api_version"
     $versionParams = @{
-        Method = 'GET'
-        Uri    = $versionUri
+        Method     = 'GET'
+        Uri        = $versionUri
+        TimeoutSec = $timeoutSec
     }
     if ($IgnoreCertificateError -and $PSVersionTable.PSVersion.Major -ge 6) {
         $versionParams['SkipCertificateCheck'] = $true
@@ -182,7 +188,7 @@ function Connect-PfbArray {
 
     if ($PSCmdlet.ParameterSetName -eq 'ApiToken') {
         # Direct API token login
-        $authToken = Invoke-PfbApiTokenLogin -Endpoint $Endpoint -ApiToken $ApiToken -SkipCertificateCheck:$IgnoreCertificateError
+        $authToken = Invoke-PfbApiTokenLogin -Endpoint $Endpoint -ApiToken $ApiToken -SkipCertificateCheck:$IgnoreCertificateError -TimeoutSec $timeoutSec
     }
     elseif ($PSCmdlet.ParameterSetName -eq 'Certificate') {
         # OAuth2 JWT certificate-based authentication
@@ -256,6 +262,7 @@ function Connect-PfbArray {
                 Uri         = "https://${Endpoint}/api/login"
                 Body        = $loginBody
                 ContentType = 'application/json'
+                TimeoutSec  = $timeoutSec
             }
             if ($IgnoreCertificateError -and $PSVersionTable.PSVersion.Major -ge 6) {
                 $loginParams['SkipCertificateCheck'] = $true
@@ -285,6 +292,7 @@ function Connect-PfbArray {
             if ($IgnoreCertificateError -and $PSVersionTable.PSVersion.Major -ge 6) {
                 $tokenInvokeArgs['SkipCertificateCheck'] = $true
             }
+            $tokenInvokeArgs['TimeoutSec'] = $timeoutSec
             # Pick the item whose admin matches our username. The /admins/api-tokens endpoint
             # silently ignores the names= / ids= filters and returns all admins, with the
             # caller's own token unmasked and other admins' tokens redacted to '****'. We must
@@ -336,7 +344,7 @@ function Connect-PfbArray {
             }
 
             $ApiToken = $mintedToken
-            $authToken = Invoke-PfbApiTokenLogin -Endpoint $Endpoint -ApiToken $ApiToken -SkipCertificateCheck:$IgnoreCertificateError
+            $authToken = Invoke-PfbApiTokenLogin -Endpoint $Endpoint -ApiToken $ApiToken -SkipCertificateCheck:$IgnoreCertificateError -TimeoutSec $timeoutSec
         }
     }
 

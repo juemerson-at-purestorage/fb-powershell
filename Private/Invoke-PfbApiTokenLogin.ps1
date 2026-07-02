@@ -18,13 +18,15 @@ function Invoke-PfbApiTokenLogin {
     param(
         [Parameter(Mandatory)] [string]$Endpoint,
         [Parameter(Mandatory)] [string]$ApiToken,
-        [Parameter()] [switch]$SkipCertificateCheck
+        [Parameter()] [switch]$SkipCertificateCheck,
+        [Parameter()] [int]$TimeoutSec = 30
     )
 
     $loginParams = @{
-        Method  = 'POST'
-        Uri     = "https://${Endpoint}/api/login"
-        Headers = @{ 'api-token' = $ApiToken }
+        Method     = 'POST'
+        Uri        = "https://${Endpoint}/api/login"
+        Headers    = @{ 'api-token' = $ApiToken }
+        TimeoutSec = $TimeoutSec
     }
     if ($SkipCertificateCheck -and $PSVersionTable.PSVersion.Major -ge 6) {
         $loginParams['SkipCertificateCheck'] = $true
