@@ -35,6 +35,31 @@ function Invoke-PfbApiRequest {
         [string]$ApiVersionOverride
     )
 
+    # Certificate/OAuth2 sessions: proactively refresh the access token before it expires,
+    # rather than waiting for a 401. A proactive refresh generates no failed-authentication
+    # entry in the array's session log, unlike a reactive 401-triggered refresh.
+    if ($Array.AuthMethod -eq 'Certificate' -and $Array.TokenExpiresAt) {
+        $buffer = [Math]::Min(30, $Array.TokenTtlSeconds * 0.10)
+        $refreshAt = $Array.TokenExpiresAt.AddSeconds(-$buffer)
+        if ((Get-Date).ToUniversalTime() -ge $refreshAt) {
+            $refreshed = Invoke-PfbOAuth2Login -Endpoint $Array.Endpoint -ClientId $Array.ClientId `
+                -Issuer $Array.Issuer -KeyId $Array.KeyId -Username $Array.Username `
+                -PrivateKeyFile $Array.PrivateKeyFile -PrivateKeyPassword $Array.PrivateKeyPassword `
+                -SkipCertificateCheck:$Array.SkipCertificateCheck
+            $Array.BearerToken = $refreshed.AccessToken
+            $Array.AuthToken = $refreshed.AccessToken
+            $Array.TokenExpiresAt = $refreshed.ExpiresAt
+            $Array.TokenTtlSeconds = $refreshed.TtlSeconds
+
+            if ($script:PfbDefaultArray -and $script:PfbDefaultArray.Endpoint -eq $Array.Endpoint) {
+                $script:PfbDefaultArray = $Array
+            }
+            if ($script:PfbArrays.ContainsKey($Array.Endpoint)) {
+                $script:PfbArrays[$Array.Endpoint] = $Array
+            }
+        }
+    }
+
     $apiVer = if ($ApiVersionOverride) { $ApiVersionOverride } else { $Array.ApiVersion }
     $baseUrl = "https://$($Array.Endpoint)/api/${apiVer}"
     $queryString = ConvertTo-PfbQueryString -Parameters $QueryParams
@@ -85,14 +110,33 @@ function Invoke-PfbApiRequest {
                 $statusCode = [int]$_.Exception.Response.StatusCode
             }
 
-            # Auto-reconnect on 401 if we have a stored API token
-            if ($statusCode -eq 401 -and $isFirstRequest -and -not [string]::IsNullOrEmpty($Array.ApiToken)) {
+            # Auto-reconnect on 401: ApiToken/Credential/PSCredential sessions have a
+            # cached long-lived API token; Certificate sessions refresh the OAuth2
+            # access token instead (fallback for what the proactive check above can't
+            # anticipate: clock skew, or early revocation).
+            $canReconnect = ($isFirstRequest -and (
+                -not [string]::IsNullOrEmpty($Array.ApiToken) -or $Array.AuthMethod -eq 'Certificate'
+            ))
+            if ($statusCode -eq 401 -and $canReconnect) {
                 $reconnectSucceeded = $false
                 try {
-                    $reconnected = Connect-PfbArrayInternal -Endpoint $Array.Endpoint -ApiToken $Array.ApiToken -ApiVersion $Array.ApiVersion -SkipCertificateCheck:$Array.SkipCertificateCheck
-                    $Array.AuthToken = $reconnected.AuthToken
-                    $Array.ConnectedAt = $reconnected.ConnectedAt
-                    $headers['x-auth-token'] = $Array.AuthToken
+                    if ($Array.AuthMethod -eq 'Certificate') {
+                        $refreshed = Invoke-PfbOAuth2Login -Endpoint $Array.Endpoint -ClientId $Array.ClientId `
+                            -Issuer $Array.Issuer -KeyId $Array.KeyId -Username $Array.Username `
+                            -PrivateKeyFile $Array.PrivateKeyFile -PrivateKeyPassword $Array.PrivateKeyPassword `
+                            -SkipCertificateCheck:$Array.SkipCertificateCheck
+                        $Array.BearerToken = $refreshed.AccessToken
+                        $Array.AuthToken = $refreshed.AccessToken
+                        $Array.TokenExpiresAt = $refreshed.ExpiresAt
+                        $Array.TokenTtlSeconds = $refreshed.TtlSeconds
+                        $headers['Authorization'] = "Bearer $($Array.BearerToken)"
+                    }
+                    else {
+                        $reconnected = Connect-PfbArrayInternal -Endpoint $Array.Endpoint -ApiToken $Array.ApiToken -ApiVersion $Array.ApiVersion -SkipCertificateCheck:$Array.SkipCertificateCheck
+                        $Array.AuthToken = $reconnected.AuthToken
+                        $Array.ConnectedAt = $reconnected.ConnectedAt
+                        $headers['x-auth-token'] = $Array.AuthToken
+                    }
                     $restParams['Headers'] = $headers
 
                     # Update the stored connection

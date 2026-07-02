@@ -130,3 +130,158 @@ Describe 'Connect-PfbArray - Certificate/OAuth2 flow uses shared helper' {
             Should -Throw -ExpectedMessage '*OAuth2 token exchange failed*'
     }
 }
+
+Describe 'Invoke-PfbApiRequest - Certificate/OAuth2 token refresh' {
+    BeforeAll {
+        function New-CertificateConnection {
+            param(
+                [datetime]$TokenExpiresAt,
+                [int]$TokenTtlSeconds = 3600,
+                [string]$AuthToken = 'initial-token'
+            )
+            [PSCustomObject]@{
+                Endpoint              = 'fb.test'
+                ApiVersion            = '2.26'
+                AuthToken             = $AuthToken
+                BearerToken           = $AuthToken
+                ApiToken              = $null
+                AuthMethod            = 'Certificate'
+                ClientId              = 'client-1'
+                Issuer                = 'myapp'
+                KeyId                 = 'key-1'
+                Username              = 'pureuser'
+                PrivateKeyFile        = 'C:\keys\fake.pem'
+                PrivateKeyPassword    = $null
+                TokenExpiresAt        = $TokenExpiresAt
+                TokenTtlSeconds       = $TokenTtlSeconds
+                SkipCertificateCheck  = $false
+            }
+        }
+    }
+
+    Context 'Proactive refresh' {
+        It 'refreshes before the call when the token is already past its buffer-adjusted expiry' {
+            $array = New-CertificateConnection -TokenExpiresAt ((Get-Date).ToUniversalTime().AddMinutes(-5))
+
+            Mock -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login {
+                [PSCustomObject]@{ AccessToken = 'refreshed-token'; ExpiresAt = (Get-Date).ToUniversalTime().AddHours(1); TtlSeconds = 3600 }
+            }
+            Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+                [PSCustomObject]@{ items = @() }
+            } -ParameterFilter { $Uri -like '*file-systems*' }
+
+            InModuleScope PureStorageFlashBladePowerShell -Parameters @{ array = $array } {
+                InModuleScope PureStorageFlashBladePowerShell -Parameters @{ array = $array } {
+                Invoke-PfbApiRequest -Array $array -Method GET -Endpoint 'file-systems' | Out-Null
+            }
+            }
+
+            Should -Invoke -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login -Times 1 -Exactly
+            $array.AuthToken | Should -Be 'refreshed-token'
+        }
+
+        It 'does not refresh when the token is comfortably within its TTL' {
+            $array = New-CertificateConnection -TokenExpiresAt ((Get-Date).ToUniversalTime().AddHours(1))
+
+            Mock -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login { throw 'should not be called' }
+            Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+                [PSCustomObject]@{ items = @() }
+            } -ParameterFilter { $Uri -like '*file-systems*' }
+
+            InModuleScope PureStorageFlashBladePowerShell -Parameters @{ array = $array } {
+                Invoke-PfbApiRequest -Array $array -Method GET -Endpoint 'file-systems' | Out-Null
+            }
+
+            Should -Invoke -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login -Times 0
+            $array.AuthToken | Should -Be 'initial-token'
+        }
+    }
+
+    Context 'Buffer scaling at TTL extremes' {
+        It 'scales the buffer down for a very short (1s) TTL instead of using a fixed 30s' {
+            # buffer = min(30, 1 * 0.10) = 0.1s. An expiry 0.9s in the future should NOT
+            # trigger a refresh yet -- a fixed 30s buffer would incorrectly say it should.
+            $array = New-CertificateConnection -TokenExpiresAt ((Get-Date).ToUniversalTime().AddMilliseconds(900)) -TokenTtlSeconds 1
+
+            Mock -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login { throw 'should not be called yet' }
+            Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+                [PSCustomObject]@{ items = @() }
+            } -ParameterFilter { $Uri -like '*file-systems*' }
+
+            InModuleScope PureStorageFlashBladePowerShell -Parameters @{ array = $array } {
+                Invoke-PfbApiRequest -Array $array -Method GET -Endpoint 'file-systems' | Out-Null
+            }
+
+            Should -Invoke -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login -Times 0
+        }
+
+        It 'caps the buffer at 30s for a long (24h) TTL instead of scaling to 2.4h' {
+            $array = New-CertificateConnection -TokenExpiresAt ((Get-Date).ToUniversalTime().AddMinutes(50)) -TokenTtlSeconds 86400
+
+            Mock -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login { throw 'should not be called' }
+            Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+                [PSCustomObject]@{ items = @() }
+            } -ParameterFilter { $Uri -like '*file-systems*' }
+
+            InModuleScope PureStorageFlashBladePowerShell -Parameters @{ array = $array } {
+                Invoke-PfbApiRequest -Array $array -Method GET -Endpoint 'file-systems' | Out-Null
+            }
+
+            Should -Invoke -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login -Times 0
+        }
+    }
+
+    Context 'Reactive fallback on 401' {
+        It 'refreshes and retries once when the array returns 401 despite a locally-valid token' {
+            $array = New-CertificateConnection -TokenExpiresAt ((Get-Date).ToUniversalTime().AddHours(1))
+            $script:PfbArrays = @{ 'fb.test' = $array }
+            $script:PfbDefaultArray = $array
+
+            Mock -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login {
+                [PSCustomObject]@{ AccessToken = 'refreshed-token'; ExpiresAt = (Get-Date).ToUniversalTime().AddHours(1); TtlSeconds = 3600 }
+            }
+
+            $script:oauthCallCount = 0
+            Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+                $script:oauthCallCount++
+                if ($script:oauthCallCount -eq 1) {
+                    throw (New-MockHttpError -StatusCode 401 -Message 'unauthorized')
+                }
+                [PSCustomObject]@{ items = @() }
+            } -ParameterFilter { $Uri -like '*file-systems*' }
+
+            InModuleScope PureStorageFlashBladePowerShell -Parameters @{ array = $array } {
+                Invoke-PfbApiRequest -Array $array -Method GET -Endpoint 'file-systems' | Out-Null
+            }
+
+            Should -Invoke -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login -Times 1 -Exactly
+            $array.AuthToken | Should -Be 'refreshed-token'
+            $script:oauthCallCount | Should -Be 2
+        }
+    }
+
+    Context 'Other auth methods unaffected' {
+        It 'never calls Invoke-PfbOAuth2Login for an ApiToken-authenticated connection' {
+            $array = [PSCustomObject]@{
+                Endpoint             = 'fb.test'
+                ApiVersion           = '2.26'
+                AuthToken            = 'session-token'
+                BearerToken          = $null
+                ApiToken             = 'T-fake-token'
+                AuthMethod           = 'ApiToken'
+                SkipCertificateCheck = $false
+            }
+
+            Mock -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login { throw 'should not be called' }
+            Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+                [PSCustomObject]@{ items = @() }
+            } -ParameterFilter { $Uri -like '*file-systems*' }
+
+            InModuleScope PureStorageFlashBladePowerShell -Parameters @{ array = $array } {
+                Invoke-PfbApiRequest -Array $array -Method GET -Endpoint 'file-systems' | Out-Null
+            }
+
+            Should -Invoke -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login -Times 0
+        }
+    }
+}
