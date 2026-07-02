@@ -112,3 +112,72 @@ Describe 'Connect-PfbArray - native login version gate + Posh-SSH fallback' {
         }
     }
 }
+
+Describe 'Connect-PfbArray - HttpTimeout is applied to requests' {
+    It 'converts -HttpTimeout milliseconds to whole TimeoutSec and applies it to /api/api_version' {
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+            [PSCustomObject]@{ versions = @('2.26') }
+        } -ParameterFilter { $Uri -like '*api_version*' -and $TimeoutSec -eq 15 }
+
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-WebRequest {
+            [PSCustomObject]@{ Headers = @{ 'x-auth-token' = 'tok' } }
+        } -ParameterFilter { $Uri -eq 'https://fb.test/api/login' }
+
+        Connect-PfbArray -Endpoint 'fb.test' -ApiToken 'T-fake' -HttpTimeout 15000 | Out-Null
+
+        Should -Invoke -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod -Times 1 -Exactly -ParameterFilter {
+            $Uri -like '*api_version*' -and $TimeoutSec -eq 15
+        }
+    }
+
+    It 'rounds up a sub-1-second timeout instead of collapsing to 0' {
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+            [PSCustomObject]@{ versions = @('2.26') }
+        } -ParameterFilter { $Uri -like '*api_version*' -and $TimeoutSec -eq 1 }
+
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-WebRequest {
+            [PSCustomObject]@{ Headers = @{ 'x-auth-token' = 'tok' } }
+        } -ParameterFilter { $Uri -eq 'https://fb.test/api/login' }
+
+        Connect-PfbArray -Endpoint 'fb.test' -ApiToken 'T-fake' -HttpTimeout 500 | Out-Null
+
+        Should -Invoke -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod -Times 1 -Exactly -ParameterFilter {
+            $Uri -like '*api_version*' -and $TimeoutSec -eq 1
+        }
+    }
+
+    It 'applies the timeout to the api-token login call via Invoke-PfbApiTokenLogin' {
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+            [PSCustomObject]@{ versions = @('2.26') }
+        } -ParameterFilter { $Uri -like '*api_version*' }
+
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-WebRequest {
+            [PSCustomObject]@{ Headers = @{ 'x-auth-token' = 'tok' } }
+        } -ParameterFilter { $Uri -eq 'https://fb.test/api/login' -and $TimeoutSec -eq 20 }
+
+        Connect-PfbArray -Endpoint 'fb.test' -ApiToken 'T-fake' -HttpTimeout 20000 | Out-Null
+
+        Should -Invoke -ModuleName PureStorageFlashBladePowerShell Invoke-WebRequest -Times 1 -Exactly -ParameterFilter {
+            $Uri -eq 'https://fb.test/api/login' -and $TimeoutSec -eq 20
+        }
+    }
+
+    It 'applies the timeout to the Posh-SSH-fallback login path too' {
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+            [PSCustomObject]@{ versions = @('2.20', '2.25') }
+        } -ParameterFilter { $Uri -like '*api_version*' }
+
+        Mock -ModuleName PureStorageFlashBladePowerShell Get-PfbApiTokenViaSsh { 'T-minted' }
+
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-WebRequest {
+            [PSCustomObject]@{ Headers = @{ 'x-auth-token' = 'ssh-tok' } }
+        } -ParameterFilter { $Uri -eq 'https://fb.test/api/login' -and $TimeoutSec -eq 20 }
+
+        $pw = ConvertTo-SecureString 'hunter2' -AsPlainText -Force
+        Connect-PfbArray -Endpoint 'fb.test' -Username 'pureuser' -Password $pw -HttpTimeout 20000 | Out-Null
+
+        Should -Invoke -ModuleName PureStorageFlashBladePowerShell Invoke-WebRequest -Times 1 -Exactly -ParameterFilter {
+            $Uri -eq 'https://fb.test/api/login' -and $TimeoutSec -eq 20
+        }
+    }
+}
