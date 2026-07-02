@@ -74,3 +74,59 @@ Describe 'Invoke-PfbOAuth2Login' {
         } | Should -Throw -ExpectedMessage '*Failed to generate JWT*'
     }
 }
+
+Describe 'Connect-PfbArray - Certificate/OAuth2 flow uses shared helper' {
+    BeforeEach {
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+            [PSCustomObject]@{ versions = @('2.20', '2.25', '2.26') }
+        } -ParameterFilter { $Uri -like '*api_version*' }
+    }
+
+    It 'stores the access token, expiry, ttl, and JWT-signing parameters on the connection object' {
+        $expiresAt = (Get-Date).ToUniversalTime().AddHours(1)
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login {
+            [PSCustomObject]@{ AccessToken = 'oauth-token'; ExpiresAt = $expiresAt; TtlSeconds = 3600 }
+        }
+
+        $conn = Connect-PfbArray -Endpoint 'fb.test' -Username 'pureuser' -ClientId 'client-1' `
+            -Issuer 'myapp' -KeyId 'key-1' -PrivateKeyFile 'C:\keys\fake.pem'
+
+        $conn.AuthToken       | Should -Be 'oauth-token'
+        $conn.BearerToken     | Should -Be 'oauth-token'
+        $conn.TokenExpiresAt  | Should -Be $expiresAt
+        $conn.TokenTtlSeconds | Should -Be 3600
+        $conn.ClientId        | Should -Be 'client-1'
+        $conn.Issuer          | Should -Be 'myapp'
+        $conn.KeyId           | Should -Be 'key-1'
+        $conn.PrivateKeyFile  | Should -Be 'C:\keys\fake.pem'
+        $conn.ApiToken        | Should -BeNullOrEmpty
+    }
+
+    It 'hides ClientId, Issuer, KeyId, PrivateKeyFile, and PrivateKeyPassword from default display' {
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login {
+            [PSCustomObject]@{ AccessToken = 'oauth-token'; ExpiresAt = (Get-Date).ToUniversalTime().AddHours(1); TtlSeconds = 3600 }
+        }
+
+        $conn = Connect-PfbArray -Endpoint 'fb.test' -Username 'pureuser' -ClientId 'client-1' `
+            -Issuer 'myapp' -KeyId 'key-1' -PrivateKeyFile 'C:\keys\fake.pem'
+
+        $defaultView = ($conn | Format-List | Out-String)
+        $defaultView | Should -Not -Match 'PrivateKeyPassword'
+        $defaultView | Should -Not -Match 'ClientId'
+        $defaultView | Should -Not -Match 'Issuer'
+        $defaultView | Should -Not -Match 'KeyId'
+        $defaultView | Should -Not -Match 'PrivateKeyFile'
+        # Sanity check: the properties still exist and are directly reachable, just hidden from default display
+        $conn.ClientId | Should -Be 'client-1'
+    }
+
+    It 'throws when Invoke-PfbOAuth2Login fails, without falling back to any other auth path' {
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login {
+            throw "OAuth2 token exchange failed for FlashBlade 'fb.test': connection refused"
+        }
+
+        { Connect-PfbArray -Endpoint 'fb.test' -Username 'pureuser' -ClientId 'client-1' `
+            -Issuer 'myapp' -KeyId 'key-1' -PrivateKeyFile 'C:\keys\fake.pem' } |
+            Should -Throw -ExpectedMessage '*OAuth2 token exchange failed*'
+    }
+}
