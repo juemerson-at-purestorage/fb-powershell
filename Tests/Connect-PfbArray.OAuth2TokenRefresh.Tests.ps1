@@ -322,3 +322,38 @@ Describe 'Invoke-PfbApiRequest - Certificate/OAuth2 token refresh' {
         }
     }
 }
+
+Describe 'Certificate/OAuth2 refresh - PrivateKeyPassword never logged' {
+    It 'never surfaces the plaintext private key password in Write-Verbose or Write-Warning output' {
+        $plainPassword = 'super-secret-key-password'
+        $keyPassword = ConvertTo-SecureString $plainPassword -AsPlainText -Force
+
+        $script:capturedMessages = [System.Collections.Generic.List[string]]::new()
+        Mock -ModuleName PureStorageFlashBladePowerShell Write-Verbose {
+            $script:capturedMessages.Add([string]$Message)
+        }
+        Mock -ModuleName PureStorageFlashBladePowerShell Write-Warning {
+            $script:capturedMessages.Add([string]$Message)
+        }
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+            [PSCustomObject]@{ versions = @('2.26') }
+        } -ParameterFilter { $Uri -like '*api_version*' }
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login {
+            [PSCustomObject]@{ AccessToken = 'oauth-token'; ExpiresAt = (Get-Date).ToUniversalTime().AddSeconds(-1); TtlSeconds = 60 }
+        }
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+            [PSCustomObject]@{ items = @() }
+        } -ParameterFilter { $Uri -like '*file-systems*' }
+
+        $conn = Connect-PfbArray -Endpoint 'fb.test' -Username 'pureuser' -ClientId 'client-1' `
+            -Issuer 'myapp' -KeyId 'key-1' -PrivateKeyFile 'C:\keys\fake.pem' -PrivateKeyPassword $keyPassword
+
+        # ExpiresAt was set 1 second in the past above, so this call triggers a proactive refresh cycle too.
+        InModuleScope PureStorageFlashBladePowerShell -Parameters @{ conn = $conn } {
+            Invoke-PfbApiRequest -Array $conn -Method GET -Endpoint 'file-systems' | Out-Null
+        }
+
+        $joined = $script:capturedMessages -join "`n"
+        $joined | Should -Not -Match ([regex]::Escape($plainPassword))
+    }
+}
