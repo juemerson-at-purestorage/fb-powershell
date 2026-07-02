@@ -181,3 +181,37 @@ Describe 'Connect-PfbArray - HttpTimeout is applied to requests' {
         }
     }
 }
+
+Describe 'Connect-PfbArray - TLS 1.2 enforcement decoupled from cert-bypass' {
+    It 'forces TLS 1.2 even when -IgnoreCertificateError is not specified' {
+        Mock -ModuleName PureStorageFlashBladePowerShell Set-PfbTlsProtocol { }
+        Mock -ModuleName PureStorageFlashBladePowerShell Set-PfbCertificatePolicy { }
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+            [PSCustomObject]@{ versions = @('2.26') }
+        } -ParameterFilter { $Uri -like '*api_version*' }
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-WebRequest {
+            [PSCustomObject]@{ Headers = @{ 'x-auth-token' = 'tok' } }
+        } -ParameterFilter { $Uri -eq 'https://fb.test/api/login' }
+
+        Connect-PfbArray -Endpoint 'fb.test' -ApiToken 'T-fake' | Out-Null
+
+        Should -Invoke -ModuleName PureStorageFlashBladePowerShell Set-PfbTlsProtocol -Times 1 -Exactly
+        Should -Invoke -ModuleName PureStorageFlashBladePowerShell Set-PfbCertificatePolicy -Times 0
+    }
+
+    It 'still applies certificate bypass only when -IgnoreCertificateError is specified' {
+        Mock -ModuleName PureStorageFlashBladePowerShell Set-PfbTlsProtocol { }
+        Mock -ModuleName PureStorageFlashBladePowerShell Set-PfbCertificatePolicy { }
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+            [PSCustomObject]@{ versions = @('2.26') }
+        } -ParameterFilter { $Uri -like '*api_version*' }
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-WebRequest {
+            [PSCustomObject]@{ Headers = @{ 'x-auth-token' = 'tok' } }
+        } -ParameterFilter { $Uri -eq 'https://fb.test/api/login' }
+
+        Connect-PfbArray -Endpoint 'fb.test' -ApiToken 'T-fake' -IgnoreCertificateError | Out-Null
+
+        Should -Invoke -ModuleName PureStorageFlashBladePowerShell Set-PfbTlsProtocol -Times 1 -Exactly
+        Should -Invoke -ModuleName PureStorageFlashBladePowerShell Set-PfbCertificatePolicy -Times 1 -Exactly
+    }
+}

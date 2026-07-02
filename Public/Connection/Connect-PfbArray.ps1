@@ -123,6 +123,10 @@ function Connect-PfbArray {
         [int]$HttpTimeout = 30000
     )
 
+    # Force TLS 1.2 on PowerShell 5.1 unconditionally -- independent of certificate
+    # validation bypass, which is a separate concern.
+    Set-PfbTlsProtocol
+
     # Handle SSL bypass
     if ($IgnoreCertificateError) {
         Set-PfbCertificatePolicy
