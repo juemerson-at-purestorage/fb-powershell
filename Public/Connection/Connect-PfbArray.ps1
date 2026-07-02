@@ -19,13 +19,6 @@ function Connect-PfbArray {
         The optional long-lived API token can be retrieved from /admins/api-tokens for
         future passwordless reconnects.
 
-        OAuth2/Certificate Authentication Flow:
-        The JWT built from -ClientId/-Issuer/-KeyId/-PrivateKeyFile is a short-lived
-        (5 minute) bootstrap credential used once to exchange for an OAuth2 access
-        token; it is not retained. Unlike every other authentication method here,
-        Certificate/OAuth2 sessions do NOT auto-reconnect when the access token
-        expires — see .NOTES for why and how to work around it.
-
         Auto-negotiates the highest supported API version unless explicitly specified.
         The connection is cached and becomes the default for subsequent cmdlet calls.
     .PARAMETER Endpoint
@@ -60,27 +53,6 @@ function Connect-PfbArray {
         Bypass SSL certificate validation. Common for lab environments with self-signed certs.
     .PARAMETER HttpTimeout
         HTTP request timeout in milliseconds. Default is 30000 (30 seconds).
-    .NOTES
-        Certificate/OAuth2 sessions do not auto-reconnect on token expiry.
-
-        Every other authentication method (-ApiToken, -Password, -Credential) caches a
-        long-lived API token on the connection object, so Invoke-PfbApiRequest can
-        silently mint a fresh session token if a call gets a 401. The Certificate
-        parameter set has no equivalent: the connection object never retains -ClientId,
-        -Issuer, -KeyId, or -PrivateKeyFile, so there is nothing to reconnect with once
-        the OAuth2 access token expires. The call simply fails.
-
-        How long that takes depends entirely on the API client's configuration on the
-        array (access_token_ttl_in_ms), not on this module — it can be set anywhere from
-        1 second to 24 hours (server default: 24 hours) and this cmdlet has no visibility
-        into that value at connect time. On a long-lived API client this rarely matters
-        in practice; on one deliberately configured with a short TTL for tighter
-        credential rotation, a Certificate-authenticated session can stop working after
-        only seconds with no automatic recovery.
-
-        Workarounds: re-run Connect-PfbArray to obtain a fresh access token, or prefer
-        -ApiToken for long-running sessions/automation against an array with a
-        short-TTL API client.
     .EXAMPLE
         $array = Connect-PfbArray -Endpoint fb01.example.com -ApiToken $token -IgnoreCertificateError
 
