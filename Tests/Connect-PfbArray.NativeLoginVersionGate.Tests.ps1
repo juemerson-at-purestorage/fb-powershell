@@ -76,6 +76,25 @@ Describe 'Connect-PfbArray - native login version gate + Posh-SSH fallback' {
             $conn.ApiToken  | Should -Be 'T-minted-via-ssh'
             Should -Invoke -ModuleName PureStorageFlashBladePowerShell Get-PfbApiTokenViaSsh -Times 1 -Exactly
         }
+
+        It 'falls back to Get-PfbApiTokenViaSsh via the -Credential (PSCredential) parameter set too' {
+            Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+                [PSCustomObject]@{ versions = @('1.10', '1.11', '1.12', '2.20', '2.25') }
+            } -ParameterFilter { $Uri -like '*api_version*' }
+
+            Mock -ModuleName PureStorageFlashBladePowerShell Get-PfbApiTokenViaSsh { 'T-minted-via-ssh' }
+
+            Mock -ModuleName PureStorageFlashBladePowerShell Invoke-WebRequest {
+                [PSCustomObject]@{ Headers = @{ 'x-auth-token' = 'ssh-session-token' } }
+            } -ParameterFilter { $Uri -eq 'https://fb.test/api/login' -and $Headers['api-token'] -eq 'T-minted-via-ssh' }
+
+            $cred = [System.Management.Automation.PSCredential]::new('pureuser', $script:testPassword)
+            $conn = Connect-PfbArray -Endpoint 'fb.test' -Credential $cred
+
+            $conn.AuthToken | Should -Be 'ssh-session-token'
+            $conn.ApiToken  | Should -Be 'T-minted-via-ssh'
+            Should -Invoke -ModuleName PureStorageFlashBladePowerShell Get-PfbApiTokenViaSsh -Times 1 -Exactly -ParameterFilter { $Username -eq 'pureuser' }
+        }
     }
 
     Context 'SSH fallback fails' {
