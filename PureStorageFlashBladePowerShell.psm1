@@ -23,7 +23,14 @@ if (Test-Path $publicPath) {
     $publicFunctions = $publicFiles.BaseName
 }
 
-# Export only public functions
-if ($publicFunctions.Count -gt 0) {
-    Export-ModuleMember -Function $publicFunctions
+# Export public functions and private functions used by tests
+$functionsToExport = @($publicFunctions)
+
+# Include private helper functions that are directly tested
+if (Get-Command ConvertTo-PfbVersionObject -ErrorAction SilentlyContinue) {
+    $functionsToExport += 'ConvertTo-PfbVersionObject'
+}
+
+if ($functionsToExport.Count -gt 0) {
+    Export-ModuleMember -Function $functionsToExport
 }
