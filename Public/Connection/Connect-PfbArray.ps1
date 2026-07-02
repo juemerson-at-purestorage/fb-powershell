@@ -13,11 +13,17 @@ function Connect-PfbArray {
         - OAuth2/JWT certificate-based authentication (Certificate parameter set)
 
         Username/Password Authentication Flow:
-        When using -Password or -Credential, the cmdlet POSTs the credentials to the
-        unversioned /api/login endpoint, which is the REST 2.x native username/password
-        login. A session token (x-auth-token) is returned and used for subsequent calls.
-        The optional long-lived API token can be retrieved from /admins/api-tokens for
-        future passwordless reconnects.
+        When using -Password or -Credential, the cmdlet checks whether the array
+        supports native REST 2.x username/password login (FlashBlade REST API 2.26 /
+        Purity//FB 4.8.1+). If so, it POSTs the credentials to the unversioned /api/login
+        endpoint and returns a session token (x-auth-token); the optional long-lived API
+        token can be retrieved from /admins/api-tokens for future passwordless
+        reconnects. If the array is below that threshold, the cmdlet instead falls back
+        to SSH (via the optional Posh-SSH module) to mint an API token using the
+        'pureadmin' CLI, then completes login with that token. FlashBlade has never had
+        a REST-based way to exchange username/password for a token below this version,
+        so SSH is not a convenience fallback here -- it's the only mechanism available.
+        Install Posh-SSH with: Install-Module -Name Posh-SSH -Scope CurrentUser -Force
 
         Auto-negotiates the highest supported API version unless explicitly specified.
         The connection is cached and becomes the default for subsequent cmdlet calls.
