@@ -1,6 +1,6 @@
 ﻿@{
     RootModule        = 'PureStorageFlashBladePowerShell.psm1'
-    ModuleVersion     = '2.0.6'
+    ModuleVersion     = '2.0.5'
     GUID              = 'b25473b3-9eb7-414d-8da1-264e10f73d86'
     Author            = 'Pure Storage, Inc.'
     CompanyName       = 'Pure Storage, Inc.'
