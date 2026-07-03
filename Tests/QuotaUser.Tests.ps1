@@ -45,7 +45,7 @@ Describe 'Remove-PfbQuotaUser' {
         Get-PfbQuotaUser -FileSystemName 'fs-home' -Array $fakeArray | Remove-PfbQuotaUser -Confirm:$false -Array $fakeArray
         Should -Invoke Invoke-PfbApiRequest -ModuleName PureStorageFlashBladePowerShell -Times 1 -Exactly -ParameterFilter {
             $Method -eq 'DELETE' -and $Endpoint -eq 'quotas/users' -and
-            $QueryParams['names'] -eq 'jdoe' -and $QueryParams['file_system_names'] -eq 'fs-home'
+            $QueryParams['user_names'] -eq 'jdoe' -and $QueryParams['file_system_names'] -eq 'fs-home'
         }
     }
 
@@ -62,7 +62,7 @@ Describe 'Remove-PfbQuotaUser' {
         Mock -ModuleName PureStorageFlashBladePowerShell Invoke-PfbApiRequest { }
         Remove-PfbQuotaUser -FileSystemName 'fs-home' -UserName 'jdoe' -Confirm:$false -Array $fakeArray
         Should -Invoke Invoke-PfbApiRequest -ModuleName PureStorageFlashBladePowerShell -Times 1 -Exactly -ParameterFilter {
-            $Method -eq 'DELETE' -and $QueryParams['names'] -eq 'jdoe' -and $QueryParams['file_system_names'] -eq 'fs-home'
+            $Method -eq 'DELETE' -and $QueryParams['user_names'] -eq 'jdoe' -and $QueryParams['file_system_names'] -eq 'fs-home'
         }
     }
 }
@@ -85,7 +85,7 @@ Describe 'Update-PfbQuotaUser' {
         Get-PfbQuotaUser -FileSystemName 'fs-home' -Array $fakeArray | Update-PfbQuotaUser -Quota 999 -Confirm:$false -Array $fakeArray
         Should -Invoke Invoke-PfbApiRequest -ModuleName PureStorageFlashBladePowerShell -Times 1 -Exactly -ParameterFilter {
             $Method -eq 'PATCH' -and $Endpoint -eq 'quotas/users' -and
-            $QueryParams['names'] -eq 'jdoe' -and $QueryParams['file_system_names'] -eq 'fs-home' -and
+            $QueryParams['user_names'] -eq 'jdoe' -and $QueryParams['file_system_names'] -eq 'fs-home' -and
             $Body['quota'] -eq 999
         }
     }
@@ -94,7 +94,7 @@ Describe 'Update-PfbQuotaUser' {
         Mock -ModuleName PureStorageFlashBladePowerShell Invoke-PfbApiRequest { }
         Update-PfbQuotaUser -FileSystemName 'fs-home' -UserName 'jdoe' -Quota 10737418240 -Confirm:$false -Array $fakeArray
         Should -Invoke Invoke-PfbApiRequest -ModuleName PureStorageFlashBladePowerShell -Times 1 -Exactly -ParameterFilter {
-            $Method -eq 'PATCH' -and $QueryParams['names'] -eq 'jdoe' -and $QueryParams['file_system_names'] -eq 'fs-home'
+            $Method -eq 'PATCH' -and $QueryParams['user_names'] -eq 'jdoe' -and $QueryParams['file_system_names'] -eq 'fs-home'
         }
     }
 }
