@@ -225,6 +225,40 @@ Describe 'Invoke-PfbApiRequest - Certificate/OAuth2 token refresh' {
             Should -Invoke -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login -Times 0
             $array.AuthToken | Should -Be 'initial-token'
         }
+
+        It 'falls through to the current token and warns (without throwing) when the proactive refresh attempt itself throws' {
+            $originalExpiresAt = (Get-Date).ToUniversalTime().AddMinutes(-5)
+            $array = New-CertificateConnection -TokenExpiresAt $originalExpiresAt
+
+            Mock -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login {
+                throw 'transient network blip'
+            }
+            Mock -ModuleName PureStorageFlashBladePowerShell Write-Warning { }
+            Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+                [PSCustomObject]@{ items = @() }
+            } -ParameterFilter { $Uri -like '*file-systems*' }
+
+            # (a) the call does not throw
+            {
+                InModuleScope PureStorageFlashBladePowerShell -Parameters @{ array = $array } {
+                    Invoke-PfbApiRequest -Array $array -Method GET -Endpoint 'file-systems' | Out-Null
+                }
+            } | Should -Not -Throw
+
+            # (c) it proceeds and succeeds using the original (unrefreshed) token
+            Should -Invoke -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod -Times 1 -Exactly `
+                -ParameterFilter { $Uri -like '*file-systems*' -and $Headers.Authorization -eq 'Bearer initial-token' }
+
+            # (b) a warning naming the failure is emitted
+            Should -Invoke -ModuleName PureStorageFlashBladePowerShell Write-Warning -Times 1 -Exactly `
+                -ParameterFilter { $Message -like '*fb.test*' -and $Message -like '*transient network blip*' }
+
+            # (d) the stale-but-still-possibly-valid token is left untouched, not corrupted by the failed attempt
+            $array.AuthToken       | Should -Be 'initial-token'
+            $array.BearerToken     | Should -Be 'initial-token'
+            $array.TokenExpiresAt  | Should -Be $originalExpiresAt
+            $array.TokenTtlSeconds | Should -Be 3600
+        }
     }
 
     Context 'Buffer scaling at TTL extremes' {
