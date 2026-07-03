@@ -40,8 +40,16 @@ function Get-PfbQuotaUser {
     )
     Assert-PfbConnection -Array ([ref]$Array)
     $queryParams = @{}
-    if ($Name) { $queryParams['names'] = $Name -join ',' }
-    if ($FileSystemName) { $queryParams['file_system_names'] = $FileSystemName }
+    if ($Name) {
+        # FlashBlade rejects 'names' combined with 'file_system_names' ("Cannot provide a
+        # names parameter along with any of: file system, user IDs, or user names" --
+        # confirmed live against our lab array). The compound name (e.g. 'fs-share/1235') already
+        # identifies the file system, so file_system_names is omitted in this branch.
+        $queryParams['names'] = $Name -join ','
+    }
+    elseif ($FileSystemName) {
+        $queryParams['file_system_names'] = $FileSystemName
+    }
     if ($Filter) { $queryParams['filter'] = $Filter }
     if ($Sort) { $queryParams['sort'] = $Sort }
     if ($Limit -gt 0) { $queryParams['limit'] = $Limit }
