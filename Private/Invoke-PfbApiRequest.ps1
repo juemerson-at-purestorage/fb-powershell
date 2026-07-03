@@ -42,20 +42,29 @@ function Invoke-PfbApiRequest {
         $buffer = [Math]::Min(30, $Array.TokenTtlSeconds * 0.10)
         $refreshAt = $Array.TokenExpiresAt.AddSeconds(-$buffer)
         if ((Get-Date).ToUniversalTime() -ge $refreshAt) {
-            $refreshed = Invoke-PfbOAuth2Login -Endpoint $Array.Endpoint -ClientId $Array.ClientId `
-                -Issuer $Array.Issuer -KeyId $Array.KeyId -Username $Array.Username `
-                -PrivateKeyFile $Array.PrivateKeyFile -PrivateKeyPassword $Array.PrivateKeyPassword `
-                -SkipCertificateCheck:$Array.SkipCertificateCheck
-            $Array.BearerToken = $refreshed.AccessToken
-            $Array.AuthToken = $refreshed.AccessToken
-            $Array.TokenExpiresAt = $refreshed.ExpiresAt
-            $Array.TokenTtlSeconds = $refreshed.TtlSeconds
+            # A failure here is NOT fatal: the current token may still be valid (we're only
+            # inside the buffer window, not past actual expiry). Warn and fall through to
+            # attempt the request with the existing token -- the reactive 401 path below is
+            # the real safety net if the token has genuinely become invalid.
+            try {
+                $refreshed = Invoke-PfbOAuth2Login -Endpoint $Array.Endpoint -ClientId $Array.ClientId `
+                    -Issuer $Array.Issuer -KeyId $Array.KeyId -Username $Array.Username `
+                    -PrivateKeyFile $Array.PrivateKeyFile -PrivateKeyPassword $Array.PrivateKeyPassword `
+                    -SkipCertificateCheck:$Array.SkipCertificateCheck
+                $Array.BearerToken = $refreshed.AccessToken
+                $Array.AuthToken = $refreshed.AccessToken
+                $Array.TokenExpiresAt = $refreshed.ExpiresAt
+                $Array.TokenTtlSeconds = $refreshed.TtlSeconds
 
-            if ($script:PfbDefaultArray -and $script:PfbDefaultArray.Endpoint -eq $Array.Endpoint) {
-                $script:PfbDefaultArray = $Array
+                if ($script:PfbDefaultArray -and $script:PfbDefaultArray.Endpoint -eq $Array.Endpoint) {
+                    $script:PfbDefaultArray = $Array
+                }
+                if ($script:PfbArrays.ContainsKey($Array.Endpoint)) {
+                    $script:PfbArrays[$Array.Endpoint] = $Array
+                }
             }
-            if ($script:PfbArrays.ContainsKey($Array.Endpoint)) {
-                $script:PfbArrays[$Array.Endpoint] = $Array
+            catch {
+                Write-Warning "FlashBlade proactive OAuth2 token refresh failed for $($Array.Endpoint): $($_.Exception.Message). Proceeding with the existing token."
             }
         }
     }
