@@ -44,7 +44,7 @@ function Update-PfbQuotaUser {
             $body = @{}
             if ($Quota -gt 0) { $body['quota'] = $Quota }
         }
-        $q = @{ 'names' = $UserName; 'file_system_names' = $FileSystemName }
+        $q = @{ 'user_names' = $UserName; 'file_system_names' = $FileSystemName }
         if ($PSCmdlet.ShouldProcess("${FileSystemName}:${UserName}", 'Update user quota')) {
             Invoke-PfbApiRequest -Array $Array -Method PATCH -Endpoint 'quotas/users' -Body $body -QueryParams $q
         }

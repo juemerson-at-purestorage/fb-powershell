@@ -32,7 +32,7 @@ function Remove-PfbQuotaUser {
     }
 
     process {
-        $q = @{ 'names' = $UserName; 'file_system_names' = $FileSystemName }
+        $q = @{ 'user_names' = $UserName; 'file_system_names' = $FileSystemName }
         if ($PSCmdlet.ShouldProcess("${FileSystemName}:${UserName}", 'Remove user quota')) {
             Invoke-PfbApiRequest -Array $Array -Method DELETE -Endpoint 'quotas/users' -QueryParams $q
         }
