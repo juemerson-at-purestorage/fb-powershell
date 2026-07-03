@@ -126,7 +126,16 @@ function Invoke-PfbApiRequest {
             $canReconnect = ($isFirstRequest -and (
                 -not [string]::IsNullOrEmpty($Array.ApiToken) -or $Array.AuthMethod -eq 'Certificate'
             ))
-            if ($statusCode -eq 401 -and $canReconnect) {
+
+            # Live testing against a real FlashBlade array (Purity//FB 4.8.2 / REST 2.26) proved it
+            # returns HTTP 403, not 401, for ANY invalid Bearer-token auth failure (confirmed with
+            # both a genuinely-expired OAuth2 access token and a garbage bearer token). Without this,
+            # the Certificate/OAuth2 reactive-refresh safety net above never actually triggers against
+            # that array. ApiToken/Credential/PSCredential use a different mechanism (the x-auth-token
+            # session header) that has NOT been proven to share this 403-for-invalid-auth behavior, so
+            # those parameter sets deliberately stay 401-only.
+            $isAuthFailureStatus = ($statusCode -eq 401) -or ($statusCode -eq 403 -and $Array.AuthMethod -eq 'Certificate')
+            if ($isAuthFailureStatus -and $canReconnect) {
                 $reconnectSucceeded = $false
                 try {
                     if ($Array.AuthMethod -eq 'Certificate') {
@@ -278,8 +287,13 @@ function ConvertTo-PfbApiError {
     if ($ErrorRecord.ErrorDetails.Message) {
         try {
             $apiError = $ErrorRecord.ErrorDetails.Message | ConvertFrom-Json
-            if ($apiError.errors) {
-                $errorMessage = "FlashBlade API error: $($apiError.errors[0].message)"
+            # Most FlashBlade error bodies use the plural key "errors", but some real-world
+            # responses (confirmed live against Purity//FB 4.8.2 / REST 2.26) use the singular
+            # "error" instead -- same array-of-objects shape, different key name. Prefer plural
+            # if both are somehow present.
+            $errorList = if ($apiError.errors) { $apiError.errors } else { $apiError.error }
+            if ($errorList) {
+                $errorMessage = "FlashBlade API error: $($errorList[0].message)"
             }
         }
         catch { }
