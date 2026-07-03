@@ -264,14 +264,22 @@ Describe 'Invoke-PfbApiRequest - Certificate/OAuth2 token refresh' {
     Context 'Reactive fallback on 401' {
         It 'refreshes and retries once when the array returns 401 despite a locally-valid token' {
             $array = New-CertificateConnection -TokenExpiresAt ((Get-Date).ToUniversalTime().AddHours(1))
+            # A distinct object with the same Endpoint but a different identity/token stands in for
+            # whatever the module's cache held before this call (mirrors the proactive-path
+            # staleCachedClone test above). This proves the cache is genuinely re-pointed at the
+            # refreshed $array -- seeding the cache with $array itself (as a prior version of this
+            # test did) would pass even if the module's cache-sync code were deleted, because $array
+            # is a reference type mutated in place regardless of caching.
+            #
             # Seeding must happen via InModuleScope: a bare $script: assignment made directly in
             # this It block would set a variable in this test file's own script scope, not the
             # module's -- $script: resolves relative to where a scriptblock is defined, and this
             # scriptblock is defined here, not inside the module. See the empirical check recorded
             # in .superpowers/sdd/task-3-report.md for confirmation.
-            InModuleScope PureStorageFlashBladePowerShell -Parameters @{ array = $array } {
-                $script:PfbArrays = @{ 'fb.test' = $array }
-                $script:PfbDefaultArray = $array
+            $staleCachedClone = New-CertificateConnection -TokenExpiresAt ((Get-Date).ToUniversalTime().AddHours(1)) -AuthToken 'stale-cached-token'
+            InModuleScope PureStorageFlashBladePowerShell -Parameters @{ staleCachedClone = $staleCachedClone } {
+                $script:PfbArrays = @{ $staleCachedClone.Endpoint = $staleCachedClone }
+                $script:PfbDefaultArray = $staleCachedClone
             }
 
             Mock -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login {
@@ -294,6 +302,12 @@ Describe 'Invoke-PfbApiRequest - Certificate/OAuth2 token refresh' {
             Should -Invoke -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login -Times 1 -Exactly
             $array.AuthToken | Should -Be 'refreshed-token'
             $script:oauthCallCount | Should -Be 2
+
+            $cachedDefaultToken = InModuleScope PureStorageFlashBladePowerShell { $script:PfbDefaultArray.AuthToken }
+            $cachedArraysToken  = InModuleScope PureStorageFlashBladePowerShell -Parameters @{ array = $array } { $script:PfbArrays[$array.Endpoint].AuthToken }
+
+            $cachedDefaultToken | Should -Be 'refreshed-token'
+            $cachedArraysToken  | Should -Be 'refreshed-token'
         }
     }
 
