@@ -12,23 +12,33 @@ Describe 'New-PfbFileSystemSnapshot' {
         Mock -ModuleName PureStorageFlashBladePowerShell Invoke-PfbApiRequest { }
     }
 
-    It 'makes one API call with joined source_names for explicit -SourceName' {
+    It 'makes one API call PER explicit -SourceName (FlashBlade rejects multi-source snapshot creation)' {
         New-PfbFileSystemSnapshot -SourceName 'fs1', 'fs2' -Confirm:$false -Array $fakeArray
+        Should -Invoke Invoke-PfbApiRequest -ModuleName PureStorageFlashBladePowerShell -Times 2 -Exactly
         Should -Invoke Invoke-PfbApiRequest -ModuleName PureStorageFlashBladePowerShell -Times 1 -Exactly -ParameterFilter {
-            $Method -eq 'POST' -and $Endpoint -eq 'file-system-snapshots' -and $QueryParams['source_names'] -eq 'fs1,fs2'
+            $Method -eq 'POST' -and $Endpoint -eq 'file-system-snapshots' -and $QueryParams['source_names'] -eq 'fs1'
+        }
+        Should -Invoke Invoke-PfbApiRequest -ModuleName PureStorageFlashBladePowerShell -Times 1 -Exactly -ParameterFilter {
+            $QueryParams['source_names'] -eq 'fs2'
         }
     }
 
-    It 'accumulates ALL piped FileSystem objects into ONE call (regression: not just the last)' {
+    It 'issues a separate API call per piped FileSystem object (regression: must not batch into one call or only process the last)' {
         $fsObjects = @(
             [pscustomobject]@{ name = 'fs1' }
             [pscustomobject]@{ name = 'fs2' }
             [pscustomobject]@{ name = 'fs3' }
         )
         $fsObjects | New-PfbFileSystemSnapshot -Confirm:$false -Array $fakeArray
-        Should -Invoke Invoke-PfbApiRequest -ModuleName PureStorageFlashBladePowerShell -Times 1 -Exactly
+        Should -Invoke Invoke-PfbApiRequest -ModuleName PureStorageFlashBladePowerShell -Times 3 -Exactly
         Should -Invoke Invoke-PfbApiRequest -ModuleName PureStorageFlashBladePowerShell -Times 1 -Exactly -ParameterFilter {
-            $QueryParams['source_names'] -eq 'fs1,fs2,fs3'
+            $QueryParams['source_names'] -eq 'fs1'
+        }
+        Should -Invoke Invoke-PfbApiRequest -ModuleName PureStorageFlashBladePowerShell -Times 1 -Exactly -ParameterFilter {
+            $QueryParams['source_names'] -eq 'fs2'
+        }
+        Should -Invoke Invoke-PfbApiRequest -ModuleName PureStorageFlashBladePowerShell -Times 1 -Exactly -ParameterFilter {
+            $QueryParams['source_names'] -eq 'fs3'
         }
     }
 
