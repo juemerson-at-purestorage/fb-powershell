@@ -356,4 +356,46 @@ Describe 'Certificate/OAuth2 refresh - PrivateKeyPassword never logged' {
         $joined = $script:capturedMessages -join "`n"
         $joined | Should -Not -Match ([regex]::Escape($plainPassword))
     }
+
+    It 'never surfaces the plaintext private key password when New-PfbJwtToken actually decrypts a real encrypted key' {
+        # Unlike the test above, Invoke-PfbOAuth2Login is NOT mocked here -- this exercises the
+        # real Invoke-PfbOAuth2Login -> New-PfbJwtToken path, including the actual PKCS#8
+        # encrypted-private-key decryption in New-PfbJwtToken.ps1 (the only place in the codebase
+        # that marshals PrivateKeyPassword from a SecureString to plaintext). Only the network
+        # calls (version negotiation and the OAuth2 token exchange) are mocked.
+        $plainPassword = 'super-secret-real-decrypt-password'
+        $keyPassword = ConvertTo-SecureString $plainPassword -AsPlainText -Force
+
+        $rsa = [System.Security.Cryptography.RSA]::Create(2048)
+        $pbeParams = [System.Security.Cryptography.PbeParameters]::new(
+            [System.Security.Cryptography.PbeEncryptionAlgorithm]::Aes256Cbc,
+            [System.Security.Cryptography.HashAlgorithmName]::SHA256,
+            100000)
+        $keyPem = $rsa.ExportEncryptedPkcs8PrivateKeyPem($plainPassword, $pbeParams)
+        $keyPath = Join-Path $TestDrive 'encrypted-test-key.pem'
+        Set-Content -Path $keyPath -Value $keyPem -NoNewline
+
+        $script:capturedMessages = [System.Collections.Generic.List[string]]::new()
+        Mock -ModuleName PureStorageFlashBladePowerShell Write-Verbose {
+            $script:capturedMessages.Add([string]$Message)
+        }
+        Mock -ModuleName PureStorageFlashBladePowerShell Write-Warning {
+            $script:capturedMessages.Add([string]$Message)
+        }
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+            [PSCustomObject]@{ versions = @('2.26') }
+        } -ParameterFilter { $Uri -like '*api_version*' }
+        Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+            [PSCustomObject]@{ access_token = 'oauth-token'; expires_in = 60 }
+        } -ParameterFilter { $Uri -eq 'https://fb.test/oauth2/1.0/token' }
+
+        $conn = Connect-PfbArray -Endpoint 'fb.test' -Username 'pureuser' -ClientId 'client-1' `
+            -Issuer 'myapp' -KeyId 'key-1' -PrivateKeyFile $keyPath -PrivateKeyPassword $keyPassword
+
+        # Confirms the real decryption/signing path actually succeeded (not silently short-circuited).
+        $conn.AuthToken | Should -Be 'oauth-token'
+
+        $joined = $script:capturedMessages -join "`n"
+        $joined | Should -Not -Match ([regex]::Escape($plainPassword))
+    }
 }
