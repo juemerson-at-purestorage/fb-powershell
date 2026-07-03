@@ -19,6 +19,17 @@ function Connect-PfbArray {
         The optional long-lived API token can be retrieved from /admins/api-tokens for
         future passwordless reconnects.
 
+        OAuth2/Certificate Authentication Flow:
+        When using -ClientId/-Issuer/-KeyId/-PrivateKeyFile, the cmdlet mints a
+        short-lived (5 minute) JWT and exchanges it for an OAuth2 access token. That
+        access token's lifetime (access_token_ttl_in_ms) is set per API client by an
+        admin on the array -- anywhere from 1 second to 24 hours -- and is not knowable
+        in advance. The connection automatically refreshes the access token before it
+        expires (and, as a fallback, immediately after a 401 caused by early expiry or
+        clock skew), so Certificate-authenticated sessions behave like every other
+        authentication method here: no manual reconnect required. See .NOTES for what's
+        retained in memory to make this possible.
+
         Auto-negotiates the highest supported API version unless explicitly specified.
         The connection is cached and becomes the default for subsequent cmdlet calls.
     .PARAMETER Endpoint
@@ -53,6 +64,13 @@ function Connect-PfbArray {
         Bypass SSL certificate validation. Common for lab environments with self-signed certs.
     .PARAMETER HttpTimeout
         HTTP request timeout in milliseconds. Default is 30000 (30 seconds).
+    .NOTES
+        Certificate/OAuth2 sessions retain -ClientId, -Issuer, -KeyId, -PrivateKeyFile,
+        and -PrivateKeyPassword (as a SecureString) on the connection object for the
+        session's lifetime, so the access token can be silently re-minted before or
+        immediately after it expires. This mirrors the existing precedent of retaining
+        -ApiToken for the -Credential/-Password auto-reconnect flow -- same risk class,
+        not a new category of exposure.
     .EXAMPLE
         $array = Connect-PfbArray -Endpoint fb01.example.com -ApiToken $token -IgnoreCertificateError
 
