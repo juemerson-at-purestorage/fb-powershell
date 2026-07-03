@@ -345,6 +345,48 @@ Describe 'Invoke-PfbApiRequest - Certificate/OAuth2 token refresh' {
         }
     }
 
+    Context 'Reactive fallback on 403 (Certificate) -- real FlashBlade 4.8.2 behavior' {
+        It 'refreshes and retries once when the array returns 403 for an invalid Bearer token' {
+            # Live testing against a real FlashBlade array (Purity//FB 4.8.2 / REST 2.26) proved it
+            # returns HTTP 403, not 401, for ANY invalid Bearer-token auth failure (confirmed with
+            # both a genuinely-expired OAuth2 access token and a garbage bearer token). Certificate
+            # connections must treat 403 the same as 401 for reconnect purposes.
+            $array = New-CertificateConnection -TokenExpiresAt ((Get-Date).ToUniversalTime().AddHours(1))
+            $staleCachedClone = New-CertificateConnection -TokenExpiresAt ((Get-Date).ToUniversalTime().AddHours(1)) -AuthToken 'stale-cached-token'
+            InModuleScope PureStorageFlashBladePowerShell -Parameters @{ staleCachedClone = $staleCachedClone } {
+                $script:PfbArrays = @{ $staleCachedClone.Endpoint = $staleCachedClone }
+                $script:PfbDefaultArray = $staleCachedClone
+            }
+
+            Mock -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login {
+                [PSCustomObject]@{ AccessToken = 'refreshed-token'; ExpiresAt = (Get-Date).ToUniversalTime().AddHours(1); TtlSeconds = 3600 }
+            }
+
+            $script:oauthCallCount = 0
+            Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+                $script:oauthCallCount++
+                if ($script:oauthCallCount -eq 1) {
+                    throw (New-MockHttpError -StatusCode 403 -Message 'Access Denied')
+                }
+                [PSCustomObject]@{ items = @() }
+            } -ParameterFilter { $Uri -like '*file-systems*' }
+
+            InModuleScope PureStorageFlashBladePowerShell -Parameters @{ array = $array } {
+                Invoke-PfbApiRequest -Array $array -Method GET -Endpoint 'file-systems' | Out-Null
+            }
+
+            Should -Invoke -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login -Times 1 -Exactly
+            $array.AuthToken | Should -Be 'refreshed-token'
+            $script:oauthCallCount | Should -Be 2
+
+            $cachedDefaultToken = InModuleScope PureStorageFlashBladePowerShell { $script:PfbDefaultArray.AuthToken }
+            $cachedArraysToken  = InModuleScope PureStorageFlashBladePowerShell -Parameters @{ array = $array } { $script:PfbArrays[$array.Endpoint].AuthToken }
+
+            $cachedDefaultToken | Should -Be 'refreshed-token'
+            $cachedArraysToken  | Should -Be 'refreshed-token'
+        }
+    }
+
     Context 'Other auth methods unaffected' {
         It 'never calls Invoke-PfbOAuth2Login for an ApiToken-authenticated connection' {
             $array = [PSCustomObject]@{
@@ -367,6 +409,36 @@ Describe 'Invoke-PfbApiRequest - Certificate/OAuth2 token refresh' {
             }
 
             Should -Invoke -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login -Times 0
+        }
+
+        It 'does NOT attempt reconnect for an ApiToken-authenticated connection on 403 -- regression guard: ApiToken/Credential/PSCredential stay 401-only' {
+            # ApiToken/Credential/PSCredential use the x-auth-token session mechanism, which has NOT
+            # been proven to share the real array's 403-for-invalid-Bearer-token behavior. Widening
+            # the shared reconnect condition to include 403 for these auth methods would be an
+            # unproven, unintended behavior change -- so a 403 here must still throw immediately.
+            $array = [PSCustomObject]@{
+                Endpoint             = 'fb.test'
+                ApiVersion           = '2.26'
+                AuthToken            = 'session-token'
+                BearerToken          = $null
+                ApiToken             = 'T-fake-token'
+                AuthMethod           = 'ApiToken'
+                SkipCertificateCheck = $false
+            }
+
+            Mock -ModuleName PureStorageFlashBladePowerShell Connect-PfbArrayInternal { throw 'should not be called' }
+            Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+                throw (New-MockHttpError -StatusCode 403 -Message 'Access Denied')
+            } -ParameterFilter { $Uri -like '*file-systems*' }
+
+            {
+                InModuleScope PureStorageFlashBladePowerShell -Parameters @{ array = $array } {
+                    Invoke-PfbApiRequest -Array $array -Method GET -Endpoint 'file-systems' | Out-Null
+                }
+            } | Should -Throw -ExpectedMessage '*FlashBlade API error*'
+
+            Should -Invoke -ModuleName PureStorageFlashBladePowerShell Connect-PfbArrayInternal -Times 0
+            $array.AuthToken | Should -Be 'session-token'
         }
     }
 }
