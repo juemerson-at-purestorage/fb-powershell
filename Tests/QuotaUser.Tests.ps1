@@ -25,6 +25,20 @@ Describe 'Get-PfbQuotaUser flatten' {
         $result.FileSystemName | Should -Be 'fs-home'
         $result.UserName       | Should -Be 'jdoe'
     }
+
+    It 'sends only file_system_names when -Name is not supplied' {
+        Get-PfbQuotaUser -FileSystemName 'fs-home' -Array $fakeArray
+        Should -Invoke Invoke-PfbApiRequest -ModuleName PureStorageFlashBladePowerShell -Times 1 -Exactly -ParameterFilter {
+            $QueryParams['file_system_names'] -eq 'fs-home' -and -not $QueryParams.ContainsKey('names')
+        }
+    }
+
+    It 'sends only names (omits file_system_names) when -Name is supplied alongside the mandatory -FileSystemName -- FlashBlade rejects combining names with file_system_names, confirmed live against our lab array' {
+        Get-PfbQuotaUser -FileSystemName 'fs-home' -Name 'fs-home/1235' -Array $fakeArray
+        Should -Invoke Invoke-PfbApiRequest -ModuleName PureStorageFlashBladePowerShell -Times 1 -Exactly -ParameterFilter {
+            $QueryParams['names'] -eq 'fs-home/1235' -and -not $QueryParams.ContainsKey('file_system_names')
+        }
+    }
 }
 
 Describe 'Remove-PfbQuotaUser' {
