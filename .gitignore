@@ -20,6 +20,10 @@ swagger.json
 .fb*-spec.yaml
 Tests/.coverage-*.csv
 
+# AI-planning workflow artifacts — working docs, not shipped documentation
+.superpowers/
+docs/superpowers/
+
 # PowerShell
 *.pssproj.user
 
