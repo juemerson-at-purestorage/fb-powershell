@@ -34,14 +34,14 @@ function Remove-PfbPolicyFileSystem {
         [Parameter()] [PSCustomObject]$Array
     )
 
-    Assert-PfbConnection -Array ([ref]$Array)
-
     if (-not $PolicyName -and -not $PolicyId) {
         throw 'You must supply either -PolicyName or -PolicyId.'
     }
     if (-not $MemberName -and -not $MemberId) {
         throw 'You must supply either -MemberName or -MemberId.'
     }
+
+    Assert-PfbConnection -Array ([ref]$Array)
 
     $queryParams = @{}
     if ($PolicyName) { $queryParams['policy_names'] = $PolicyName }
