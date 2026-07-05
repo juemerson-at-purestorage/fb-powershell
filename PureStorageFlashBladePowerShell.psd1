@@ -394,6 +394,7 @@
         'Remove-PfbOpenFile',
         'Remove-PfbPolicy',
         'Remove-PfbPolicyFileSystemReplicaLink',
+        'Remove-PfbPolicyFileSystem',
         'Remove-PfbPolicyMember',
         'Remove-PfbPublicKey',
         'Remove-PfbQosPolicy',
