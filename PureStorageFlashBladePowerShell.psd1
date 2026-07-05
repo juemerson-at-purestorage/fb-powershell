@@ -289,6 +289,7 @@
         'New-PfbOidcIdp',
         'New-PfbPolicy',
         'New-PfbPolicyFileSystemReplicaLink',
+        'New-PfbPolicyFileSystem',
         'New-PfbPolicyMember',
         'New-PfbPublicKey',
         'New-PfbQosPolicy',
