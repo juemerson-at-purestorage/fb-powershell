@@ -37,28 +37,23 @@ function New-PfbQuotaUser {
 
         Shows what would happen without actually creating the quota.
     #>
-    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium', DefaultParameterSetName = 'ByName')]
     param(
         [Parameter(Mandatory)] [string]$FileSystemName,
-        [Parameter()] [string]$UserName,
-        [Parameter()] [string]$UserId,
+        [Parameter(Mandatory, ParameterSetName = 'ByName')] [string]$UserName,
+        [Parameter(Mandatory, ParameterSetName = 'ById')] [string]$UserId,
         [Parameter()] [int64]$Quota,
         [Parameter()] [hashtable]$Attributes,
         [Parameter()] [PSCustomObject]$Array
     )
     Assert-PfbConnection -Array ([ref]$Array)
 
-    if (-not $UserName -and -not $UserId) {
-        throw 'Provide -UserName or -UserId to identify the user for the quota.'
-    }
-    if ($UserName -and $UserId) {
-        throw '-UserName and -UserId are mutually exclusive; specify exactly one.'
-    }
-
     if ($Attributes) { $body = $Attributes }
     else {
-        $body = @{}
-        if ($Quota -gt 0) { $body['quota'] = $Quota }
+        if ($Quota -le 0) {
+            throw 'Provide -Quota (a positive value) or -Attributes to specify the quota body.'
+        }
+        $body = @{ quota = $Quota }
     }
 
     $q = @{ 'file_system_names' = $FileSystemName }

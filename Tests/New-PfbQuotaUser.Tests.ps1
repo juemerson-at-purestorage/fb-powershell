@@ -80,4 +80,11 @@ Describe 'New-PfbQuotaUser' {
                 Should -Throw
         }
     }
+
+    Context 'body validation' {
+        It 'throws when neither -Quota nor -Attributes is supplied' {
+            { New-PfbQuotaUser -FileSystemName 'fs-share' -UserName 'jdoe' -Confirm:$false -Array $fakeArray } |
+                Should -Throw
+        }
+    }
 }
