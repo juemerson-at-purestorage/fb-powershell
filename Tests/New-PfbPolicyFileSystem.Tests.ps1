@@ -42,4 +42,14 @@ Describe 'New-PfbPolicyFileSystem' {
         New-PfbPolicyFileSystem -PolicyName 'snap-daily' -MemberName 'fs-share' -WhatIf -Array $fakeArray
         Should -Invoke -ModuleName PureStorageFlashBladePowerShell Invoke-PfbApiRequest -Times 0 -Exactly
     }
+
+    It 'throws when neither -PolicyName nor -PolicyId is supplied, before any API call' {
+        { New-PfbPolicyFileSystem -MemberName 'fs-share' -Confirm:$false -Array $fakeArray } | Should -Throw
+        Should -Invoke -ModuleName PureStorageFlashBladePowerShell Invoke-PfbApiRequest -Times 0 -Exactly
+    }
+
+    It 'throws when neither -MemberName nor -MemberId is supplied, before any API call' {
+        { New-PfbPolicyFileSystem -PolicyName 'snap-daily' -Confirm:$false -Array $fakeArray } | Should -Throw
+        Should -Invoke -ModuleName PureStorageFlashBladePowerShell Invoke-PfbApiRequest -Times 0 -Exactly
+    }
 }
