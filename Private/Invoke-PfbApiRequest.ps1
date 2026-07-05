@@ -5,7 +5,7 @@ function Invoke-PfbApiRequest {
     .DESCRIPTION
         Every public cmdlet delegates to this function. Handles URL construction,
         authentication headers, query parameters, pagination, SSL bypass, and error handling.
-        Supports auto-reconnect on 401 using stored API token.
+        Supports auto-reconnect using a stored API token when the session token is rejected.
     #>
     [CmdletBinding()]
     param(
@@ -85,8 +85,10 @@ function Invoke-PfbApiRequest {
                 $statusCode = [int]$_.Exception.Response.StatusCode
             }
 
-            # Auto-reconnect on 401 if we have a stored API token
-            if ($statusCode -eq 401 -and $isFirstRequest -and -not [string]::IsNullOrEmpty($Array.ApiToken)) {
+            # Auto-reconnect if we have a stored API token. Real FlashBlade arrays return
+            # 403 (not 401) for a missing/invalid x-auth-token -- confirmed live against
+            # our lab array -- so 401 alone never triggers this path against a real array.
+            if (($statusCode -eq 401 -or $statusCode -eq 403) -and $isFirstRequest -and -not [string]::IsNullOrEmpty($Array.ApiToken)) {
                 $reconnectSucceeded = $false
                 try {
                     $reconnected = Connect-PfbArrayInternal -Endpoint $Array.Endpoint -ApiToken $Array.ApiToken -ApiVersion $Array.ApiVersion -SkipCertificateCheck:$Array.SkipCertificateCheck
