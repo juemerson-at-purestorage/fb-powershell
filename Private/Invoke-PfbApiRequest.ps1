@@ -67,6 +67,9 @@ function Invoke-PfbApiRequest {
         $restParams['SkipCertificateCheck'] = $true
     }
 
+    # HTTP timeout handling — default to 30s if the connection object predates this field
+    $restParams['TimeoutSec'] = if ($Array.HttpTimeoutMs) { [int][Math]::Ceiling($Array.HttpTimeoutMs / 1000.0) } else { 30 }
+
     $allItems = [System.Collections.Generic.List[object]]::new()
     $totalItemCount = $null
     $hasMore = $true
@@ -89,7 +92,7 @@ function Invoke-PfbApiRequest {
             if ($statusCode -eq 401 -and $isFirstRequest -and -not [string]::IsNullOrEmpty($Array.ApiToken)) {
                 $reconnectSucceeded = $false
                 try {
-                    $reconnected = Connect-PfbArrayInternal -Endpoint $Array.Endpoint -ApiToken $Array.ApiToken -ApiVersion $Array.ApiVersion -SkipCertificateCheck:$Array.SkipCertificateCheck
+                    $reconnected = Connect-PfbArrayInternal -Endpoint $Array.Endpoint -ApiToken $Array.ApiToken -ApiVersion $Array.ApiVersion -SkipCertificateCheck:$Array.SkipCertificateCheck -TimeoutSec $restParams['TimeoutSec']
                     $Array.AuthToken = $reconnected.AuthToken
                     $Array.ConnectedAt = $reconnected.ConnectedAt
                     $headers['x-auth-token'] = $Array.AuthToken
@@ -181,7 +184,10 @@ function Connect-PfbArrayInternal {
         [string]$ApiVersion = '2.0',
 
         [Parameter()]
-        [switch]$SkipCertificateCheck
+        [switch]$SkipCertificateCheck,
+
+        [Parameter()]
+        [int]$TimeoutSec = 30
     )
 
     $loginUri = "https://${Endpoint}/api/login"
@@ -193,6 +199,7 @@ function Connect-PfbArrayInternal {
         Method  = 'POST'
         Uri     = $loginUri
         Headers = $loginHeaders
+        TimeoutSec = $TimeoutSec
     }
 
     if ($SkipCertificateCheck -and $PSVersionTable.PSVersion.Major -ge 6) {

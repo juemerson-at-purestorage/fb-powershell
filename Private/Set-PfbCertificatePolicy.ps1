@@ -3,8 +3,9 @@ function Set-PfbCertificatePolicy {
     .SYNOPSIS
         Configures SSL certificate validation bypass for FlashBlade connections.
     .DESCRIPTION
-        Handles the divergence between PowerShell 5.1 and 7+ for ignoring SSL certificate errors.
-        On PS 5.1, uses ServicePointManager callback. On PS 7+, sets a flag for -SkipCertificateCheck.
+        Handles the divergence between PowerShell 5.1 and 7+ for ignoring SSL certificate
+        errors. On PS 5.1, uses ServicePointManager callback. On PS 7+, sets a flag for
+        -SkipCertificateCheck. Does not affect TLS protocol version -- see Set-PfbTlsProtocol.
     #>
     [CmdletBinding()]
     param()
@@ -25,7 +26,6 @@ public class TrustAllCertsPolicy : ICertificatePolicy {
 "@
         }
         [System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
-        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
     }
     # PowerShell 7+: handled via -SkipCertificateCheck on Invoke-RestMethod
 }
