@@ -81,6 +81,17 @@ function Get-PfbObjectStoreUserAccessPolicy {
         if ($Limit -gt 0)              { $queryParams['limit']        = $Limit }
         if ($TotalOnly)                  { $queryParams['total_only']   = 'true' }
 
-        Invoke-PfbApiRequest -Array $Array -Method GET -Endpoint 'object-store-users/object-store-access-policies' -QueryParams $queryParams -AutoPaginate
+        $response = Invoke-PfbApiRequest -Array $Array -Method GET -Endpoint 'object-store-users/object-store-access-policies' -QueryParams $queryParams -AutoPaginate
+        foreach ($item in $response) {
+            if ($null -ne $item) {
+                $memberNameValue = $null
+                if ($null -ne $item.member) { $memberNameValue = $item.member.name }
+                $policyNameValue = $null
+                if ($null -ne $item.policy) { $policyNameValue = $item.policy.name }
+                $item | Add-Member -MemberType NoteProperty -Name 'MemberName' -Value $memberNameValue -Force
+                $item | Add-Member -MemberType NoteProperty -Name 'PolicyName' -Value $policyNameValue -Force
+            }
+            $item
+        }
     }
 }
