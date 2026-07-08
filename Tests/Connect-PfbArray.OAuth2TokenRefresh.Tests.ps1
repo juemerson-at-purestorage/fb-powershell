@@ -411,35 +411,10 @@ Describe 'Invoke-PfbApiRequest - Certificate/OAuth2 token refresh' {
             Should -Invoke -ModuleName PureStorageFlashBladePowerShell Invoke-PfbOAuth2Login -Times 0
         }
 
-        It 'does NOT attempt reconnect for an ApiToken-authenticated connection on 403 -- regression guard: ApiToken/Credential/PSCredential stay 401-only' {
-            # ApiToken/Credential/PSCredential use the x-auth-token session mechanism, which has NOT
-            # been proven to share the real array's 403-for-invalid-Bearer-token behavior. Widening
-            # the shared reconnect condition to include 403 for these auth methods would be an
-            # unproven, unintended behavior change -- so a 403 here must still throw immediately.
-            $array = [PSCustomObject]@{
-                Endpoint             = 'fb.test'
-                ApiVersion           = '2.26'
-                AuthToken            = 'session-token'
-                BearerToken          = $null
-                ApiToken             = 'T-fake-token'
-                AuthMethod           = 'ApiToken'
-                SkipCertificateCheck = $false
-            }
-
-            Mock -ModuleName PureStorageFlashBladePowerShell Connect-PfbArrayInternal { throw 'should not be called' }
-            Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
-                throw (New-MockHttpError -StatusCode 403 -Message 'Access Denied')
-            } -ParameterFilter { $Uri -like '*file-systems*' }
-
-            {
-                InModuleScope PureStorageFlashBladePowerShell -Parameters @{ array = $array } {
-                    Invoke-PfbApiRequest -Array $array -Method GET -Endpoint 'file-systems' | Out-Null
-                }
-            } | Should -Throw -ExpectedMessage '*FlashBlade API error*'
-
-            Should -Invoke -ModuleName PureStorageFlashBladePowerShell Connect-PfbArrayInternal -Times 0
-            $array.AuthToken | Should -Be 'session-token'
-        }
+        # NOTE: the reconnect-on-403 behavior for ApiToken/Credential/PSCredential connections
+        # (proven live against a real array in PR #7) is covered by
+        # Invoke-PfbApiRequest.Reconnect.Tests.ps1. The earlier regression guard here, which
+        # asserted those auth methods stayed 401-only, was disproven by that live testing and removed.
     }
 }
 
