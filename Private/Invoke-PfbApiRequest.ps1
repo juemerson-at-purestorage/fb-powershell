@@ -5,7 +5,7 @@ function Invoke-PfbApiRequest {
     .DESCRIPTION
         Every public cmdlet delegates to this function. Handles URL construction,
         authentication headers, query parameters, pagination, SSL bypass, and error handling.
-        Supports auto-reconnect on 401 using stored API token.
+        Supports auto-reconnect using a stored API token when the session token is rejected.
     #>
     [CmdletBinding()]
     param(
@@ -122,22 +122,20 @@ function Invoke-PfbApiRequest {
                 $statusCode = [int]$_.Exception.Response.StatusCode
             }
 
-            # Auto-reconnect on 401: ApiToken/Credential/PSCredential sessions have a
-            # cached long-lived API token; Certificate sessions refresh the OAuth2
-            # access token instead (fallback for what the proactive check above can't
-            # anticipate: clock skew, or early revocation).
+            # Auto-reconnect on an auth failure: ApiToken/Credential/PSCredential sessions
+            # have a cached long-lived API token to re-login with; Certificate sessions
+            # refresh the OAuth2 access token instead (fallback for what the proactive check
+            # above can't anticipate: clock skew, or early revocation).
             $canReconnect = ($isFirstRequest -and (
                 -not [string]::IsNullOrEmpty($Array.ApiToken) -or $Array.AuthMethod -eq 'Certificate'
             ))
 
-            # Live testing against a real FlashBlade array (Purity//FB 4.8.2 / REST 2.26) proved it
-            # returns HTTP 403, not 401, for ANY invalid Bearer-token auth failure (confirmed with
-            # both a genuinely-expired OAuth2 access token and a garbage bearer token). Without this,
-            # the Certificate/OAuth2 reactive-refresh safety net above never actually triggers against
-            # that array. ApiToken/Credential/PSCredential use a different mechanism (the x-auth-token
-            # session header) that has NOT been proven to share this 403-for-invalid-auth behavior, so
-            # those parameter sets deliberately stay 401-only.
-            $isAuthFailureStatus = ($statusCode -eq 401) -or ($statusCode -eq 403 -and $Array.AuthMethod -eq 'Certificate')
+            # Live testing against real FlashBlade arrays proved they return HTTP 403, not 401,
+            # for a missing/invalid token -- confirmed for BOTH the x-auth-token session header
+            # (ApiToken/Credential/PSCredential) and the OAuth2 Bearer token (Certificate). So the
+            # reconnect gate must fire on 401 OR 403 for every auth method; a 401-only (or
+            # 403-Certificate-only) gate never actually triggers against a real array.
+            $isAuthFailureStatus = ($statusCode -eq 401 -or $statusCode -eq 403)
             if ($isAuthFailureStatus -and $canReconnect) {
                 $reconnectSucceeded = $false
                 try {
