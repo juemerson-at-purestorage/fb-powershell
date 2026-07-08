@@ -4,44 +4,44 @@ function Remove-PfbObjectStoreAccessPolicyRole {
         Removes the link between an access policy and an object store role.
     .DESCRIPTION
         Deletes the association between an object store access policy and an
-        object store role. The role will no longer inherit the permissions
-        defined by the policy.
+        object store role. Accepts flattened association objects from
+        Get-PfbObjectStoreAccessPolicyRole on the pipeline.
     .PARAMETER PolicyName
-        The name of the access policy.
+        The name of the access policy. Binds from pipeline property 'PolicyName'.
     .PARAMETER MemberName
-        The name of the object store role to unlink.
+        The name of the object store role to unlink. Binds from pipeline property 'MemberName'.
     .PARAMETER Array
         The FlashBlade connection object.
     .EXAMPLE
         Remove-PfbObjectStoreAccessPolicyRole -PolicyName "full-access-policy" -MemberName "s3-admin-role"
         Removes the link between the policy and the role.
     .EXAMPLE
-        Remove-PfbObjectStoreAccessPolicyRole -PolicyName "temp-policy" -MemberName "temp-role"
-        Unlinks a temporary role from its policy.
-    .EXAMPLE
-        Get-PfbObjectStoreAccessPolicyRole -PolicyName "old-policy" |
-            ForEach-Object { Remove-PfbObjectStoreAccessPolicyRole -PolicyName $_.policy.name -MemberName $_.member.name }
+        Get-PfbObjectStoreAccessPolicyRole -PolicyName "old-policy" | Remove-PfbObjectStoreAccessPolicyRole
         Removes all role links from a policy.
     #>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
     param(
-        [Parameter(Mandatory, Position = 0)]
+        [Parameter(Mandatory, Position = 0, ValueFromPipelineByPropertyName)]
         [string]$PolicyName,
 
-        [Parameter(Mandatory, Position = 1)]
+        [Parameter(Mandatory, Position = 1, ValueFromPipelineByPropertyName)]
         [string]$MemberName,
 
         [Parameter()] [PSCustomObject]$Array
     )
 
-    Assert-PfbConnection -Array ([ref]$Array)
-
-    $queryParams = @{
-        'policy_names' = $PolicyName
-        'member_names' = $MemberName
+    begin {
+        Assert-PfbConnection -Array ([ref]$Array)
     }
 
-    if ($PSCmdlet.ShouldProcess("Policy=$PolicyName, Role=$MemberName", 'Remove access policy role link')) {
-        Invoke-PfbApiRequest -Array $Array -Method DELETE -Endpoint 'object-store-access-policies/object-store-roles' -QueryParams $queryParams
+    process {
+        $queryParams = @{
+            'policy_names' = $PolicyName
+            'member_names' = $MemberName
+        }
+
+        if ($PSCmdlet.ShouldProcess("Policy=$PolicyName, Role=$MemberName", 'Remove access policy role link')) {
+            Invoke-PfbApiRequest -Array $Array -Method DELETE -Endpoint 'object-store-access-policies/object-store-roles' -QueryParams $queryParams
+        }
     }
 }

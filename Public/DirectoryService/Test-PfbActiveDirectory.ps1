@@ -4,13 +4,14 @@ function Test-PfbActiveDirectory {
         Tests the FlashBlade Active Directory configuration.
     .DESCRIPTION
         The Test-PfbActiveDirectory cmdlet runs a connectivity and configuration test against
-        an Active Directory configuration on the connected Pure Storage FlashBlade. Returns
+        an Active Directory configuration on the connected FlashBlade. Returns
         test results including domain connectivity status, authentication checks, and any errors
-        encountered. The AD configuration to test can be identified by name or ID.
+        encountered. The AD configuration(s) to test can be identified by name or ID, and names
+        accept pipeline input by property name.
     .PARAMETER Name
-        The name of the Active Directory configuration to test.
+        One or more names of Active Directory configurations to test.
     .PARAMETER Id
-        The ID of the Active Directory configuration to test.
+        One or more IDs of Active Directory configurations to test.
     .PARAMETER Array
         The FlashBlade connection object. If not specified, the default connection is used.
     .EXAMPLE
@@ -29,16 +30,27 @@ function Test-PfbActiveDirectory {
     [CmdletBinding(DefaultParameterSetName = 'List')]
     param(
         [Parameter(ParameterSetName = 'ByName', ValueFromPipelineByPropertyName)]
-        [string]$Name,
-        [Parameter(ParameterSetName = 'ById')] [string]$Id,
+        [string[]]$Name,
+        [Parameter(ParameterSetName = 'ById')] [string[]]$Id,
         [Parameter()] [PSCustomObject]$Array
     )
 
-    Assert-PfbConnection -Array ([ref]$Array)
+    begin {
+        Assert-PfbConnection -Array ([ref]$Array)
+        $allNames = [System.Collections.Generic.List[string]]::new()
+        $allIds   = [System.Collections.Generic.List[string]]::new()
+    }
 
-    $queryParams = @{}
-    if ($Name) { $queryParams['names'] = $Name }
-    if ($Id)   { $queryParams['ids']   = $Id }
+    process {
+        if ($Name) { foreach ($n in $Name) { $allNames.Add($n) } }
+        if ($Id)   { foreach ($i in $Id)   { $allIds.Add($i) } }
+    }
 
-    Invoke-PfbApiRequest -Array $Array -Method GET -Endpoint 'active-directory/test' -QueryParams $queryParams -AutoPaginate
+    end {
+        $queryParams = @{}
+        if ($allNames.Count -gt 0) { $queryParams['names'] = $allNames -join ',' }
+        if ($allIds.Count -gt 0)   { $queryParams['ids']   = $allIds -join ',' }
+
+        Invoke-PfbApiRequest -Array $Array -Method GET -Endpoint 'active-directory/test' -QueryParams $queryParams -AutoPaginate
+    }
 }
