@@ -1,6 +1,6 @@
 ﻿@{
     RootModule        = 'PureStorageFlashBladePowerShell.psm1'
-    ModuleVersion     = '3.0.0'
+    ModuleVersion     = '2.1.0'
     GUID              = 'b25473b3-9eb7-414d-8da1-264e10f73d86'
     Author            = 'Pure Storage, Inc.'
     CompanyName       = 'Pure Storage, Inc.'
@@ -542,11 +542,12 @@
             ProjectUri   = 'https://github.com/PureStorage-OpenConnect/flashblade-powershell-toolkit'
             LicenseUri   = 'https://github.com/PureStorage-OpenConnect/flashblade-powershell-toolkit/blob/master/LICENSE'
             ReleaseNotes = @'
-v3.0.0 - Auth resilience + cmdlet correctness (integrates PRs #4-8).
-  Breaking:
-  - Removed four public cmdlets that never functioned (they POSTed to endpoints
-    that reject POST, confirmed live as HTTP 400/405): New-PfbFileSystemSnapshotPolicy,
-    Get-PfbPolicyMember, New-PfbPolicyMember, Remove-PfbPolicyMember. Use the new
+v2.1.0 - Auth resilience + cmdlet correctness (integrates PRs #4-8).
+  Removed:
+  - Four public cmdlets that never functioned (they POSTed to endpoints that
+    reject POST, confirmed live as HTTP 400/405): New-PfbFileSystemSnapshotPolicy,
+    Get-PfbPolicyMember, New-PfbPolicyMember, Remove-PfbPolicyMember. Because they
+    were non-functional, no working script could have depended on them. Use the new
     New-PfbPolicyFileSystem / Remove-PfbPolicyFileSystem instead.
 
   Added:
