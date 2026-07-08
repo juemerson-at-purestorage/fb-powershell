@@ -1,6 +1,6 @@
 ﻿@{
     RootModule        = 'PureStorageFlashBladePowerShell.psm1'
-    ModuleVersion     = '2.0.5'
+    ModuleVersion     = '3.0.0'
     GUID              = 'b25473b3-9eb7-414d-8da1-264e10f73d86'
     Author            = 'Pure Storage, Inc.'
     CompanyName       = 'Pure Storage, Inc.'
@@ -542,7 +542,33 @@
             ProjectUri   = 'https://github.com/PureStorage-OpenConnect/flashblade-powershell-toolkit'
             LicenseUri   = 'https://github.com/PureStorage-OpenConnect/flashblade-powershell-toolkit/blob/master/LICENSE'
             ReleaseNotes = @'
-v2.0.5 - File-system demote support. See CHANGELOG.md.
+v3.0.0 - Auth resilience + cmdlet correctness (integrates PRs #4-8).
+  Breaking:
+  - Removed four public cmdlets that never functioned (they POSTed to endpoints
+    that reject POST, confirmed live as HTTP 400/405): New-PfbFileSystemSnapshotPolicy,
+    Get-PfbPolicyMember, New-PfbPolicyMember, Remove-PfbPolicyMember. Use the new
+    New-PfbPolicyFileSystem / Remove-PfbPolicyFileSystem instead.
+
+  Added:
+  - Connect-PfbArray: username/password login now works on arrays below REST API 2.26
+    via a Posh-SSH fallback (version-gated; native /api/login is used on 2.26+).
+  - Connect-PfbArray: automatic OAuth2 access-token refresh for the Certificate flow,
+    so those sessions auto-reconnect like the other auth methods.
+  - New-PfbPolicyFileSystem / Remove-PfbPolicyFileSystem (attach/detach a policy to a
+    file system via the correct policies/file-systems endpoint).
+  - New-PfbQuotaUser: -UserId as an alternative to -UserName.
+
+  Fixed:
+  - Auto-reconnect now triggers on HTTP 403 as well as 401 for every auth method
+    (real FlashBlade arrays return 403, not 401, for a missing/invalid token).
+  - Pipeline-binding gaps across relationship/membership cmdlets (piped items were
+    dropped or silently no-op'd); one API call per piped source.
+  - New-PfbQuotaUser request shape; Get-/Remove-/Update-PfbQuotaUser query-param keys.
+
+  Verified: 139/139 Pester tests pass under pwsh 7 (1 skipped), plus live testing
+  against real FlashBlade arrays on both sides of the REST 2.26 threshold.
+
+v2.0.5 - File-system demote support.
   Changed:
   - Update-PfbFileSystem: added -DiscardNonSnapshottedData switch (sends the
     discard_non_snapshotted_data=true query param) and a typed -RequestedPromotionState
