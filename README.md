@@ -176,7 +176,7 @@ Remove-PfbFileSystem -Name "test-fs" -Confirm
 | **File Systems** | Get, New, Update, Remove | `Get-PfbFileSystem`, `New-PfbFileSystem` |
 | **Snapshots** | Get, New, Remove | `Get-PfbFileSystemSnapshot` |
 | **Buckets** | Get, New, Update, Remove | `Get-PfbBucket`, `New-PfbBucket` |
-| **Policies** | Get, New, Update, Remove | `Get-PfbPolicy`, `New-PfbPolicyMember` |
+| **Policies** | Get, New, Update, Remove | `Get-PfbPolicy`, `New-PfbPolicyFileSystem` |
 | **Network** | Get, New, Update, Remove | `Get-PfbSubnet`, `Get-PfbNetworkInterface` |
 | **Hardware** | Get | `Get-PfbHardware`, `Get-PfbBlade` |
 | **Admin** | Get, New, Update, Remove | `Get-PfbAdmin`, `Get-PfbAdminSetting` |
