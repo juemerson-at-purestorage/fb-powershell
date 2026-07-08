@@ -99,11 +99,15 @@ function New-PfbJwtToken {
         if ($PSVersionTable.PSVersion.Major -ge 6) {
             $rsa = [System.Security.Cryptography.RSA]::Create()
             $bytesRead = 0
-            $plainPw = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto(
-                [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($PrivateKeyPassword)
-            )
-            $rsa.ImportEncryptedPkcs8PrivateKey([System.Text.Encoding]::UTF8.GetBytes($plainPw), $keyBytes, [ref]$bytesRead)
-            $plainPw = $null
+            $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($PrivateKeyPassword)
+            try {
+                $plainPw = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
+                $rsa.ImportEncryptedPkcs8PrivateKey([System.Text.Encoding]::UTF8.GetBytes($plainPw), $keyBytes, [ref]$bytesRead)
+            }
+            finally {
+                [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr) | Out-Null
+                $plainPw = $null
+            }
         }
         else {
             throw "Encrypted private keys require PowerShell 7+. Please use an unencrypted key or upgrade PowerShell."
