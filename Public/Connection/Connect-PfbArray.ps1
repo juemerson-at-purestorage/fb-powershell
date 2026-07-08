@@ -25,6 +25,17 @@ function Connect-PfbArray {
         so SSH is not a convenience fallback here -- it's the only mechanism available.
         Install Posh-SSH with: Install-Module -Name Posh-SSH -Scope CurrentUser -Force
 
+        OAuth2/Certificate Authentication Flow:
+        When using -ClientId/-Issuer/-KeyId/-PrivateKeyFile, the cmdlet mints a
+        short-lived (5 minute) JWT and exchanges it for an OAuth2 access token. That
+        access token's lifetime (access_token_ttl_in_ms) is set per API client by an
+        admin on the array -- anywhere from 1 second to 24 hours -- and is not knowable
+        in advance. The connection automatically refreshes the access token before it
+        expires (and, as a fallback, immediately after a 401 caused by early expiry or
+        clock skew), so Certificate-authenticated sessions behave like every other
+        authentication method here: no manual reconnect required. See .NOTES for what's
+        retained in memory to make this possible.
+
         Auto-negotiates the highest supported API version unless explicitly specified.
         The connection is cached and becomes the default for subsequent cmdlet calls.
     .PARAMETER Endpoint
@@ -59,6 +70,13 @@ function Connect-PfbArray {
         Bypass SSL certificate validation. Common for lab environments with self-signed certs.
     .PARAMETER HttpTimeout
         HTTP request timeout in milliseconds. Default is 30000 (30 seconds).
+    .NOTES
+        Certificate/OAuth2 sessions retain -ClientId, -Issuer, -KeyId, -PrivateKeyFile,
+        and -PrivateKeyPassword (as a SecureString) on the connection object for the
+        session's lifetime, so the access token can be silently re-minted before or
+        immediately after it expires. This mirrors the existing precedent of retaining
+        -ApiToken for the -Credential/-Password auto-reconnect flow -- same risk class,
+        not a new category of exposure.
     .EXAMPLE
         $array = Connect-PfbArray -Endpoint fb01.example.com -ApiToken $token -IgnoreCertificateError
 
@@ -195,6 +213,8 @@ function Connect-PfbArray {
     # Authenticate based on method
     $authToken = $null
     $bearerToken = $null
+    $tokenExpiresAt = $null
+    $tokenTtlSeconds = $null
 
     if ($PSCmdlet.ParameterSetName -eq 'ApiToken') {
         # Direct API token login
@@ -202,53 +222,36 @@ function Connect-PfbArray {
     }
     elseif ($PSCmdlet.ParameterSetName -eq 'Certificate') {
         # OAuth2 JWT certificate-based authentication
-        # Step 1: Generate a signed JWT
-        $jwtParams = @{
-            KeyId       = $KeyId
-            ClientId    = $ClientId
-            Issuer      = $Issuer
-            Username    = $Username
+        $oauthLoginParams = @{
+            Endpoint       = $Endpoint
+            ClientId       = $ClientId
+            Issuer         = $Issuer
+            KeyId          = $KeyId
+            Username       = $Username
             PrivateKeyFile = $PrivateKeyFile
         }
         if ($PrivateKeyPassword) {
-            $jwtParams['PrivateKeyPassword'] = $PrivateKeyPassword
-        }
-
-        try {
-            $jwt = New-PfbJwtToken @jwtParams
-        }
-        catch {
-            throw "Failed to generate JWT for OAuth2 authentication: $($_.Exception.Message)"
-        }
-
-        # Step 2: Exchange JWT for OAuth2 access token
-        $oauthBody = "grant_type=urn:ietf:params:oauth:grant-type:token-exchange&subject_token=${jwt}&subject_token_type=urn:ietf:params:oauth:token-type:jwt"
-        $oauthParams = @{
-            Method      = 'POST'
-            Uri         = "https://${Endpoint}/oauth2/1.0/token"
-            Body        = $oauthBody
-            ContentType = 'application/x-www-form-urlencoded'
+            $oauthLoginParams['PrivateKeyPassword'] = $PrivateKeyPassword
         }
         if ($IgnoreCertificateError -and $PSVersionTable.PSVersion.Major -ge 6) {
-            $oauthParams['SkipCertificateCheck'] = $true
+            $oauthLoginParams['SkipCertificateCheck'] = $true
         }
 
-        try {
-            $oauthResponse = Invoke-RestMethod @oauthParams -ErrorAction Stop
-        }
-        catch {
-            throw "OAuth2 token exchange failed for FlashBlade '${Endpoint}': $($_.Exception.Message)"
-        }
-
-        $bearerToken = $oauthResponse.access_token
-        if ([string]::IsNullOrEmpty($bearerToken)) {
-            throw "OAuth2 token exchange returned no access_token from FlashBlade '${Endpoint}'."
-        }
+        $oauthResult = Invoke-PfbOAuth2Login @oauthLoginParams
 
         # The bearer token IS the auth token for REST API calls
         # It goes in the Authorization header, not x-auth-token
+        $bearerToken = $oauthResult.AccessToken
         $authToken = $bearerToken
-        $ApiToken = $null  # No API token in Certificate flow
+        $tokenExpiresAt = $oauthResult.ExpiresAt
+        $tokenTtlSeconds = $oauthResult.TtlSeconds
+        # Deliberately NOT "$ApiToken = $null" here: $ApiToken carries
+        # [ValidateNotNullOrEmpty()] on its PSVariable, which re-validates on ANY
+        # assignment regardless of which parameter set was actually bound -- so
+        # assigning $null unconditionally throws even though this branch never
+        # received -ApiToken. $ApiToken is already $null/unbound for the Certificate
+        # parameter set; leaving it untouched fixes a live, already-shipped crash
+        # (introduced v2.0.3, still in v2.0.5) in every real Certificate/OAuth2 login.
     }
     elseif ($PSCmdlet.ParameterSetName -eq 'Credential' -or $PSCmdlet.ParameterSetName -eq 'PSCredential') {
         $parsedVersions = ConvertTo-PfbVersionObject -Versions $supportedVersions
@@ -378,6 +381,14 @@ function Connect-PfbArray {
         SkipCertificateCheck = [bool]$IgnoreCertificateError
         HttpTimeoutMs        = $HttpTimeout
         ConnectedAt          = [datetime]::UtcNow
+        # Certificate/OAuth2 refresh state — only populated when AuthMethod is 'Certificate'
+        ClientId             = $ClientId
+        Issuer               = $Issuer
+        KeyId                = $KeyId
+        PrivateKeyFile       = $PrivateKeyFile
+        PrivateKeyPassword   = $PrivateKeyPassword
+        TokenExpiresAt       = $tokenExpiresAt
+        TokenTtlSeconds      = $tokenTtlSeconds
     }
 
     # Hide secrets from default display. Sensitive fields (ApiToken, AuthToken,

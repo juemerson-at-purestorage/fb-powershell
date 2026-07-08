@@ -35,6 +35,40 @@ function Invoke-PfbApiRequest {
         [string]$ApiVersionOverride
     )
 
+    # Certificate/OAuth2 sessions: proactively refresh the access token before it expires,
+    # rather than waiting for a 401. A proactive refresh generates no failed-authentication
+    # entry in the array's session log, unlike a reactive 401-triggered refresh.
+    if ($Array.AuthMethod -eq 'Certificate' -and $Array.TokenExpiresAt) {
+        $buffer = [Math]::Min(30, $Array.TokenTtlSeconds * 0.10)
+        $refreshAt = $Array.TokenExpiresAt.AddSeconds(-$buffer)
+        if ((Get-Date).ToUniversalTime() -ge $refreshAt) {
+            # A failure here is NOT fatal: the current token may still be valid (we're only
+            # inside the buffer window, not past actual expiry). Warn and fall through to
+            # attempt the request with the existing token -- the reactive 401 path below is
+            # the real safety net if the token has genuinely become invalid.
+            try {
+                $refreshed = Invoke-PfbOAuth2Login -Endpoint $Array.Endpoint -ClientId $Array.ClientId `
+                    -Issuer $Array.Issuer -KeyId $Array.KeyId -Username $Array.Username `
+                    -PrivateKeyFile $Array.PrivateKeyFile -PrivateKeyPassword $Array.PrivateKeyPassword `
+                    -SkipCertificateCheck:$Array.SkipCertificateCheck
+                $Array.BearerToken = $refreshed.AccessToken
+                $Array.AuthToken = $refreshed.AccessToken
+                $Array.TokenExpiresAt = $refreshed.ExpiresAt
+                $Array.TokenTtlSeconds = $refreshed.TtlSeconds
+
+                if ($script:PfbDefaultArray -and $script:PfbDefaultArray.Endpoint -eq $Array.Endpoint) {
+                    $script:PfbDefaultArray = $Array
+                }
+                if ($script:PfbArrays.ContainsKey($Array.Endpoint)) {
+                    $script:PfbArrays[$Array.Endpoint] = $Array
+                }
+            }
+            catch {
+                Write-Warning "FlashBlade proactive OAuth2 token refresh failed for $($Array.Endpoint): $($_.Exception.Message). Proceeding with the existing token."
+            }
+        }
+    }
+
     $apiVer = if ($ApiVersionOverride) { $ApiVersionOverride } else { $Array.ApiVersion }
     $baseUrl = "https://$($Array.Endpoint)/api/${apiVer}"
     $queryString = ConvertTo-PfbQueryString -Parameters $QueryParams
@@ -88,14 +122,42 @@ function Invoke-PfbApiRequest {
                 $statusCode = [int]$_.Exception.Response.StatusCode
             }
 
-            # Auto-reconnect on 401 if we have a stored API token
-            if ($statusCode -eq 401 -and $isFirstRequest -and -not [string]::IsNullOrEmpty($Array.ApiToken)) {
+            # Auto-reconnect on 401: ApiToken/Credential/PSCredential sessions have a
+            # cached long-lived API token; Certificate sessions refresh the OAuth2
+            # access token instead (fallback for what the proactive check above can't
+            # anticipate: clock skew, or early revocation).
+            $canReconnect = ($isFirstRequest -and (
+                -not [string]::IsNullOrEmpty($Array.ApiToken) -or $Array.AuthMethod -eq 'Certificate'
+            ))
+
+            # Live testing against a real FlashBlade array (Purity//FB 4.8.2 / REST 2.26) proved it
+            # returns HTTP 403, not 401, for ANY invalid Bearer-token auth failure (confirmed with
+            # both a genuinely-expired OAuth2 access token and a garbage bearer token). Without this,
+            # the Certificate/OAuth2 reactive-refresh safety net above never actually triggers against
+            # that array. ApiToken/Credential/PSCredential use a different mechanism (the x-auth-token
+            # session header) that has NOT been proven to share this 403-for-invalid-auth behavior, so
+            # those parameter sets deliberately stay 401-only.
+            $isAuthFailureStatus = ($statusCode -eq 401) -or ($statusCode -eq 403 -and $Array.AuthMethod -eq 'Certificate')
+            if ($isAuthFailureStatus -and $canReconnect) {
                 $reconnectSucceeded = $false
                 try {
-                    $reconnected = Connect-PfbArrayInternal -Endpoint $Array.Endpoint -ApiToken $Array.ApiToken -ApiVersion $Array.ApiVersion -SkipCertificateCheck:$Array.SkipCertificateCheck -TimeoutSec $restParams['TimeoutSec']
-                    $Array.AuthToken = $reconnected.AuthToken
-                    $Array.ConnectedAt = $reconnected.ConnectedAt
-                    $headers['x-auth-token'] = $Array.AuthToken
+                    if ($Array.AuthMethod -eq 'Certificate') {
+                        $refreshed = Invoke-PfbOAuth2Login -Endpoint $Array.Endpoint -ClientId $Array.ClientId `
+                            -Issuer $Array.Issuer -KeyId $Array.KeyId -Username $Array.Username `
+                            -PrivateKeyFile $Array.PrivateKeyFile -PrivateKeyPassword $Array.PrivateKeyPassword `
+                            -SkipCertificateCheck:$Array.SkipCertificateCheck
+                        $Array.BearerToken = $refreshed.AccessToken
+                        $Array.AuthToken = $refreshed.AccessToken
+                        $Array.TokenExpiresAt = $refreshed.ExpiresAt
+                        $Array.TokenTtlSeconds = $refreshed.TtlSeconds
+                        $headers['Authorization'] = "Bearer $($Array.BearerToken)"
+                    }
+                    else {
+                        $reconnected = Connect-PfbArrayInternal -Endpoint $Array.Endpoint -ApiToken $Array.ApiToken -ApiVersion $Array.ApiVersion -SkipCertificateCheck:$Array.SkipCertificateCheck -TimeoutSec $restParams['TimeoutSec']
+                        $Array.AuthToken = $reconnected.AuthToken
+                        $Array.ConnectedAt = $reconnected.ConnectedAt
+                        $headers['x-auth-token'] = $Array.AuthToken
+                    }
                     $restParams['Headers'] = $headers
 
                     # Update the stored connection
@@ -232,8 +294,13 @@ function ConvertTo-PfbApiError {
     if ($ErrorRecord.ErrorDetails.Message) {
         try {
             $apiError = $ErrorRecord.ErrorDetails.Message | ConvertFrom-Json
-            if ($apiError.errors) {
-                $errorMessage = "FlashBlade API error: $($apiError.errors[0].message)"
+            # Most FlashBlade error bodies use the plural key "errors", but some real-world
+            # responses (confirmed live against Purity//FB 4.8.2 / REST 2.26) use the singular
+            # "error" instead -- same array-of-objects shape, different key name. Prefer plural
+            # if both are somehow present.
+            $errorList = if ($apiError.errors) { $apiError.errors } else { $apiError.error }
+            if ($errorList) {
+                $errorMessage = "FlashBlade API error: $($errorList[0].message)"
             }
         }
         catch { }
