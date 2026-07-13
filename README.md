@@ -239,27 +239,22 @@ Get-Command -Module PureStorageFlashBladePowerShell -Noun PfbBucket*
 
 ## Testing Results
 
-v2.0.0 was validated against a live FlashBlade S200R2 (Purity//FB 4.6.8, API 2.24) on Windows PowerShell 5.1.
+v2.1.0 was validated on PowerShell 7 (the module runtime supports Windows PowerShell 5.1+).
 
 | Test Area | Result |
 |---|---|
-| **Pester unit tests** | 1,062 passed, 0 failed |
-| **Module loads and exports** | 496 cmdlets confirmed |
-| **Help coverage** | 496/496 cmdlets have Synopsis |
-| **ShouldProcess (WhatIf/Confirm)** | 283/283 mutation cmdlets verified |
-| **Naming conventions** | 496/496 follow `Verb-PfbNoun` pattern, all approved verbs |
-| **Parameter consistency** | All cmdlets have `-Array`, correct parameter sets |
-| **Live API — read-only cmdlets** | 199/205 passed, 0 failed, 6 skipped (unconfigured features or model-specific) |
-| **Live array — mutation lifecycle** | File system + snapshot create/update/delete ✅ |
-| **Live array — Connect-PfbArray** | ApiToken, Username/Password (/api/login), PSCredential, Certificate ✅ |
-| **Build consistency** | Built `.psm1` exports identical 496 cmdlets |
-| **Code quality** | No `Write-Host` in cmdlets, no hardcoded IPs |
+| **Pester tests** | 139 passed, 0 failed, 1 skipped (21 suites, pwsh 7) |
+| **Module loads and exports** | 518 cmdlets confirmed |
+| **Help coverage** | 518/518 cmdlets have a Synopsis |
+| **Naming conventions** | 518/518 follow `Verb-PfbNoun` pattern, all approved verbs |
+| **ShouldProcess (WhatIf/Confirm)** | 299/299 array-mutating cmdlets (the 2 client-side credential cmdlets are exempt) |
+| **Live verification (PRs #4-8)** | Auth flows and affected cmdlets validated against real FlashBlade arrays on both sides of the REST API 2.26 threshold |
 
 ## Compatibility
 
 - **FlashBlade**: Purity//FB 3.x and later (REST API 2.x)
 - **PowerShell**: 5.1, 7.0+ (Windows, Linux, macOS)
-- **Tested on**: FlashBlade S200R2, Purity//FB 4.6.8, API version 2.24
+- **Verified against**: real FlashBlade arrays on both sides of the REST API 2.26 threshold
 
 ## Migration from v1.x (PureFBModule)
 
