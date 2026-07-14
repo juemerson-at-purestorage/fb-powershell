@@ -101,7 +101,12 @@ function New-PfbJwtToken {
             $bytesRead = 0
             $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($PrivateKeyPassword)
             try {
-                $plainPw = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
+                # PtrToStringAuto is ANSI on non-Windows platforms, which truncates a UTF-16
+                # BSTR at its first null byte (i.e. after the first character) -- silently
+                # mangling the password and causing decryption to fail on Linux/macOS with a
+                # misleading "password may be incorrect" error. PtrToStringBSTR reads the BSTR
+                # by its length prefix and is correct (and UTF-16) on every platform.
+                $plainPw = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)
                 $rsa.ImportEncryptedPkcs8PrivateKey([System.Text.Encoding]::UTF8.GetBytes($plainPw), $keyBytes, [ref]$bytesRead)
             }
             finally {

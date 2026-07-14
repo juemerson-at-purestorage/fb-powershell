@@ -262,7 +262,12 @@ function Connect-PfbArray {
             # /api/login is unversioned and is part of REST 2.x. No SSH required.
             $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($Password)
             try {
-                $plainPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
+                # PtrToStringAuto is ANSI on non-Windows platforms, which truncates a UTF-16
+                # BSTR at its first null byte (i.e. after the first character) -- silently
+                # sending a mangled password to /api/login on Linux/macOS. PtrToStringBSTR
+                # reads the BSTR by its length prefix and is correct (and UTF-16) on every
+                # platform.
+                $plainPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringBSTR($bstr)
                 $loginBody = @{ username = $Username; password = $plainPassword } | ConvertTo-Json -Compress
             }
             finally {
