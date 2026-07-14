@@ -5,6 +5,11 @@ name: Tests
 # so platform-specific bugs (e.g. a .NET marshaling difference between Windows and
 # Linux/macOS) are caught on every push/PR instead of only surfacing much later on
 # whichever CI job happens to run on a non-Windows runner.
+#
+# Two separate jobs rather than one shell-matrixed job: the `shell:` key on a step does
+# NOT have access to the `matrix` context (unlike `run:`, `env:`, or a job's own `name:`/
+# `runs-on:`) -- confirmed via `gh workflow run`: "Unrecognized named-value: 'matrix'.
+# Located at position 1 within expression: matrix.shell". `shell:` must be a literal.
 
 on:
   push:
@@ -12,32 +17,20 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  test:
-    name: Test (${{ matrix.os }}, ${{ matrix.shell }})
+  test-pwsh:
+    name: Test (${{ matrix.os }}, pwsh)
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        shell: [pwsh]
-        include:
-          # Windows PowerShell 5.1 -- the manifest's declared minimum -- is only
-          # available on the windows-latest runner; pwsh (PowerShell 7+) already covers
-          # all three OSes via the matrix above.
-          - os: windows-latest
-            shell: powershell
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Install test dependencies
-        shell: ${{ matrix.shell }}
+        shell: pwsh
         run: |
-          if ($PSVersionTable.PSVersion.Major -lt 6) {
-            # Some older Windows PowerShell 5.1 hosts default to TLS 1.0/1.1, which
-            # PowerShell Gallery rejects -- force TLS 1.2 before hitting it.
-            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-          }
           Install-Module -Name Pester -MinimumVersion 5.0 -Force -SkipPublisherCheck -Scope CurrentUser
           # Posh-SSH is an optional runtime dependency (see Private/Get-PfbApiTokenViaSsh.ps1),
           # but Get-PfbApiTokenViaSsh.Tests.ps1 mocks its cmdlets (New-SSHSession, etc.) --
@@ -46,7 +39,34 @@ jobs:
           Install-Module -Name Posh-SSH -Force -SkipPublisherCheck -Scope CurrentUser
 
       - name: Run Pester tests
-        shell: ${{ matrix.shell }}
+        shell: pwsh
+        run: |
+          Import-Module Pester -MinimumVersion 5.0 -Force
+          Import-Module Posh-SSH -Force
+          $cfg = New-PesterConfiguration
+          $cfg.Run.Path = 'Tests'
+          $cfg.Run.Exit = $true
+          $cfg.Output.Verbosity = 'Detailed'
+          Invoke-Pester -Configuration $cfg
+
+  test-windows-powershell-5-1:
+    name: Test (windows-latest, Windows PowerShell 5.1)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install test dependencies
+        shell: powershell
+        run: |
+          # Some older Windows PowerShell 5.1 hosts default to TLS 1.0/1.1, which
+          # PowerShell Gallery rejects -- force TLS 1.2 before hitting it.
+          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+          Install-Module -Name Pester -MinimumVersion 5.0 -Force -SkipPublisherCheck -Scope CurrentUser
+          Install-Module -Name Posh-SSH -Force -SkipPublisherCheck -Scope CurrentUser
+
+      - name: Run Pester tests
+        shell: powershell
         run: |
           Import-Module Pester -MinimumVersion 5.0 -Force
           Import-Module Posh-SSH -Force
