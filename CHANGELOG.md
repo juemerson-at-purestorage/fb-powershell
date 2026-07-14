@@ -8,7 +8,8 @@ All notable changes to `PureStorageFlashBladePowerShell` are documented in this 
      content sourced from that branch's PureStorageFlashBladePowerShell.psd1 ReleaseNotes.
      Date is PR #9's ModuleVersion-bump commit date, not a merge date. -->
 
-Auth resilience + cmdlet correctness (integrates PRs #4-8).
+Auth resilience + cmdlet correctness (integrates PRs #4-8), plus file-system
+export and local directory-services fixes from field testing.
 
 ### Removed
 
@@ -27,6 +28,11 @@ Auth resilience + cmdlet correctness (integrates PRs #4-8).
 - `New-PfbPolicyFileSystem` / `Remove-PfbPolicyFileSystem` (attach/detach a policy to a
   file system via the correct `policies/file-systems` endpoint).
 - `New-PfbQuotaUser`: `-UserId` as an alternative to `-UserName`.
+- Local directory-services management (8 cmdlets under `directory-services/local/*`):
+  `Get-`/`New-PfbLocalDirectoryService`, `Get-`/`New-`/`Remove-PfbLocalGroup`, and
+  `Get-`/`New-`/`Remove-PfbLocalGroupMember`. `New-PfbLocalGroupMember` maps external
+  (e.g. Active Directory) users into a local group, the supported path for granting
+  those users SMB NTFS access.
 
 ### Fixed
 
@@ -41,6 +47,10 @@ Auth resilience + cmdlet correctness (integrates PRs #4-8).
 - `Connect-PfbArray` now forces TLS 1.2 on Windows PowerShell 5.1 (via new private helper
   `Set-PfbTlsProtocol`), which doesn't always default to it depending on OS/registry state,
   causing connections to a FlashBlade (which requires TLS 1.2+) to fail.
+- `New-PfbFileSystemExport`: creation was broken — it sent an invalid `names` query
+  parameter with an arbitrary body, which the array rejected. Now sends `member_names`
+  (file system) and `policy_names` (export policy) as query parameters plus a proper
+  `{ export_name, server, share_policy }` request body.
 
 ### Verified
 
