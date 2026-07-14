@@ -13,11 +13,28 @@ function Connect-PfbArray {
         - OAuth2/JWT certificate-based authentication (Certificate parameter set)
 
         Username/Password Authentication Flow:
-        When using -Password or -Credential, the cmdlet POSTs the credentials to the
-        unversioned /api/login endpoint, which is the REST 2.x native username/password
-        login. A session token (x-auth-token) is returned and used for subsequent calls.
-        The optional long-lived API token can be retrieved from /admins/api-tokens for
-        future passwordless reconnects.
+        When using -Password or -Credential, the cmdlet checks whether the array
+        supports native REST 2.x username/password login (FlashBlade REST API 2.26 /
+        Purity//FB 4.8.1+). If so, it POSTs the credentials to the unversioned /api/login
+        endpoint and returns a session token (x-auth-token); the optional long-lived API
+        token can be retrieved from /admins/api-tokens for future passwordless
+        reconnects. If the array is below that threshold, the cmdlet instead falls back
+        to SSH (via the optional Posh-SSH module) to mint an API token using the
+        'pureadmin' CLI, then completes login with that token. FlashBlade has never had
+        a REST-based way to exchange username/password for a token below this version,
+        so SSH is not a convenience fallback here -- it's the only mechanism available.
+        Install Posh-SSH with: Install-Module -Name Posh-SSH -Scope CurrentUser -Force
+
+        OAuth2/Certificate Authentication Flow:
+        When using -ClientId/-Issuer/-KeyId/-PrivateKeyFile, the cmdlet mints a
+        short-lived (5 minute) JWT and exchanges it for an OAuth2 access token. That
+        access token's lifetime (access_token_ttl_in_ms) is set per API client by an
+        admin on the array -- anywhere from 1 second to 24 hours -- and is not knowable
+        in advance. The connection automatically refreshes the access token before it
+        expires (and, as a fallback, immediately after a 401 caused by early expiry or
+        clock skew), so Certificate-authenticated sessions behave like every other
+        authentication method here: no manual reconnect required. See .NOTES for what's
+        retained in memory to make this possible.
 
         Auto-negotiates the highest supported API version unless explicitly specified.
         The connection is cached and becomes the default for subsequent cmdlet calls.
@@ -53,6 +70,13 @@ function Connect-PfbArray {
         Bypass SSL certificate validation. Common for lab environments with self-signed certs.
     .PARAMETER HttpTimeout
         HTTP request timeout in milliseconds. Default is 30000 (30 seconds).
+    .NOTES
+        Certificate/OAuth2 sessions retain -ClientId, -Issuer, -KeyId, -PrivateKeyFile,
+        and -PrivateKeyPassword (as a SecureString) on the connection object for the
+        session's lifetime, so the access token can be silently re-minted before or
+        immediately after it expires. This mirrors the existing precedent of retaining
+        -ApiToken for the -Credential/-Password auto-reconnect flow -- same risk class,
+        not a new category of exposure.
     .EXAMPLE
         $array = Connect-PfbArray -Endpoint fb01.example.com -ApiToken $token -IgnoreCertificateError
 
@@ -123,10 +147,19 @@ function Connect-PfbArray {
         [int]$HttpTimeout = 30000
     )
 
+    # Force TLS 1.2 on PowerShell 5.1 unconditionally -- independent of certificate
+    # validation bypass, which is a separate concern.
+    Set-PfbTlsProtocol
+
     # Handle SSL bypass
     if ($IgnoreCertificateError) {
         Set-PfbCertificatePolicy
     }
+
+    # Convert -HttpTimeout (milliseconds) to the whole seconds Invoke-RestMethod/
+    # Invoke-WebRequest expect via -TimeoutSec. Round up so a sub-1000ms value never
+    # collapses to 0 (TimeoutSec 0 means "no timeout" on some PowerShell versions).
+    $timeoutSec = [int][Math]::Ceiling($HttpTimeout / 1000.0)
 
     # Resolve PSCredential to username/password
     if ($PSCmdlet.ParameterSetName -eq 'PSCredential') {
@@ -142,8 +175,9 @@ function Connect-PfbArray {
     # Discover supported API versions
     $versionUri = "https://${Endpoint}/api/api_version"
     $versionParams = @{
-        Method = 'GET'
-        Uri    = $versionUri
+        Method     = 'GET'
+        Uri        = $versionUri
+        TimeoutSec = $timeoutSec
     }
     if ($IgnoreCertificateError -and $PSVersionTable.PSVersion.Major -ge 6) {
         $versionParams['SkipCertificateCheck'] = $true
@@ -153,7 +187,7 @@ function Connect-PfbArray {
         $versionResponse = Invoke-RestMethod @versionParams -ErrorAction Stop
     }
     catch {
-        throw "Failed to connect to FlashBlade at '${Endpoint}': $($_.Exception.Message)"
+        throw "Failed to connect to FlashBlade at '${Endpoint}': $(ConvertTo-PfbApiError -Method 'GET' -Endpoint 'api_version' -ErrorRecord $_)"
     }
 
     $supportedVersions = $versionResponse.versions
@@ -167,14 +201,7 @@ function Connect-PfbArray {
     }
     else {
         # Pick the highest 2.x version
-        $v2Versions = $supportedVersions | Where-Object { $_ -match '^2\.' } | ForEach-Object {
-            $parts = $_ -split '\.'
-            [PSCustomObject]@{
-                Version = $_
-                Major   = [int]$parts[0]
-                Minor   = [int]$parts[1]
-            }
-        } | Sort-Object Major, Minor -Descending
+        $v2Versions = ConvertTo-PfbVersionObject -Versions $supportedVersions | Where-Object { $_.Major -eq 2 }
 
         if (-not $v2Versions) {
             throw "No REST API 2.x versions supported by this FlashBlade. Supported: $($supportedVersions -join ', ')"
@@ -186,162 +213,150 @@ function Connect-PfbArray {
     # Authenticate based on method
     $authToken = $null
     $bearerToken = $null
+    $tokenExpiresAt = $null
+    $tokenTtlSeconds = $null
 
     if ($PSCmdlet.ParameterSetName -eq 'ApiToken') {
         # Direct API token login
-        $loginUri = "https://${Endpoint}/api/login"
-        $loginHeaders = @{ 'api-token' = $ApiToken }
-        $loginParams = @{
-            Method  = 'POST'
-            Uri     = $loginUri
-            Headers = $loginHeaders
-        }
-        if ($IgnoreCertificateError -and $PSVersionTable.PSVersion.Major -ge 6) {
-            $loginParams['SkipCertificateCheck'] = $true
-        }
-
-        try {
-            $loginResponse = Invoke-WebRequest @loginParams -UseBasicParsing -ErrorAction Stop
-        }
-        catch {
-            throw "Authentication failed for FlashBlade '${Endpoint}': $($_.Exception.Message)"
-        }
-
-        $authToken = $loginResponse.Headers['x-auth-token']
-        if ($authToken -is [array]) { $authToken = $authToken[0] }
+        $authToken = Invoke-PfbApiTokenLogin -Endpoint $Endpoint -ApiToken $ApiToken -SkipCertificateCheck:$IgnoreCertificateError -TimeoutSec $timeoutSec
     }
     elseif ($PSCmdlet.ParameterSetName -eq 'Certificate') {
         # OAuth2 JWT certificate-based authentication
-        # Step 1: Generate a signed JWT
-        $jwtParams = @{
-            KeyId       = $KeyId
-            ClientId    = $ClientId
-            Issuer      = $Issuer
-            Username    = $Username
+        $oauthLoginParams = @{
+            Endpoint       = $Endpoint
+            ClientId       = $ClientId
+            Issuer         = $Issuer
+            KeyId          = $KeyId
+            Username       = $Username
             PrivateKeyFile = $PrivateKeyFile
         }
         if ($PrivateKeyPassword) {
-            $jwtParams['PrivateKeyPassword'] = $PrivateKeyPassword
-        }
-
-        try {
-            $jwt = New-PfbJwtToken @jwtParams
-        }
-        catch {
-            throw "Failed to generate JWT for OAuth2 authentication: $($_.Exception.Message)"
-        }
-
-        # Step 2: Exchange JWT for OAuth2 access token
-        $oauthBody = "grant_type=urn:ietf:params:oauth:grant-type:token-exchange&subject_token=${jwt}&subject_token_type=urn:ietf:params:oauth:token-type:jwt"
-        $oauthParams = @{
-            Method      = 'POST'
-            Uri         = "https://${Endpoint}/oauth2/1.0/token"
-            Body        = $oauthBody
-            ContentType = 'application/x-www-form-urlencoded'
+            $oauthLoginParams['PrivateKeyPassword'] = $PrivateKeyPassword
         }
         if ($IgnoreCertificateError -and $PSVersionTable.PSVersion.Major -ge 6) {
-            $oauthParams['SkipCertificateCheck'] = $true
+            $oauthLoginParams['SkipCertificateCheck'] = $true
         }
 
-        try {
-            $oauthResponse = Invoke-RestMethod @oauthParams -ErrorAction Stop
-        }
-        catch {
-            throw "OAuth2 token exchange failed for FlashBlade '${Endpoint}': $($_.Exception.Message)"
-        }
-
-        $bearerToken = $oauthResponse.access_token
-        if ([string]::IsNullOrEmpty($bearerToken)) {
-            throw "OAuth2 token exchange returned no access_token from FlashBlade '${Endpoint}'."
-        }
+        $oauthResult = Invoke-PfbOAuth2Login @oauthLoginParams
 
         # The bearer token IS the auth token for REST API calls
         # It goes in the Authorization header, not x-auth-token
+        $bearerToken = $oauthResult.AccessToken
         $authToken = $bearerToken
-        $ApiToken = $null  # No API token in Certificate flow
+        $tokenExpiresAt = $oauthResult.ExpiresAt
+        $tokenTtlSeconds = $oauthResult.TtlSeconds
+        # Deliberately NOT "$ApiToken = $null" here: $ApiToken carries
+        # [ValidateNotNullOrEmpty()] on its PSVariable, which re-validates on ANY
+        # assignment regardless of which parameter set was actually bound -- so
+        # assigning $null unconditionally throws even though this branch never
+        # received -ApiToken. $ApiToken is already $null/unbound for the Certificate
+        # parameter set; leaving it untouched fixes a live, already-shipped crash
+        # (introduced v2.0.3, still in v2.0.5) in every real Certificate/OAuth2 login.
     }
     elseif ($PSCmdlet.ParameterSetName -eq 'Credential' -or $PSCmdlet.ParameterSetName -eq 'PSCredential') {
-        # Native REST 2.x username/password login — POST /api/login with JSON body.
-        # /api/login is unversioned and is part of REST 2.x. No SSH required.
-        $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($Password)
-        try {
-            $plainPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
-            $loginBody = @{ username = $Username; password = $plainPassword } | ConvertTo-Json -Compress
-        }
-        finally {
-            [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr) | Out-Null
-            $plainPassword = $null
-        }
+        $parsedVersions = ConvertTo-PfbVersionObject -Versions $supportedVersions
+        $nativeLoginSupported = [bool]($parsedVersions | Where-Object { $_.Major -gt 2 -or ($_.Major -eq 2 -and $_.Minor -ge 26) })
 
-        $loginParams = @{
-            Method      = 'POST'
-            Uri         = "https://${Endpoint}/api/login"
-            Body        = $loginBody
-            ContentType = 'application/json'
-        }
-        if ($IgnoreCertificateError -and $PSVersionTable.PSVersion.Major -ge 6) {
-            $loginParams['SkipCertificateCheck'] = $true
-        }
-        $loginBody = $null  # release the JSON body containing the password
-
-        try {
-            $loginResponse = Invoke-WebRequest @loginParams -UseBasicParsing -ErrorAction Stop
-        }
-        catch {
-            $detail = if ($_.ErrorDetails.Message) { " ($($_.ErrorDetails.Message))" } else { '' }
-            throw "Username/password authentication failed for FlashBlade '${Endpoint}': $($_.Exception.Message)${detail}"
-        }
-
-        $authToken = $loginResponse.Headers['x-auth-token']
-        if ($authToken -is [array]) { $authToken = $authToken[0] }
-
-        # Try to retrieve (or mint) a long-lived API token for auto-reconnect.
-        # Best-effort: succeeds for users with admin privileges; falls through silently otherwise.
-        # Use a local variable since the $ApiToken parameter retains its [ValidateNotNullOrEmpty]
-        # constraint and would reject a $null reassignment.
-        $cachedApiToken  = $null
-        $tokenHeaders    = @{ 'x-auth-token' = $authToken }
-        $encodedName     = [System.Uri]::EscapeDataString($Username)
-        $tokenBaseUri    = "https://${Endpoint}/api/${negotiatedVersion}/admins/api-tokens"
-        $tokenInvokeArgs = @{}
-        if ($IgnoreCertificateError -and $PSVersionTable.PSVersion.Major -ge 6) {
-            $tokenInvokeArgs['SkipCertificateCheck'] = $true
-        }
-        # Pick the item whose admin matches our username. The /admins/api-tokens endpoint
-        # silently ignores the names= / ids= filters and returns all admins, with the
-        # caller's own token unmasked and other admins' tokens redacted to '****'. We must
-        # filter client-side to avoid grabbing a peer admin's masked entry.
-        $isOurAdmin = { param($item) $item.admin -and $item.admin.name -eq $Username }
-        $isRealToken = { param($t) $t -and $t -ne '****' -and -not ($t -match '^\*+$') }
-
-        try {
-            $existing = Invoke-RestMethod -Uri "${tokenBaseUri}?expose_api_token=true" `
-                                          -Headers $tokenHeaders -ErrorAction Stop @tokenInvokeArgs
-            $mine = $existing.items | Where-Object { & $isOurAdmin $_ } | Select-Object -First 1
-            if ($mine -and $mine.api_token -and (& $isRealToken $mine.api_token.token)) {
-                $cachedApiToken = $mine.api_token.token
-            }
-        }
-        catch {
-            Write-Verbose "Could not read existing API token for '$Username': $($_.Exception.Message)"
-        }
-        if (-not $cachedApiToken) {
+        if ($nativeLoginSupported) {
+            # Native REST 2.x username/password login — POST /api/login with JSON body.
+            # /api/login is unversioned and is part of REST 2.x. No SSH required.
+            $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($Password)
             try {
-                $minted = Invoke-RestMethod -Uri "${tokenBaseUri}?names=${encodedName}" `
-                                            -Method POST -Headers $tokenHeaders -ErrorAction Stop @tokenInvokeArgs
-                $mine = $minted.items | Where-Object { & $isOurAdmin $_ } | Select-Object -First 1
+                $plainPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
+                $loginBody = @{ username = $Username; password = $plainPassword } | ConvertTo-Json -Compress
+            }
+            finally {
+                [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr) | Out-Null
+                $plainPassword = $null
+            }
+
+            $loginParams = @{
+                Method      = 'POST'
+                Uri         = "https://${Endpoint}/api/login"
+                Body        = $loginBody
+                ContentType = 'application/json'
+                TimeoutSec  = $timeoutSec
+            }
+            if ($IgnoreCertificateError -and $PSVersionTable.PSVersion.Major -ge 6) {
+                $loginParams['SkipCertificateCheck'] = $true
+            }
+            $loginBody = $null  # release the JSON body containing the password
+
+            try {
+                $loginResponse = Invoke-WebRequest @loginParams -UseBasicParsing -ErrorAction Stop
+            }
+            catch {
+                throw "Username/password authentication failed for FlashBlade '${Endpoint}': $(ConvertTo-PfbApiError -Method 'POST' -Endpoint 'login' -ErrorRecord $_)"
+            }
+
+            $authToken = $loginResponse.Headers['x-auth-token']
+            if ($authToken -is [array]) { $authToken = $authToken[0] }
+
+            # Try to retrieve (or mint) a long-lived API token for auto-reconnect.
+            # Best-effort: succeeds for users with admin privileges; falls through silently otherwise.
+            # Use a local variable since the $ApiToken parameter retains its [ValidateNotNullOrEmpty]
+            # constraint and would reject a $null reassignment.
+            $cachedApiToken  = $null
+            $tokenHeaders    = @{ 'x-auth-token' = $authToken }
+            $encodedName     = [System.Uri]::EscapeDataString($Username)
+            $tokenBaseUri    = "https://${Endpoint}/api/${negotiatedVersion}/admins/api-tokens"
+            $tokenInvokeArgs = @{}
+            if ($IgnoreCertificateError -and $PSVersionTable.PSVersion.Major -ge 6) {
+                $tokenInvokeArgs['SkipCertificateCheck'] = $true
+            }
+            $tokenInvokeArgs['TimeoutSec'] = $timeoutSec
+            # Pick the item whose admin matches our username. The /admins/api-tokens endpoint
+            # silently ignores the names= / ids= filters and returns all admins, with the
+            # caller's own token unmasked and other admins' tokens redacted to '****'. We must
+            # filter client-side to avoid grabbing a peer admin's masked entry.
+            $isOurAdmin = { param($item) $item.admin -and $item.admin.name -eq $Username }
+            $isRealToken = { param($t) $t -and $t -ne '****' -and -not ($t -match '^\*+$') }
+
+            try {
+                $existing = Invoke-RestMethod -Uri "${tokenBaseUri}?expose_api_token=true" `
+                                              -Headers $tokenHeaders -ErrorAction Stop @tokenInvokeArgs
+                $mine = $existing.items | Where-Object { & $isOurAdmin $_ } | Select-Object -First 1
                 if ($mine -and $mine.api_token -and (& $isRealToken $mine.api_token.token)) {
                     $cachedApiToken = $mine.api_token.token
                 }
             }
             catch {
-                Write-Verbose "Could not mint API token for '$Username': $($_.Exception.Message)"
+                Write-Verbose "Could not read existing API token for '$Username': $($_.Exception.Message)"
+            }
+            if (-not $cachedApiToken) {
+                try {
+                    $minted = Invoke-RestMethod -Uri "${tokenBaseUri}?names=${encodedName}" `
+                                                -Method POST -Headers $tokenHeaders -ErrorAction Stop @tokenInvokeArgs
+                    $mine = $minted.items | Where-Object { & $isOurAdmin $_ } | Select-Object -First 1
+                    if ($mine -and $mine.api_token -and (& $isRealToken $mine.api_token.token)) {
+                        $cachedApiToken = $mine.api_token.token
+                    }
+                }
+                catch {
+                    Write-Verbose "Could not mint API token for '$Username': $($_.Exception.Message)"
+                }
+            }
+            if ($cachedApiToken) {
+                $ApiToken = $cachedApiToken
+            } else {
+                Write-Verbose "Connected without a cached API token. Auto-reconnect on 401 will be unavailable for this session."
             }
         }
-        if ($cachedApiToken) {
-            $ApiToken = $cachedApiToken
-        } else {
-            Write-Verbose "Connected without a cached API token. Auto-reconnect on 401 will be unavailable for this session."
+        else {
+            # Native REST 2.x login isn't available on this array (< Purity//FB 4.8.1 /
+            # REST API 2.26). FlashBlade has never had a way to exchange username/password
+            # for a token over REST itself -- confirmed against real arrays and the
+            # source of FlashBlade's original PowerShell module -- so SSH is the only
+            # mechanism available to bootstrap from credentials to a token here.
+            try {
+                $mintedToken = Get-PfbApiTokenViaSsh -Endpoint $Endpoint -Username $Username -Password $Password -Verbose:$VerbosePreference
+            }
+            catch {
+                throw "Username/password authentication failed for FlashBlade '${Endpoint}'. This array supports API versions: $($supportedVersions -join ', '). Native REST login requires API 2.26+ (Purity//FB 4.8.1+), which is not supported here; FlashBlade has no REST-based username/password login below that version, so this cmdlet falls back to SSH to mint an API token. The SSH fallback failed: $($_.Exception.Message)"
+            }
+
+            $ApiToken = $mintedToken
+            $authToken = Invoke-PfbApiTokenLogin -Endpoint $Endpoint -ApiToken $ApiToken -SkipCertificateCheck:$IgnoreCertificateError -TimeoutSec $timeoutSec
         }
     }
 
@@ -366,6 +381,14 @@ function Connect-PfbArray {
         SkipCertificateCheck = [bool]$IgnoreCertificateError
         HttpTimeoutMs        = $HttpTimeout
         ConnectedAt          = [datetime]::UtcNow
+        # Certificate/OAuth2 refresh state — only populated when AuthMethod is 'Certificate'
+        ClientId             = $ClientId
+        Issuer               = $Issuer
+        KeyId                = $KeyId
+        PrivateKeyFile       = $PrivateKeyFile
+        PrivateKeyPassword   = $PrivateKeyPassword
+        TokenExpiresAt       = $tokenExpiresAt
+        TokenTtlSeconds      = $tokenTtlSeconds
     }
 
     # Hide secrets from default display. Sensitive fields (ApiToken, AuthToken,

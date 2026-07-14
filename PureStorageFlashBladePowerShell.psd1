@@ -1,11 +1,10 @@
-﻿@{
+@{
     RootModule        = 'PureStorageFlashBladePowerShell.psm1'
-    ModuleVersion     = '2.0.5'
+    ModuleVersion     = '2.1.0'
     GUID              = 'b25473b3-9eb7-414d-8da1-264e10f73d86'
     Author            = 'Pure Storage, Inc.'
     CompanyName       = 'Pure Storage, Inc.'
     Copyright         = '(c) 2026 Pure Storage, Inc. All rights reserved.'
-    # See CHANGELOG.md for a complete diff.
     Description       = 'Pure Storage FlashBlade REST 2.x PowerShell Toolkit. Provides comprehensive coverage of FlashBlade REST API 2.x endpoints with a Connect-PfbArray experience that mirrors the FlashArray PureStoragePowerShellSDK2 module. Supports API token, username/password (native REST 2.x /api/login), PSCredential, and certificate-based authentication.'
     PowerShellVersion = '5.1'
 
@@ -155,7 +154,6 @@
         'Get-PfbPolicyFileSystem',
         'Get-PfbPolicyFileSystemReplicaLink',
         'Get-PfbPolicyFileSystemSnapshot',
-        'Get-PfbPolicyMember',
         'Get-PfbPublicKey',
         'Get-PfbPublicKeyUse',
         'Get-PfbQosPolicy',
@@ -247,7 +245,6 @@
         'New-PfbFileSystemReplicaLink',
         'New-PfbFileSystemReplicaLinkPolicy',
         'New-PfbFileSystemSnapshot',
-        'New-PfbFileSystemSnapshotPolicy',
         'New-PfbFleet',
         'New-PfbFleetKey',
         'New-PfbFleetMember',
@@ -288,8 +285,8 @@
         'New-PfbObjectStoreVirtualHost',
         'New-PfbOidcIdp',
         'New-PfbPolicy',
+        'New-PfbPolicyFileSystem',
         'New-PfbPolicyFileSystemReplicaLink',
-        'New-PfbPolicyMember',
         'New-PfbPublicKey',
         'New-PfbQosPolicy',
         'New-PfbQosPolicyMember',
@@ -392,8 +389,8 @@
         'Remove-PfbOidcIdp',
         'Remove-PfbOpenFile',
         'Remove-PfbPolicy',
+        'Remove-PfbPolicyFileSystem',
         'Remove-PfbPolicyFileSystemReplicaLink',
-        'Remove-PfbPolicyMember',
         'Remove-PfbPublicKey',
         'Remove-PfbQosPolicy',
         'Remove-PfbQosPolicyMember',
@@ -532,7 +529,16 @@
         'Get-PfbDataEvictionPolicyFileSystem',
         'Add-PfbDataEvictionPolicyFileSystem',
         'Remove-PfbDataEvictionPolicyFileSystem',
-        'Get-PfbDataEvictionPolicyMember'
+        'Get-PfbDataEvictionPolicyMember',
+        # Local directory services (local user/group management)
+        'Get-PfbLocalDirectoryService',
+        'New-PfbLocalDirectoryService',
+        'Get-PfbLocalGroup',
+        'New-PfbLocalGroup',
+        'Remove-PfbLocalGroup',
+        'Get-PfbLocalGroupMember',
+        'New-PfbLocalGroupMember',
+        'Remove-PfbLocalGroupMember'
     )
     CmdletsToExport   = @()
     VariablesToExport  = @()
@@ -541,81 +547,21 @@
     PrivateData = @{
         PSData = @{
             Tags         = @('PureStorage', 'FlashBlade', 'Storage', 'REST', 'API', 'S3', 'NFS', 'SMB', 'FlashBlade2')
-            ProjectUri   = 'https://github.com/PureStorage-OpenConnect/flashblade-powershell-toolkit'
-            LicenseUri   = 'https://github.com/PureStorage-OpenConnect/flashblade-powershell-toolkit/blob/master/LICENSE'
+            ProjectUri   = 'https://github.com/PureStorage-OpenConnect/flashblade-powershell'
+            LicenseUri   = 'https://github.com/PureStorage-OpenConnect/flashblade-powershell/blob/main/LICENSE'
+            # This branch is based on PR #9 (integration/justin-prs) in anticipation of its
+            # merge, so ModuleVersion/FunctionsToExport/ReleaseNotes already reflect that
+            # state. Full v2.1.0 and v2.0.5 detail lives in CHANGELOG.md; if PR #9 changes
+            # further before it actually merges, re-check this block against the real result.
             ReleaseNotes = @'
-v2.0.5 - File-system demote support. See CHANGELOG.md.
-  Changed:
-  - Update-PfbFileSystem: added -DiscardNonSnapshottedData switch (sends the
-    discard_non_snapshotted_data=true query param) and a typed -RequestedPromotionState
-    ('promoted' | 'demoted') parameter to support demoting a file system to a read-only
-    replication target without dropping to raw REST. -RequestedPromotionState is mutually
-    exclusive with -Attributes (throws if both supplied). Promote was already supported.
+v2.1.0 - Auth resilience + cmdlet correctness (integrates PRs #4-8).
+  Connect-PfbArray gains a Posh-SSH login fallback for arrays below REST API 2.26,
+  automatic OAuth2 token refresh for the Certificate flow, and forces TLS 1.2 on
+  PowerShell 5.1. Fixes the 401/403 reconnect gap, pipeline-binding gaps on
+  relationship/membership cmdlets, and New-PfbQuotaUser. Removes 4 non-functional
+  cmdlets in favor of New-/Remove-PfbPolicyFileSystem.
 
-v2.0.3 - Real-AD test suite + HTML report generator. See CHANGELOG.md.
-  Added:
-  - Tests/SmbShareScript.AD.Tests.ps1: 8 live tests with a real AD identity as
-    lockdown principal; verifies NTFS via icacls actually lands on the share.
-  - Tests/Generate-Reports.ps1: produces a self-contained HTML bundle
-    (index + per-suite HTML + NUnit XML + every markdown doc rendered).
-  Verified live: 29/29 Pester tests pass in ~32s.
-
-v2.0.2 - SMB share lockdown script + Update-PfbFileSystem expansion. See CHANGELOG.md.
-  Added:
-  - examples/New-LockdownFlashBladeShare.ps1 (lockdown -> NTFS -> production-flip)
-  - Tests/SmbShareScript.Tests.ps1 (8 live tests against the lab)
-  - Tests/API_COVERAGE.md (spec gap analysis, ~84% coverage)
-  - Tests/TEST_REPORT.md
-
-  Changed:
-  - Update-PfbFileSystem: typed -SmbSharePolicy, -SmbClientPolicy, -NfsExportPolicy
-    parameters (no more hashtable-only flipping for the lockdown workflow).
-
-  Fixed:
-  - Compound filter idempotency check on /smb-share-policies/rules: FB returns
-    a count-only stub for "policy.name='x' and principal='y'". Single-clause
-    filter + client-side narrow is the workaround.
-
-  Verified:
-  - 21/21 Pester tests pass live against Purity//FB 4.8.2 / API 2.26 in ~28s
-
-v2.0.1 - Posh-SSH dependency removed. See CHANGELOG.md for full diff.
-  Removed:
-  - Posh-SSH dependency entirely. Username/password auth now uses native REST 2.x /api/login.
-
-  Fixed:
-  - New-PfbNetworkInterface: removed read-only `subnet` field from POST body (was returning "Invalid body parameter").
-  - New-PfbFileSystem: switch parameter name collision ($smb/$Smb) caused SwitchParameter cast errors.
-  - New-PfbFileSystemSnapshot: -Suffix was sent as query param, now correctly in request body.
-
-  Added:
-  - New-PfbFileSystemReplicaLink / Remove-PfbFileSystemReplicaLink (gap in v2.0.0).
-  - New-PfbFileSystemSnapshot -Send / -Targets for one-shot manual replication.
-  - Tests/SmbWorkflow.E2E.Tests.ps1: end-to-end SMB workflow suite including cross-array replication.
-  - Tests/SMB_SHARE_WORKFLOW.md: per-operation cmdlet mapping reference.
-
-  Changed:
-  - Connect-PfbArray default display hides ApiToken / AuthToken / BearerToken.
-  - Invoke-PfbApiRequest emits Write-Verbose for every endpoint hit.
-  - New-PfbFileSystem / New-PfbServer / Update-PfbServer / New-PfbNetworkInterface: typed parameters with mutually exclusive -Attributes parameter set.
-  - Remove-PfbFileSystem: added -DeleteLinkOnEradication for FSes that participate in a replica link.
-  - Remove-Pfb{FileSystem,Bucket,Server,ObjectStoreUser,ObjectStoreAccount,Policy}: reject -Name '*' / '?' / empty at parameter binding.
-
-v2.0.0 - Complete rewrite targeting FlashBlade REST API 2.x.
-  Breaking changes from v1.x (PureFBModule):
-  - New module name: PureStorageFlashBladePowerShell (was PureFBModule)
-  - Session-based connection model: Connect-PfbArray / Disconnect-PfbArray
-  - REST API 2.x only (1.x is no longer targeted)
-  - Cmdlet naming follows Verb-PfbNoun pattern with Get/New/Update/Remove verbs
-
-  New in v2.0.0:
-  - 493 cmdlets covering 218 FlashBlade REST API 2.x endpoints
-  - Connect-PfbArray mirrors the FlashArray Connect-Pfa2Array experience
-  - Four authentication methods: ApiToken, Username/Password, PSCredential, Certificate (OAuth2/JWT)
-  - Native REST 2.x /api/login for username/password (no external SSH module required)
-  - Connection object exposes .HttpEndpoint, .Username, .ApiToken, .RestApiVersion (Pfa2-compatible)
-  - Modular architecture: Public/ and Private/ function layout
-  - PowerShell 5.1+ compatible
+Full version history: https://github.com/PureStorage-OpenConnect/flashblade-powershell/blob/main/CHANGELOG.md
 '@
         }
     }

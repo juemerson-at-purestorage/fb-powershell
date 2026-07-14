@@ -5,44 +5,44 @@ function New-PfbObjectStoreAccessPolicyRole {
     .DESCRIPTION
         Creates an association between an object store access policy and an
         object store role. Once linked, the role inherits the permissions
-        defined by the access policy.
+        defined by the access policy. Accepts flattened association objects from
+        Get-PfbObjectStoreAccessPolicyRole on the pipeline.
     .PARAMETER PolicyName
-        The name of the access policy.
+        The name of the access policy. Binds from pipeline property 'PolicyName'.
     .PARAMETER MemberName
-        The name of the object store role to link.
+        The name of the object store role to link. Binds from pipeline property 'MemberName'.
     .PARAMETER Array
         The FlashBlade connection object.
     .EXAMPLE
         New-PfbObjectStoreAccessPolicyRole -PolicyName "full-access-policy" -MemberName "s3-admin-role"
         Links the s3-admin-role to the full-access-policy.
     .EXAMPLE
-        New-PfbObjectStoreAccessPolicyRole -PolicyName "readonly-policy" -MemberName "analytics-role"
-        Links the analytics-role to a read-only policy.
-    .EXAMPLE
-        "role-a","role-b" | ForEach-Object {
-            New-PfbObjectStoreAccessPolicyRole -PolicyName "shared-policy" -MemberName $_
-        }
-        Links multiple roles to the same policy.
+        Get-PfbObjectStoreAccessPolicyRole -PolicyName "old-policy" | New-PfbObjectStoreAccessPolicyRole -PolicyName "new-policy"
+        Re-links every role from old-policy onto new-policy.
     #>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
     param(
-        [Parameter(Mandatory, Position = 0)]
+        [Parameter(Mandatory, Position = 0, ValueFromPipelineByPropertyName)]
         [string]$PolicyName,
 
-        [Parameter(Mandatory, Position = 1)]
+        [Parameter(Mandatory, Position = 1, ValueFromPipelineByPropertyName)]
         [string]$MemberName,
 
         [Parameter()] [PSCustomObject]$Array
     )
 
-    Assert-PfbConnection -Array ([ref]$Array)
-
-    $queryParams = @{
-        'policy_names' = $PolicyName
-        'member_names' = $MemberName
+    begin {
+        Assert-PfbConnection -Array ([ref]$Array)
     }
 
-    if ($PSCmdlet.ShouldProcess("Policy=$PolicyName, Role=$MemberName", 'Create access policy role link')) {
-        Invoke-PfbApiRequest -Array $Array -Method POST -Endpoint 'object-store-access-policies/object-store-roles' -QueryParams $queryParams
+    process {
+        $queryParams = @{
+            'policy_names' = $PolicyName
+            'member_names' = $MemberName
+        }
+
+        if ($PSCmdlet.ShouldProcess("Policy=$PolicyName, Role=$MemberName", 'Create access policy role link')) {
+            Invoke-PfbApiRequest -Array $Array -Method POST -Endpoint 'object-store-access-policies/object-store-roles' -QueryParams $queryParams
+        }
     }
 }

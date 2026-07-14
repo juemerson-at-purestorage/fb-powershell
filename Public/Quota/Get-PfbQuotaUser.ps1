@@ -40,10 +40,29 @@ function Get-PfbQuotaUser {
     )
     Assert-PfbConnection -Array ([ref]$Array)
     $queryParams = @{}
-    if ($Name) { $queryParams['names'] = $Name -join ',' }
-    if ($FileSystemName) { $queryParams['file_system_names'] = $FileSystemName }
+    if ($Name) {
+        # FlashBlade rejects 'names' combined with 'file_system_names' ("Cannot provide a
+        # names parameter along with any of: file system, user IDs, or user names" --
+        # confirmed live against our lab array). The compound name (e.g. 'fs-share/1235') already
+        # identifies the file system, so file_system_names is omitted in this branch.
+        $queryParams['names'] = $Name -join ','
+    }
+    elseif ($FileSystemName) {
+        $queryParams['file_system_names'] = $FileSystemName
+    }
     if ($Filter) { $queryParams['filter'] = $Filter }
     if ($Sort) { $queryParams['sort'] = $Sort }
     if ($Limit -gt 0) { $queryParams['limit'] = $Limit }
-    Invoke-PfbApiRequest -Array $Array -Method GET -Endpoint 'quotas/users' -QueryParams $queryParams -AutoPaginate
+    $response = Invoke-PfbApiRequest -Array $Array -Method GET -Endpoint 'quotas/users' -QueryParams $queryParams -AutoPaginate
+    foreach ($item in $response) {
+        if ($null -ne $item) {
+            $fileSystemNameValue = $null
+            if ($null -ne $item.file_system) { $fileSystemNameValue = $item.file_system.name }
+            $userNameValue = $null
+            if ($null -ne $item.user) { $userNameValue = $item.user.name }
+            $item | Add-Member -MemberType NoteProperty -Name 'FileSystemName' -Value $fileSystemNameValue -Force
+            $item | Add-Member -MemberType NoteProperty -Name 'UserName' -Value $userNameValue -Force
+        }
+        $item
+    }
 }

@@ -1,30 +1,41 @@
 # Pure Storage FlashBlade PowerShell Toolkit
 
-PowerShell module for managing Pure Storage FlashBlade arrays via the REST API 2.x. Provides **496 cmdlets** covering all FlashBlade REST 2.x endpoints with a `Connect-PfbArray` experience that mirrors the FlashArray `PureStoragePowerShellSDK2` module.
+PowerShell module for managing Pure Storage FlashBlade arrays via the REST API 2.x. Provides **526 cmdlets** covering all FlashBlade REST 2.x endpoints with a `Connect-PfbArray` experience that mirrors the FlashArray `PureStoragePowerShellSDK2` module.
 
 ## Requirements
 
 - **PowerShell 5.1** or later (Windows PowerShell or PowerShell 7+)
+- **[Posh-SSH](https://www.powershellgallery.com/packages/Posh-SSH)** (optional) — only needed for `-Username`/`-Password`/`-Credential` auth against arrays running REST API below 2.26 (Purity//FB < 4.8.1). See [Authentication](#authentication) below.
 
 ## Installation
 
-### From source
+### From the PowerShell Gallery (recommended)
+
+```powershell
+Install-Module -Name PureStorageFlashBladePowerShell -Scope CurrentUser
+Import-Module PureStorageFlashBladePowerShell
+```
+
+### From source (contributors / air-gapped environments)
+
+The repo uses a flat layout (`.psd1`/`.psm1` at the root, alongside `Public/`/`Private/`);
+`./scripts/build.ps1` assembles the installable module folder:
 
 ```powershell
 # Clone the repository
-git clone https://github.com/dmann000/fb-powershell.git
+git clone https://github.com/PureStorage-OpenConnect/flashblade-powershell.git
+cd flashblade-powershell
 
-# Copy the module folder to a PSModulePath location
-Copy-Item -Recurse .\fb-powershell\PureStorageFlashBladePowerShell `
+# Build the module folder
+./scripts/build.ps1
+
+# Copy the built module to a PSModulePath location
+Copy-Item -Recurse .\build\PureStorageFlashBladePowerShell `
     "$env:USERPROFILE\Documents\WindowsPowerShell\Modules\PureStorageFlashBladePowerShell"
 
 # Import
 Import-Module PureStorageFlashBladePowerShell
 ```
-
-### Manual install
-
-Download the release and copy the `PureStorageFlashBladePowerShell` folder (containing `.psd1`, `.psm1`, and `LICENSE`) into any directory listed in `$env:PSModulePath`.
 
 ## Authentication
 
@@ -47,9 +58,19 @@ $array = Connect-PfbArray -Endpoint 10.0.0.1 -Username "pureuser" -Password $pas
 
 **How it works under the hood:**
 
-When you provide `-Username` and `-Password`, the module POSTs to the FlashBlade's native REST 2.x `/api/login` endpoint with `{ username, password }` as a JSON body. The array returns a session token (`x-auth-token`) used for subsequent calls.
+When you provide `-Username` and `-Password`, the module checks whether the connected array supports native REST 2.x username/password login (FlashBlade REST API 2.26 / Purity//FB 4.8.1 and later). If so, it POSTs to the `/api/login` endpoint with `{ username, password }` as a JSON body; the array returns a session token (`x-auth-token`) used for subsequent calls.
 
-After successful login, the module attempts to retrieve a long-lived API token from `/api/<ver>/admins/api-tokens?expose_api_token=true` for the connected user. If none exists and the user has admin privileges, the module mints one with a POST to the same endpoint. The cached API token enables automatic reconnection if the session expires mid-run. This mirrors `Connect-Pfa2Array` from the FlashArray SDK — without requiring SSH or any external module.
+After successful login, the module attempts to retrieve a long-lived API token from `/api/<ver>/admins/api-tokens?expose_api_token=true` for the connected user. If none exists and the user has admin privileges, the module mints one with a POST to the same endpoint. The cached API token enables automatic reconnection if the session expires mid-run. This mirrors `Connect-Pfa2Array` from the FlashArray SDK.
+
+**SSH fallback for older arrays (< REST API 2.26 / Purity//FB 4.8.1):**
+
+FlashBlade has never had a REST-based way to exchange a username/password for a token below that version, so on older arrays `-Username`/`-Password` (and `-Credential`) instead fall back to SSH: the module connects over SSH and runs the `pureadmin` CLI to retrieve or mint an API token. This path requires the optional [Posh-SSH](https://www.powershellgallery.com/packages/Posh-SSH) module:
+
+```powershell
+Install-Module -Name Posh-SSH -Scope CurrentUser
+```
+
+Posh-SSH is **not** a hard dependency of this module — it's only imported when the SSH fallback actually runs (i.e., only against arrays below REST API 2.26). If it isn't installed and the fallback is needed, `Connect-PfbArray` throws an error naming the exact install command, plus non-SSH alternatives (`-ApiToken`, or certificate/OAuth2 auth). Arrays on REST API 2.26+ never touch this path at all.
 
 ### PSCredential
 
@@ -176,7 +197,7 @@ Remove-PfbFileSystem -Name "test-fs" -Confirm
 | **File Systems** | Get, New, Update, Remove | `Get-PfbFileSystem`, `New-PfbFileSystem` |
 | **Snapshots** | Get, New, Remove | `Get-PfbFileSystemSnapshot` |
 | **Buckets** | Get, New, Update, Remove | `Get-PfbBucket`, `New-PfbBucket` |
-| **Policies** | Get, New, Update, Remove | `Get-PfbPolicy`, `New-PfbPolicyMember` |
+| **Policies** | Get, New, Update, Remove | `Get-PfbPolicy`, `New-PfbPolicyFileSystem` |
 | **Network** | Get, New, Update, Remove | `Get-PfbSubnet`, `Get-PfbNetworkInterface` |
 | **Hardware** | Get | `Get-PfbHardware`, `Get-PfbBlade` |
 | **Admin** | Get, New, Update, Remove | `Get-PfbAdmin`, `Get-PfbAdminSetting` |
@@ -218,27 +239,22 @@ Get-Command -Module PureStorageFlashBladePowerShell -Noun PfbBucket*
 
 ## Testing Results
 
-v2.0.0 was validated against a live FlashBlade S200R2 (Purity//FB 4.6.8, API 2.24) on Windows PowerShell 5.1.
+v2.1.0 was validated on PowerShell 7 (the module runtime supports Windows PowerShell 5.1+).
 
 | Test Area | Result |
 |---|---|
-| **Pester unit tests** | 1,062 passed, 0 failed |
-| **Module loads and exports** | 496 cmdlets confirmed |
-| **Help coverage** | 496/496 cmdlets have Synopsis |
-| **ShouldProcess (WhatIf/Confirm)** | 283/283 mutation cmdlets verified |
-| **Naming conventions** | 496/496 follow `Verb-PfbNoun` pattern, all approved verbs |
-| **Parameter consistency** | All cmdlets have `-Array`, correct parameter sets |
-| **Live API — read-only cmdlets** | 199/205 passed, 0 failed, 6 skipped (unconfigured features or model-specific) |
-| **Live array — mutation lifecycle** | File system + snapshot create/update/delete ✅ |
-| **Live array — Connect-PfbArray** | ApiToken, Username/Password (/api/login), PSCredential, Certificate ✅ |
-| **Build consistency** | Built `.psm1` exports identical 496 cmdlets |
-| **Code quality** | No `Write-Host` in cmdlets, no hardcoded IPs |
+| **Pester tests** | 144 passed, 0 failed, 1 skipped (22 suites, pwsh 7) |
+| **Module loads and exports** | 526 cmdlets confirmed |
+| **Help coverage** | 526/526 cmdlets have a Synopsis |
+| **Naming conventions** | 526/526 follow `Verb-PfbNoun` pattern, all approved verbs |
+| **ShouldProcess (WhatIf/Confirm)** | 304/304 array-mutating cmdlets (the 2 client-side credential cmdlets are exempt) |
+| **Live verification (PRs #4-8)** | Auth flows and affected cmdlets validated against real FlashBlade arrays on both sides of the REST API 2.26 threshold |
 
 ## Compatibility
 
 - **FlashBlade**: Purity//FB 3.x and later (REST API 2.x)
 - **PowerShell**: 5.1, 7.0+ (Windows, Linux, macOS)
-- **Tested on**: FlashBlade S200R2, Purity//FB 4.6.8, API version 2.24
+- **Verified against**: real FlashBlade arrays on both sides of the REST API 2.26 threshold
 
 ## Migration from v1.x (PureFBModule)
 
@@ -249,7 +265,9 @@ This is a complete rewrite. Key changes:
 - **Authentication**: Session-based via `Connect-PfbArray` / `Disconnect-PfbArray`
 - **Cmdlet naming**: `Verb-PfbNoun` pattern with `Get`, `New`, `Update`, `Remove` verbs
 
-The legacy v1.x module is preserved in the `legacy/` folder of this repository.
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 
 ## License
 
