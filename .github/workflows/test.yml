@@ -1,0 +1,56 @@
+name: Tests
+
+# Runs the Pester suite across every OS/PowerShell-edition combination the module
+# claims to support (PureStorageFlashBladePowerShell.psd1: PowerShellVersion = '5.1'),
+# so platform-specific bugs (e.g. a .NET marshaling difference between Windows and
+# Linux/macOS) are caught on every push/PR instead of only surfacing much later on
+# whichever CI job happens to run on a non-Windows runner.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }}, ${{ matrix.shell }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        shell: [pwsh]
+        include:
+          # Windows PowerShell 5.1 -- the manifest's declared minimum -- is only
+          # available on the windows-latest runner; pwsh (PowerShell 7+) already covers
+          # all three OSes via the matrix above.
+          - os: windows-latest
+            shell: powershell
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install test dependencies
+        shell: ${{ matrix.shell }}
+        run: |
+          if ($PSVersionTable.PSVersion.Major -lt 6) {
+            # Some older Windows PowerShell 5.1 hosts default to TLS 1.0/1.1, which
+            # PowerShell Gallery rejects -- force TLS 1.2 before hitting it.
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+          }
+          Install-Module -Name Pester -MinimumVersion 5.0 -Force -SkipPublisherCheck -Scope CurrentUser
+          # Posh-SSH is an optional runtime dependency (see Private/Get-PfbApiTokenViaSsh.ps1),
+          # but Get-PfbApiTokenViaSsh.Tests.ps1 mocks its cmdlets (New-SSHSession, etc.) --
+          # Pester can only mock a command that's resolvable, so it must be installed here
+          # even though the module under test never actually opens an SSH connection.
+          Install-Module -Name Posh-SSH -Force -SkipPublisherCheck -Scope CurrentUser
+
+      - name: Run Pester tests
+        shell: ${{ matrix.shell }}
+        run: |
+          Import-Module Pester -MinimumVersion 5.0 -Force
+          Import-Module Posh-SSH -Force
+          $cfg = New-PesterConfiguration
+          $cfg.Run.Path = 'Tests'
+          $cfg.Run.Exit = $true
+          $cfg.Output.Verbosity = 'Detailed'
+          Invoke-Pester -Configuration $cfg
