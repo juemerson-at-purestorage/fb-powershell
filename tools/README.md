@@ -46,6 +46,13 @@ Run in this order:
    just reports which versions need lookup and exits without failing. See the script's
    header comment for the Glean-assisted manual fallback.
 
+   `Data/PfbVersionMap.json` is currently populated as a **static, hand-curated file**
+   (sourced via the Glean-assisted flow above, cross-checked against the FlashBlade
+   Management REST API Reference table and per-version release-notes pages) rather than
+   by this script. The automated generator above remains deferred until a non-token data
+   path is wired up; when it lands, it should overwrite this file using the same
+   `{ "<version>": { "purity": "<version>" } }` shape it already emits.
+
 ## What's deliberately NOT in the manifest
 
 The FlashBlade OpenAPI spec has no structural JSON Schema `enum` anywhere — verified
