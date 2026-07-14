@@ -4,6 +4,11 @@
 $script:PfbDefaultArray = $null
 $script:PfbArrays = @{}
 
+# Module-scoped API-capability state (Data/PfbCapabilityMap.json, Data/PfbVersionMap.json)
+$script:PfbModuleRoot = $PSScriptRoot
+$script:PfbCapabilityMap = $null
+$script:PfbVersionMap = $null
+
 # Dot-source all private functions
 $privatePath = Join-Path $PSScriptRoot 'Private'
 if (Test-Path $privatePath) {

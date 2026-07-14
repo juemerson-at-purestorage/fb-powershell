@@ -35,6 +35,11 @@ function Invoke-PfbApiRequest {
         [string]$ApiVersionOverride
     )
 
+    # Fail fast if the connected array's REST version doesn't support this endpoint/param/
+    # field, before any network call is made. Never sent if incompatible: see
+    # Assert-PfbApiCapability's header for why an unrecognized endpoint is a silent no-op.
+    Assert-PfbApiCapability -Array $Array -Method $Method -Endpoint $Endpoint -Body $Body -QueryParams $QueryParams -ApiVersion $ApiVersionOverride
+
     # Certificate/OAuth2 sessions: proactively refresh the access token before it expires,
     # rather than waiting for a 401. A proactive refresh generates no failed-authentication
     # entry in the array's session log, unlike a reactive 401-triggered refresh.
