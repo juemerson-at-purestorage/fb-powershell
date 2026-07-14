@@ -1,6 +1,6 @@
 # Pure Storage FlashBlade PowerShell Toolkit
 
-PowerShell module for managing Pure Storage FlashBlade arrays via the REST API 2.x. Provides **518 cmdlets** covering all FlashBlade REST 2.x endpoints with a `Connect-PfbArray` experience that mirrors the FlashArray `PureStoragePowerShellSDK2` module.
+PowerShell module for managing Pure Storage FlashBlade arrays via the REST API 2.x. Provides **526 cmdlets** covering all FlashBlade REST 2.x endpoints with a `Connect-PfbArray` experience that mirrors the FlashArray `PureStoragePowerShellSDK2` module.
 
 ## Requirements
 
@@ -243,11 +243,11 @@ v2.1.0 was validated on PowerShell 7 (the module runtime supports Windows PowerS
 
 | Test Area | Result |
 |---|---|
-| **Pester tests** | 139 passed, 0 failed, 1 skipped (21 suites, pwsh 7) |
-| **Module loads and exports** | 518 cmdlets confirmed |
-| **Help coverage** | 518/518 cmdlets have a Synopsis |
-| **Naming conventions** | 518/518 follow `Verb-PfbNoun` pattern, all approved verbs |
-| **ShouldProcess (WhatIf/Confirm)** | 299/299 array-mutating cmdlets (the 2 client-side credential cmdlets are exempt) |
+| **Pester tests** | 144 passed, 0 failed, 1 skipped (22 suites, pwsh 7) |
+| **Module loads and exports** | 526 cmdlets confirmed |
+| **Help coverage** | 526/526 cmdlets have a Synopsis |
+| **Naming conventions** | 526/526 follow `Verb-PfbNoun` pattern, all approved verbs |
+| **ShouldProcess (WhatIf/Confirm)** | 304/304 array-mutating cmdlets (the 2 client-side credential cmdlets are exempt) |
 | **Live verification (PRs #4-8)** | Auth flows and affected cmdlets validated against real FlashBlade arrays on both sides of the REST API 2.26 threshold |
 
 ## Compatibility

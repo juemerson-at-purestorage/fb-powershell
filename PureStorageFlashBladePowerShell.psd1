@@ -529,7 +529,16 @@
         'Get-PfbDataEvictionPolicyFileSystem',
         'Add-PfbDataEvictionPolicyFileSystem',
         'Remove-PfbDataEvictionPolicyFileSystem',
-        'Get-PfbDataEvictionPolicyMember'
+        'Get-PfbDataEvictionPolicyMember',
+        # Local directory services (local user/group management)
+        'Get-PfbLocalDirectoryService',
+        'New-PfbLocalDirectoryService',
+        'Get-PfbLocalGroup',
+        'New-PfbLocalGroup',
+        'Remove-PfbLocalGroup',
+        'Get-PfbLocalGroupMember',
+        'New-PfbLocalGroupMember',
+        'Remove-PfbLocalGroupMember'
     )
     CmdletsToExport   = @()
     VariablesToExport  = @()
