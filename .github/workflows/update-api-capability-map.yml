@@ -86,7 +86,7 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           commit-message: 'Update API capability map'
-          title: 'Update API capability map${{ steps.summary.outputs.new_versions && format(" (new REST versions: {0})", steps.summary.outputs.new_versions) || "" }}'
+          title: "Update API capability map${{ steps.summary.outputs.new_versions && format(' (new REST versions: {0})', steps.summary.outputs.new_versions) || '' }}"
           body: |
             Automated update from the `update-api-capability-map` workflow.
 
