@@ -247,7 +247,7 @@ v2.1.0 was validated on PowerShell 7 (the module runtime supports Windows PowerS
 
 | Test Area | Result |
 |---|---|
-| **Pester tests** | 144 passed, 0 failed, 1 skipped (22 suites, pwsh 7) |
+| **Pester tests** | 145 passed, 0 failed, 2 skipped (22 suites, pwsh 7); 143 passed, 0 failed, 4 skipped on Windows PowerShell 5.1 |
 | **Module loads and exports** | 526 cmdlets confirmed |
 | **Help coverage** | 526/526 cmdlets have a Synopsis |
 | **Naming conventions** | 526/526 follow `Verb-PfbNoun` pattern, all approved verbs |
