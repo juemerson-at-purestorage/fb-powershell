@@ -1,6 +1,6 @@
 @{
     RootModule        = 'PureStorageFlashBladePowerShell.psm1'
-    ModuleVersion     = '2.1.0'
+    ModuleVersion     = '2.1.1'
     GUID              = 'b25473b3-9eb7-414d-8da1-264e10f73d86'
     Author            = 'Pure Storage, Inc.'
     CompanyName       = 'Pure Storage, Inc.'
@@ -549,11 +549,14 @@
             Tags         = @('PureStorage', 'FlashBlade', 'Storage', 'REST', 'API', 'S3', 'NFS', 'SMB', 'FlashBlade2')
             ProjectUri   = 'https://github.com/PureStorage-OpenConnect/flashblade-powershell'
             LicenseUri   = 'https://github.com/PureStorage-OpenConnect/flashblade-powershell/blob/main/LICENSE'
-            # This branch is based on PR #9 (integration/justin-prs) in anticipation of its
-            # merge, so ModuleVersion/FunctionsToExport/ReleaseNotes already reflect that
-            # state. Full v2.1.0 and v2.0.5 detail lives in CHANGELOG.md; if PR #9 changes
-            # further before it actually merges, re-check this block against the real result.
+            # ReleaseNotes carries only the latest-version highlight; full history is in CHANGELOG.md.
             ReleaseNotes = @'
+v2.1.1 - Cross-platform + Windows PowerShell 5.1 fixes.
+  Fixes a SecureString password truncation on Linux/macOS (affected encrypted-key JWT
+  signing and native username/password login, which silently used only the first
+  character of the password). Guards the encrypted-PKCS#8 test fixtures on Windows
+  PowerShell 5.1 and documents that -PrivateKeyPassword requires PowerShell 7+.
+
 v2.1.0 - Auth resilience + cmdlet correctness (integrates PRs #4-8).
   Connect-PfbArray gains a Posh-SSH login fallback for arrays below REST API 2.26,
   automatic OAuth2 token refresh for the Certificate flow, and forces TLS 1.2 on

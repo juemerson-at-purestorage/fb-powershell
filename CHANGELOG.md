@@ -2,6 +2,27 @@
 
 All notable changes to `PureStorageFlashBladePowerShell` are documented in this file.
 
+## [2.1.1] - 2026-07-15
+
+Cross-platform and Windows PowerShell 5.1 fixes.
+
+### Fixed
+
+- SecureString password truncation on Linux/macOS: `Marshal.PtrToStringAuto` reads a
+  BSTR with ANSI semantics on non-Windows platforms, truncating the password to its
+  first character. Switched to `Marshal.PtrToStringBSTR` (correct and UTF-16 on every
+  platform) in `New-PfbJwtToken` (encrypted-key JWT signing) and `Connect-PfbArray`
+  (native username/password `/api/login`). Windows was never affected.
+- Windows PowerShell 5.1 test crash: the encrypted-PKCS#8 test fixtures used
+  `RSA.ExportEncryptedPkcs8PrivateKeyPem` / `PbeParameters`, which don't exist on .NET
+  Framework 4.x. Those tests are now guarded on 5.1 (with a 5.1 regression test added);
+  production code already surfaces a clear "requires PowerShell 7+" error.
+
+### Changed
+
+- Documented that `-PrivateKeyPassword` (encrypted private keys) requires PowerShell 7+
+  (README and `New-PfbJwtToken` help).
+
 ## [2.1.0] - 2026-07-07
 
 <!-- Pending merge via PR #9 (integration/justin-prs) at the time this entry was written;
