@@ -99,6 +99,10 @@ $array = Connect-PfbArray -Endpoint 10.0.0.1 -Username "pureuser" `
     -PrivateKeyFile "C:\keys\fb-private.pem" -IgnoreCertificateError
 ```
 
+> **Note:** `-PrivateKeyPassword` (encrypted private keys) requires **PowerShell 7+**. Windows
+> PowerShell 5.1 can only use unencrypted (plain) private key files with this flow; supplying
+> `-PrivateKeyPassword` under Windows PowerShell 5.1 throws a clear error rather than connecting.
+
 ### The `-IgnoreCertificateError` flag
 
 Most FlashBlade arrays use self-signed SSL certificates. Pass `-IgnoreCertificateError` to bypass certificate validation. This is standard for lab and on-prem environments.
