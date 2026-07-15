@@ -452,12 +452,15 @@ Describe 'Certificate/OAuth2 refresh - PrivateKeyPassword never logged' {
         $joined | Should -Not -Match ([regex]::Escape($plainPassword))
     }
 
-    It 'never surfaces the plaintext private key password when New-PfbJwtToken actually decrypts a real encrypted key' {
+    It 'never surfaces the plaintext private key password when New-PfbJwtToken actually decrypts a real encrypted key' -Skip:($PSVersionTable.PSVersion.Major -lt 6) {
         # Unlike the test above, Invoke-PfbOAuth2Login is NOT mocked here -- this exercises the
         # real Invoke-PfbOAuth2Login -> New-PfbJwtToken path, including the actual PKCS#8
         # encrypted-private-key decryption in New-PfbJwtToken.ps1 (the only place in the codebase
         # that marshals PrivateKeyPassword from a SecureString to plaintext). Only the network
         # calls (version negotiation and the OAuth2 token exchange) are mocked.
+        # RSA.ExportEncryptedPkcs8PrivateKeyPem/PbeParameters are .NET Core 3.0+/.NET 5+ only --
+        # skipped on Windows PowerShell 5.1, where New-PfbJwtToken.ps1 throws before decrypting
+        # (see Tests/New-PfbJwtToken.Tests.ps1's dedicated 5.1 regression test for that path).
         $plainPassword = 'super-secret-real-decrypt-password'
         $keyPassword = ConvertTo-SecureString $plainPassword -AsPlainText -Force
 

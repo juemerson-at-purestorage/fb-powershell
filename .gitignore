@@ -27,6 +27,9 @@ docs/superpowers/
 # PowerShell
 *.pssproj.user
 
+# Not yet decided whether this should be tracked -- excluded for now
+tools/
+
 # OS
 Thumbs.db
 Desktop.ini
