@@ -5,7 +5,15 @@ function New-PfbJwtToken {
     .DESCRIPTION
         Internal helper that creates a JWT signed with an RSA private key.
         Used by Connect-PfbArray for the certificate-based authentication flow.
-        Compatible with PowerShell 5.1 (uses .NET crypto classes directly).
+        Unencrypted PKCS#1/PKCS#8 private keys are compatible with Windows PowerShell 5.1
+        (uses .NET crypto classes directly, via CNG). Encrypted private keys supplied with
+        -PrivateKeyPassword require PowerShell 7+ -- see .NOTES.
+    .NOTES
+        -PrivateKeyPassword (encrypted PKCS#8 private keys) requires PowerShell 7+.
+        RSA.ImportEncryptedPkcs8PrivateKey is a .NET Core 3.0+/.NET 5+ API with no equivalent
+        on .NET Framework 4.x, which Windows PowerShell 5.1 runs on. Under Windows PowerShell
+        5.1, supplying -PrivateKeyPassword throws "Encrypted private keys require PowerShell 7+."
+        Use an unencrypted private key, or run under PowerShell 7+, in that case.
     #>
     [CmdletBinding()]
     param(
