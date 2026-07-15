@@ -56,6 +56,26 @@ Describe 'Connect-PfbArray - native login version gate + Posh-SSH fallback' {
             $conn.AuthToken | Should -Be 'native-token'
             Should -Invoke -ModuleName PureStorageFlashBladePowerShell Get-PfbApiTokenViaSsh -Times 0
         }
+
+        It 'sends the full, untruncated password in the /api/login request body' {
+            # Regression test for the SecureString->BSTR marshaling bug: Marshal.PtrToStringAuto
+            # is ANSI on non-Windows platforms and silently truncates a UTF-16 BSTR at its first
+            # null byte -- i.e. after only the first character -- so a naive mock that ignores
+            # $Body (like the test above) can't catch it. Assert on the actual decoded password.
+            Mock -ModuleName PureStorageFlashBladePowerShell Invoke-RestMethod {
+                [PSCustomObject]@{ versions = @('2.26') }
+            } -ParameterFilter { $Uri -like '*api_version*' }
+
+            Mock -ModuleName PureStorageFlashBladePowerShell Invoke-WebRequest {
+                [PSCustomObject]@{ Headers = @{ 'x-auth-token' = 'native-token' } }
+            } -ParameterFilter { $Uri -eq 'https://fb.test/api/login' }
+
+            Connect-PfbArray -Endpoint 'fb.test' -Username 'pureuser' -Password $script:testPassword | Out-Null
+
+            Should -Invoke -ModuleName PureStorageFlashBladePowerShell Invoke-WebRequest -Times 1 -Exactly -ParameterFilter {
+                $Uri -eq 'https://fb.test/api/login' -and ($Body | ConvertFrom-Json).password -eq 'hunter2'
+            }
+        }
     }
 
     Context 'Array does not support native login (< 2.26)' {
