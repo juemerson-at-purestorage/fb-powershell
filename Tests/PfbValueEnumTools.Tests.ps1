@@ -301,3 +301,157 @@ Describe 'Get-PfbSpecValueEnums' {
         Get-PfbSpecValueEnums -Spec $emptySpec | Should -BeNullOrEmpty
     }
 }
+
+Describe 'Get-PfbSpecValueEnums: inline path-operation parameters' {
+    BeforeAll {
+        # Regression fixture for the real GET /arrays/space `type` gap: a versioned
+        # spec.paths key (every real cached spec carries an "/api/<version>/" prefix)
+        # whose GET operation defines `type` INLINE (no $ref), alongside a sibling
+        # parameter that is already a $ref (must NOT be reprocessed/double-counted) and
+        # an inline parameter with no "Valid values..." trigger at all (must not emit a
+        # record).
+        $script:inlineSpec = [PSCustomObject]@{
+            components = [PSCustomObject]@{
+                schemas    = [PSCustomObject]@{}
+                parameters = [PSCustomObject]@{
+                    Resolution = [PSCustomObject]@{
+                        name        = 'resolution'
+                        'in'        = 'query'
+                        description = 'The desired ms between samples. Valid values are `1000`, `30000`.'
+                    }
+                }
+            }
+            paths      = [PSCustomObject]@{
+                '/api/2.0/arrays/space' = [PSCustomObject]@{
+                    get = [PSCustomObject]@{
+                        parameters = @(
+                            [PSCustomObject]@{ '$ref' = '#/components/parameters/Resolution' }
+                            [PSCustomObject]@{
+                                name        = 'type'
+                                'in'        = 'query'
+                                description = 'Display the metric of a specified object type. Valid values are `array`, `file-system`, and `object-store`. If not specified, defaults to `array`.'
+                            }
+                            [PSCustomObject]@{
+                                name        = 'start_time'
+                                'in'        = 'query'
+                                description = 'When the time window starts (in milliseconds since epoch).'
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
+        $script:inlineResults = Get-PfbSpecValueEnums -Spec $inlineSpec
+    }
+
+    It 'extracts an inline (non-$ref) path-operation parameter as Kind = inline-parameter' {
+        $rec = $inlineResults | Where-Object { $_.Kind -eq 'inline-parameter' }
+        $rec | Should -Not -BeNullOrEmpty
+        $rec.Values | Should -Be @('array', 'file-system', 'object-store')
+        $rec.Name | Should -Be 'type'
+    }
+
+    It 'keys the inline-parameter record as "<METHOD> <path>#<paramName>", with the /api/<version>/ prefix stripped' {
+        $rec = $inlineResults | Where-Object { $_.Kind -eq 'inline-parameter' }
+        $rec.Key | Should -Be 'GET arrays/space#type'
+    }
+
+    It 'does not reprocess a $ref entry in the inline-parameter pass (no double-count of the Resolution parameter)' {
+        ($inlineResults | Where-Object { $_.Name -eq 'resolution' }).Count | Should -Be 1
+        ($inlineResults | Where-Object { $_.Name -eq 'resolution' }).Kind | Should -Be 'parameter'
+    }
+
+    It 'does not emit an inline-parameter record for an operation parameter with no trigger phrase' {
+        ($inlineResults | Where-Object { $_.Name -eq 'start_time' }) | Should -BeNullOrEmpty
+    }
+
+    It 'strips a non-versioned path prefix down to just the leading slash (e.g. /oauth2/1.0/token-shaped paths)' {
+        $spec = [PSCustomObject]@{
+            components = [PSCustomObject]@{ schemas = [PSCustomObject]@{}; parameters = [PSCustomObject]@{} }
+            paths      = [PSCustomObject]@{
+                '/oauth2/1.0/token' = [PSCustomObject]@{
+                    post = [PSCustomObject]@{
+                        parameters = @(
+                            [PSCustomObject]@{ name = 'grant_type'; 'in' = 'query'; description = 'Valid values are `client_credentials`.' }
+                        )
+                    }
+                }
+            }
+        }
+        $rec = Get-PfbSpecValueEnums -Spec $spec | Where-Object { $_.Kind -eq 'inline-parameter' }
+        $rec.Key | Should -Be 'POST oauth2/1.0/token#grant_type'
+    }
+}
+
+Describe 'Build-PfbValueEnumMap.ps1: inline-parameter-to-$ref refactor keeps the field''s minVersion at its original (inline) version' {
+    BeforeAll {
+        $repoRoot = Split-Path -Parent $PSScriptRoot
+        $script:builderScript = Join-Path $repoRoot 'tools/Build-PfbValueEnumMap.ps1'
+
+        # Reproduces the real Get-PfbArraySpace `type` history exactly: v1 defines it
+        # inline on GET /arrays/space with a full "Valid values..." description; v2
+        # refactors the SAME parameter into a components.parameters $ref with
+        # byte-identical description text — a pure documentation refactor, not an API
+        # change. The field must still be attributed to v1, not v2, once diffed.
+        New-Item -ItemType Directory -Path 'TestDrive:\inlineSpecs' -Force | Out-Null
+
+        $description = 'Display the metric of a specified object type. Valid values are `array`, `file-system`, and `object-store`. If not specified, defaults to `array`.'
+
+        $specV1 = [ordered]@{
+            openapi    = '3.0.1'
+            info       = @{ version = '5.0' }
+            components = [ordered]@{ schemas = [ordered]@{}; parameters = [ordered]@{} }
+            paths      = [ordered]@{
+                '/api/5.0/arrays/space' = [ordered]@{
+                    get = [ordered]@{
+                        parameters = @(
+                            [ordered]@{ name = 'type'; 'in' = 'query'; description = $description }
+                        )
+                    }
+                }
+            }
+        }
+        $specV2 = [ordered]@{
+            openapi    = '3.0.1'
+            info       = @{ version = '5.1' }
+            components = [ordered]@{
+                schemas    = [ordered]@{}
+                parameters = [ordered]@{
+                    Type = [ordered]@{ name = 'type'; 'in' = 'query'; description = $description }
+                }
+            }
+            paths      = [ordered]@{
+                '/api/5.1/arrays/space' = [ordered]@{
+                    get = [ordered]@{
+                        parameters = @(
+                            [ordered]@{ '$ref' = '#/components/parameters/Type' }
+                        )
+                    }
+                }
+            }
+        }
+
+        $specV1 | ConvertTo-Json -Depth 20 | Set-Content -Path 'TestDrive:\inlineSpecs\fb5.0.json'
+        $specV2 | ConvertTo-Json -Depth 20 | Set-Content -Path 'TestDrive:\inlineSpecs\fb5.1.json'
+
+        & $builderScript -SpecsDirectory 'TestDrive:\inlineSpecs' -OutputPath 'TestDrive:\inlineOutput\map.json' -ReconciliationPath 'TestDrive:\inlineOutput\reconciliation.md'
+        $script:inlineManifest = Get-Content -Path 'TestDrive:\inlineOutput\map.json' -Raw | ConvertFrom-Json -Depth 20
+    }
+
+    It 'extracts the older (inline) version as an inline-parameter-kind record keyed by method+path+name' {
+        $inlineManifest.entries.'GET arrays/space#type' | Should -Not -BeNullOrEmpty
+        $inlineManifest.entries.'GET arrays/space#type'.kind | Should -Be 'inline-parameter'
+        $inlineManifest.entries.'GET arrays/space#type'.values | Should -Be @('array', 'file-system', 'object-store')
+    }
+
+    It 'attributes the inline-parameter record''s minVersion to the OLDER version, not the version where it became a $ref' {
+        $inlineManifest.entries.'GET arrays/space#type'.minVersion | Should -Be '5.0'
+    }
+
+    It 'also records the newer $ref''d definition under components.parameters, separately, without disturbing the inline record' {
+        $inlineManifest.entries.'Type' | Should -Not -BeNullOrEmpty
+        $inlineManifest.entries.'Type'.kind | Should -Be 'parameter'
+        $inlineManifest.entries.'Type'.minVersion | Should -Be '5.1'
+    }
+}

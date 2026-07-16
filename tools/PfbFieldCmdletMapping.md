@@ -6,16 +6,14 @@ Reporting only -- no `Public/` cmdlet is edited by this script. Every `matched` 
 
 ## Summary
 
-- matched: 0
-- collision: 1
+- matched: 1
+- collision: 0
 - not-found-in-resource: 2
 - no-spec-enum-found: 1064
 
-No `matched` candidates this run -- this can be a genuinely correct result (most typed parameters without a `ValidateSet` are generic non-enum fields like filter/sort/limit/names/ids, not spec-documented enums) rather than a sign the tool found nothing useful. See the `collision`/`not-found-in-resource` rows below for what *is* actionable.
-
 | Cmdlet | Parameter | Wire name | Status | Spec values | Recommendation |
 |---|---|---|---|---|---|
-| `Get-PfbArraySpace` | `-Type` | type | collision |  |  |
+| `Get-PfbArraySpace` | `-Type` | type | matched | array, file-system, object-store | ValidateSet |
 | `Update-PfbDataEvictionPolicy` | `-NewName` | name | not-found-in-resource |  |  |
 | `Update-PfbWorkload` | `-NewName` | name | not-found-in-resource |  |  |
 

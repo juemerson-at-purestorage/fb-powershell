@@ -100,6 +100,17 @@ Key correctness rules (each has a dedicated regression test in
   presets-only `_presetWorkloadExportConfigurationNfsRule.access` is
   `root-squash`/`all-squash`/`no-root-squash`) — collapsing by bare name would silently
   merge them.
+- The extractor also covers a parameter defined **inline** directly on a
+  `spec.paths.<path>.<method>` operation — not just `components.schemas` properties and
+  named `components.parameters` entries. This matters because a field can be inline for
+  years before a later spec refactor turns it into a `$ref`: `GET /arrays/space`'s `type`
+  query parameter was inline (full "Valid values are `array`, `file-system`,
+  `object-store`." description) from REST 2.0 through 2.16, only becoming
+  `$ref: '#/components/parameters/Type'` at 2.17 — a pure documentation refactor, not an
+  API change. Without this pass, the field's true `minVersion` (2.0) would be invisible
+  and its earlier, inline-only history would be lost entirely. Keyed by
+  `"<METHOD> <path>#<paramName>"` (`Kind = 'inline-parameter'`), never the bare parameter
+  name, for the same never-collapse reason as above.
 - Value extraction is scoped to the matched trigger *sentence* only, not the whole
   description, since some descriptions repeat the same backtick-quoted values again in
   explanatory prose that follows the enum sentence.
@@ -149,6 +160,14 @@ Key correctness rules:
   different value sets, or `not-found-in-resource` if the wire name exists in the spec but
   not under any schema the cmdlet's resource hint suggests. Both require manual follow-up
   to ensure the intent is captured.
+- An **`inline-parameter`**-kind value-enum record (see "Value-enum extraction" above) is
+  keyed by exact endpoint identity (`"<METHOD> <path>#<paramName>"`), so when
+  `PfbCmdletParamTools.ps1`'s AST inventory can determine exactly which endpoint a given
+  cmdlet parameter calls, an exact match there overrides an otherwise-ambiguous
+  `parameter`-kind wire name — this is precisely how `Get-PfbArraySpace -Type` resolves to
+  `matched`/`ValidateSet` instead of `collision`, even though its wire name `type` also
+  matches two disagreeing `components.parameters` definitions (`Type` and
+  `Type_for_performance`) elsewhere in the spec.
 - `attributesOnly` and `typedUnresolved` entries are *reported*, not resolved — they list
   parameters that either have no typed field to attach validation to (attributes-only),
   or have a wire name that couldn't be resolved to a spec key. These require human

@@ -1565,11 +1565,15 @@
       "cmdlet": "Get-PfbArraySpace",
       "parameter": "Type",
       "wireName": "type",
-      "status": "collision",
-      "matchedKey": null,
-      "specValues": null,
-      "stableSinceOldestVersion": null,
-      "recommendation": null
+      "status": "matched",
+      "matchedKey": "GET arrays/space#type",
+      "specValues": [
+        "array",
+        "file-system",
+        "object-store"
+      ],
+      "stableSinceOldestVersion": true,
+      "recommendation": "ValidateSet"
     },
     {
       "cmdlet": "Get-PfbArraySshCaPolicy",
