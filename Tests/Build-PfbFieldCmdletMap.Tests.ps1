@@ -161,6 +161,30 @@ Describe 'Build-PfbFieldCmdletMap' {
         (Get-Content $reportPath -Raw) | Should -Match 'ValidateSet'
     }
 
+    It 'includes a Summary section with correct per-status counts for the fixture set' {
+        $reportText = Get-Content $reportPath -Raw
+        $reportText | Should -Match '## Summary'
+        # Fixture distribution: matched = StableField, ChangingField, NewInV2,
+        # ParamKindConsistentField (4); collision = CollisionField, ParamKindField (2);
+        # not-found-in-resource = ElsewhereField (1); no-spec-enum-found = NoSpecField (1).
+        $reportText | Should -Match '- matched: 4'
+        $reportText | Should -Match '- collision: 2'
+        $reportText | Should -Match '- not-found-in-resource: 1'
+        $reportText | Should -Match '- no-spec-enum-found: 1'
+    }
+
+    It 'does not emit the zero-matched note when matched candidates exist' {
+        (Get-Content $reportPath -Raw) | Should -Not -Match 'No `matched` candidates this run'
+    }
+
+    It 'omits no-spec-enum-found rows from the detailed table but keeps matched/collision/not-found-in-resource rows' {
+        $reportText = Get-Content $reportPath -Raw
+        $reportText | Should -Not -Match '\| `New-PfbWidget` \| `-NoSpecField` \|'
+        $reportText | Should -Match '\| `New-PfbWidget` \| `-StableField` \|'
+        $reportText | Should -Match '\| `New-PfbWidget` \| `-CollisionField` \|'
+        $reportText | Should -Match '\| `New-PfbWidget` \| `-ElsewhereField` \|'
+    }
+
     It 'classifies a wire name matching multiple hinted schemas with different value sets as collision, not a guess' {
         $rec = $manifest.entries | Where-Object { $_.parameter -eq 'CollisionField' }
         $rec.status | Should -Be 'collision'
