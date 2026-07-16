@@ -1565,7 +1565,7 @@
       "cmdlet": "Get-PfbArraySpace",
       "parameter": "Type",
       "wireName": "type",
-      "status": "not-found-in-resource",
+      "status": "collision",
       "matchedKey": null,
       "specValues": null,
       "stableSinceOldestVersion": null,

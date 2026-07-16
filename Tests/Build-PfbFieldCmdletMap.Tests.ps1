@@ -47,6 +47,20 @@ BeforeAll {
                     }
                 }
             }
+            # Reproduces the real Get-PfbArraySpace -Type bug pattern: Kind='parameter'
+            # records are keyed by an OpenAPI components.parameters dictionary name with
+            # NO relationship to the owning resource/cmdlet, so the resource-hint filter
+            # (built for schema keys) can never match them. Two distinct
+            # components.parameters definitions can share the same wire "name" -- if
+            # they disagree on value set, the field is genuinely ambiguous (collision);
+            # if they agree, it's safe to resolve regardless of which definition this
+            # cmdlet's endpoint actually references (matched).
+            parameters = @{
+                ParamKindAmbiguousA  = @{ name = 'param_kind_ambiguous';  description = 'Valid values are `t1`, `t2`.' }
+                ParamKindAmbiguousB  = @{ name = 'param_kind_ambiguous';  description = 'Valid values are `t1`, `t3`.' }
+                ParamKindConsistentA = @{ name = 'param_kind_consistent'; description = 'Valid values are `k1`, `k2`.' }
+                ParamKindConsistentB = @{ name = 'param_kind_consistent'; description = 'Valid values are `k1`, `k2`.' }
+            }
         }
     }
     $specV2 = @{
@@ -71,6 +85,12 @@ BeforeAll {
                     }
                 }
             }
+            parameters = @{
+                ParamKindAmbiguousA  = @{ name = 'param_kind_ambiguous';  description = 'Valid values are `t1`, `t2`.' }
+                ParamKindAmbiguousB  = @{ name = 'param_kind_ambiguous';  description = 'Valid values are `t1`, `t3`.' }
+                ParamKindConsistentA = @{ name = 'param_kind_consistent'; description = 'Valid values are `k1`, `k2`.' }
+                ParamKindConsistentB = @{ name = 'param_kind_consistent'; description = 'Valid values are `k1`, `k2`.' }
+            }
         }
     }
     $specV1 | ConvertTo-Json -Depth 20 | Set-Content -Path (Join-Path $specsDir 'fb1.0.json')
@@ -90,6 +110,8 @@ function New-PfbWidget {
         [Parameter()] [string]$CollisionField,
         [Parameter()] [string]$ElsewhereField,
         [Parameter()] [string]$NoSpecField,
+        [Parameter()] [string]$ParamKindField,
+        [Parameter()] [string]$ParamKindConsistentField,
         [Parameter()] [PSCustomObject]$Array
     )
     $body = @{}
@@ -99,6 +121,8 @@ function New-PfbWidget {
     if ($CollisionField)  { $body["collision_field"]  = $CollisionField }
     if ($ElsewhereField)  { $body["elsewhere_field"]  = $ElsewhereField }
     if ($NoSpecField)      { $body["totally_unknown_field"] = $NoSpecField }
+    if ($ParamKindField)   { $body["param_kind_ambiguous"] = $ParamKindField }
+    if ($ParamKindConsistentField) { $body["param_kind_consistent"] = $ParamKindConsistentField }
 }
 '@
 
@@ -154,6 +178,19 @@ Describe 'Build-PfbFieldCmdletMap' {
         $rec = $manifest.entries | Where-Object { $_.parameter -eq 'NoSpecField' }
         $rec.status | Should -Be 'no-spec-enum-found'
         $rec.recommendation | Should -BeNullOrEmpty
+    }
+
+    It 'classifies a parameter-kind wire name with disagreeing value sets across components.parameters definitions as collision, not not-found-in-resource' {
+        $rec = $manifest.entries | Where-Object { $_.parameter -eq 'ParamKindField' }
+        $rec.status | Should -Be 'collision'
+        $rec.recommendation | Should -BeNullOrEmpty
+        $rec.matchedKey | Should -BeNullOrEmpty
+    }
+
+    It 'resolves a parameter-kind wire name to matched when every components.parameters definition sharing it agrees on the same value set' {
+        $rec = $manifest.entries | Where-Object { $_.parameter -eq 'ParamKindConsistentField' }
+        $rec.status | Should -Be 'matched'
+        $rec.specValues | Should -Be @('k1', 'k2')
     }
 }
 
