@@ -127,6 +127,41 @@ no reliable way to diff individual values across versions given how often the sa
 gets reworded without the value set itself changing. The manifest tracks each field's
 current legal value set and the field's own earliest-seen version only.
 
+## Field-to-cmdlet mapping (`Build-PfbFieldCmdletMap.ps1`)
+
+Joins the cmdlet parameter inventory (from `PfbCmdletParamTools.ps1`, which reads `Public/`
+cmdlet ASTs) against the prose value-enum data extracted above to recommend, per typed
+`Public/` parameter that lacks a `ValidateSet` today, whether it should become a
+`ValidateSet` or an `ArgumentCompleter`:
+
+```powershell
+./tools/Build-PfbFieldCmdletMap.ps1
+```
+
+Key correctness rules:
+- A parameter is recommended `ValidateSet` only if: the parameter's wire field appears in
+  the spec, it has a documented value enumeration, that enumeration is present unchanged in
+  every REST version from the field's introduction onward, and the field was present since
+  the oldest cached version.
+- A parameter is recommended `ArgumentCompleter` if the field exists but the value set
+  changed at any point in the history, or the field was introduced in a newer version.
+- A parameter is classified `collision` if its wire name matches multiple schema keys with
+  different value sets, or `not-found-in-resource` if the wire name exists in the spec but
+  not under any schema the cmdlet's resource hint suggests. Both require manual follow-up
+  to ensure the intent is captured.
+- `attributesOnly` and `typedUnresolved` entries are *reported*, not resolved — they list
+  parameters that either have no typed field to attach validation to (attributes-only),
+  or have a wire name that couldn't be resolved to a spec key. These require human
+  decisions (add a new typed parameter, or leave as-is); the script does not edit any
+  `Public/` cmdlet.
+
+The builder also writes `tools/PfbFieldCmdletMapping.md`, a Markdown table summarizing
+every candidate and its recommendation — informational only, not consumed at runtime.
+
+**`Data/PfbFieldCmdletMap.json`'s output is not consumed anywhere at runtime yet** — no
+`ValidateSet` or `ArgumentCompleter` is added to any `Public/` cmdlet by this script.
+Whether/how to consume it is a deliberate follow-on decision.
+
 ## Tests
 
 `Tests/PfbSpecTools.Tests.ps1`, `Tests/PfbVersionMapTools.Tests.ps1`, and
