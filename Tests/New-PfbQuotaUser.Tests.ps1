@@ -70,9 +70,23 @@ Describe 'New-PfbQuotaUser' {
     }
 
     Context 'identity validation' {
-        It 'throws when neither -UserName nor -UserId is supplied' {
-            { New-PfbQuotaUser -FileSystemName 'fs-share' -Quota 100 -Confirm:$false -Array $fakeArray } |
-                Should -Throw
+        It 'declares -UserName and -UserId mandatory in mutually exclusive parameter sets (rejects neither being supplied)' {
+            # Deliberately does NOT invoke the cmdlet with neither -UserName nor -UserId:
+            # PowerShell's own parameter binder can't resolve a parameter set in that case,
+            # falls back to the default ('ByName'), and then PROMPTS INTERACTIVELY for the
+            # missing mandatory -UserName instead of letting the cmdlet's own code run —
+            # which hangs forever with no TTY to answer it (confirmed live, in both a real
+            # interactive terminal and this suite's own non-interactive runner). Asserting
+            # against the parameter metadata proves the same "neither supplied" case is
+            # rejected, without ever risking that hang.
+            $cmd = Get-Command New-PfbQuotaUser
+            $userNameSet = $cmd.Parameters['UserName'].Attributes |
+                Where-Object { $_ -is [System.Management.Automation.ParameterAttribute] -and $_.ParameterSetName -eq 'ByName' }
+            $userIdSet = $cmd.Parameters['UserId'].Attributes |
+                Where-Object { $_ -is [System.Management.Automation.ParameterAttribute] -and $_.ParameterSetName -eq 'ById' }
+
+            $userNameSet.Mandatory | Should -BeTrue
+            $userIdSet.Mandatory | Should -BeTrue
         }
 
         It 'throws when both -UserName and -UserId are supplied' {
