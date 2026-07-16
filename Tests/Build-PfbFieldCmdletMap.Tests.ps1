@@ -60,6 +60,24 @@ BeforeAll {
                 ParamKindAmbiguousB  = @{ name = 'param_kind_ambiguous';  description = 'Valid values are `t1`, `t3`.' }
                 ParamKindConsistentA = @{ name = 'param_kind_consistent'; description = 'Valid values are `k1`, `k2`.' }
                 ParamKindConsistentB = @{ name = 'param_kind_consistent'; description = 'Valid values are `k1`, `k2`.' }
+                # Reproduces the real Get-PfbArraySpace -Type bug exactly: two
+                # components.parameters definitions share wire name 'endpoint_field' with
+                # DIFFERENT value sets (ambiguous on their own), but one specific endpoint
+                # (GET /widgets/endpoint below) inline-defines the SAME field with a value
+                # set matching EndpointFieldA -- an inline-parameter record keyed to that
+                # exact endpoint, which must resolve the field despite the param-kind
+                # ambiguity, not report 'collision'.
+                EndpointFieldA = @{ name = 'endpoint_field'; description = 'Valid values are `e1`, `e2`.' }
+                EndpointFieldB = @{ name = 'endpoint_field'; description = 'Valid values are `e1`, `e3`.' }
+            }
+        }
+        paths = @{
+            '/api/1.0/widgets/endpoint' = @{
+                get = @{
+                    parameters = @(
+                        @{ name = 'endpoint_field'; 'in' = 'query'; description = 'Valid values are `e1`, `e2`.' }
+                    )
+                }
             }
         }
     }
@@ -90,6 +108,24 @@ BeforeAll {
                 ParamKindAmbiguousB  = @{ name = 'param_kind_ambiguous';  description = 'Valid values are `t1`, `t3`.' }
                 ParamKindConsistentA = @{ name = 'param_kind_consistent'; description = 'Valid values are `k1`, `k2`.' }
                 ParamKindConsistentB = @{ name = 'param_kind_consistent'; description = 'Valid values are `k1`, `k2`.' }
+                # Reproduces the real Get-PfbArraySpace -Type bug exactly: two
+                # components.parameters definitions share wire name 'endpoint_field' with
+                # DIFFERENT value sets (ambiguous on their own), but one specific endpoint
+                # (GET /widgets/endpoint below) inline-defines the SAME field with a value
+                # set matching EndpointFieldA -- an inline-parameter record keyed to that
+                # exact endpoint, which must resolve the field despite the param-kind
+                # ambiguity, not report 'collision'.
+                EndpointFieldA = @{ name = 'endpoint_field'; description = 'Valid values are `e1`, `e2`.' }
+                EndpointFieldB = @{ name = 'endpoint_field'; description = 'Valid values are `e1`, `e3`.' }
+            }
+        }
+        paths = @{
+            '/api/1.1/widgets/endpoint' = @{
+                get = @{
+                    parameters = @(
+                        @{ name = 'endpoint_field'; 'in' = 'query'; description = 'Valid values are `e1`, `e2`.' }
+                    )
+                }
             }
         }
     }
@@ -112,6 +148,7 @@ function New-PfbWidget {
         [Parameter()] [string]$NoSpecField,
         [Parameter()] [string]$ParamKindField,
         [Parameter()] [string]$ParamKindConsistentField,
+        [Parameter()] [string]$EndpointField,
         [Parameter()] [PSCustomObject]$Array
     )
     $body = @{}
@@ -123,6 +160,9 @@ function New-PfbWidget {
     if ($NoSpecField)      { $body["totally_unknown_field"] = $NoSpecField }
     if ($ParamKindField)   { $body["param_kind_ambiguous"] = $ParamKindField }
     if ($ParamKindConsistentField) { $body["param_kind_consistent"] = $ParamKindConsistentField }
+    $queryParams = @{}
+    if ($EndpointField) { $queryParams["endpoint_field"] = $EndpointField }
+    Invoke-PfbApiRequest -Array $Array -Method GET -Endpoint 'widgets/endpoint' -Body $body -QueryParams $queryParams
 }
 '@
 
@@ -165,9 +205,10 @@ Describe 'Build-PfbFieldCmdletMap' {
         $reportText = Get-Content $reportPath -Raw
         $reportText | Should -Match '## Summary'
         # Fixture distribution: matched = StableField, ChangingField, NewInV2,
-        # ParamKindConsistentField (4); collision = CollisionField, ParamKindField (2);
-        # not-found-in-resource = ElsewhereField (1); no-spec-enum-found = NoSpecField (1).
-        $reportText | Should -Match '- matched: 4'
+        # ParamKindConsistentField, EndpointField (5); collision = CollisionField,
+        # ParamKindField (2); not-found-in-resource = ElsewhereField (1);
+        # no-spec-enum-found = NoSpecField (1).
+        $reportText | Should -Match '- matched: 5'
         $reportText | Should -Match '- collision: 2'
         $reportText | Should -Match '- not-found-in-resource: 1'
         $reportText | Should -Match '- no-spec-enum-found: 1'
@@ -215,6 +256,29 @@ Describe 'Build-PfbFieldCmdletMap' {
         $rec = $manifest.entries | Where-Object { $_.parameter -eq 'ParamKindConsistentField' }
         $rec.status | Should -Be 'matched'
         $rec.specValues | Should -Be @('k1', 'k2')
+    }
+
+    It 'resolves the real Get-PfbArraySpace -Type shape: an exact inline-parameter endpoint match overrides an otherwise-ambiguous parameter-kind wire name' {
+        # EndpointFieldA/EndpointFieldB disagree on value set (like Type/Type_for_performance)
+        # -- would be 'collision' on their own -- but New-PfbWidget's -EndpointField resolves
+        # to exactly one Invoke-PfbApiRequest call (GET widgets/endpoint), matching an
+        # inline-parameter record keyed to that exact endpoint, which settles it.
+        $rec = $manifest.entries | Where-Object { $_.parameter -eq 'EndpointField' }
+        $rec.status | Should -Be 'matched'
+        $rec.specValues | Should -Be @('e1', 'e2')
+        $rec.stableSinceOldestVersion | Should -BeTrue
+        $rec.recommendation | Should -Be 'ValidateSet'
+    }
+
+    It 'still reports collision for an ambiguous parameter-kind wire name when no inline-parameter record matches this cmdlet''s own endpoint' {
+        # ParamKindField's cmdlet (New-PfbWidget) DOES now resolve an Endpoint/Method (GET
+        # widgets/endpoint, shared with -EndpointField above) -- but no inline-parameter
+        # record exists keyed "GET widgets/endpoint#param_kind_ambiguous", so the exact-match
+        # override never applies here and the pre-existing ambiguous-collision behavior for
+        # parameter-kind records must still hold.
+        $rec = $manifest.entries | Where-Object { $_.parameter -eq 'ParamKindField' }
+        $rec.status | Should -Be 'collision'
+        $rec.recommendation | Should -BeNullOrEmpty
     }
 }
 

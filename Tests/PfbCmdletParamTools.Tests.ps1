@@ -99,6 +99,43 @@ function Get-PfbFixtureArrayPerformance {
     # must not guess through it. No -Attributes escape hatch exists on this cmdlet either,
     # so this must surface as TypedUnresolved, not silently dropped or force-matched.
     if ($StartTime) { $queryParams["start_time"] = "$StartTime" }
+
+    Invoke-PfbApiRequest -Array $Array -Method GET -Endpoint 'arrays/performance' -QueryParams $queryParams -AutoPaginate
+}
+'@
+
+    # Real Get-PfbArraySpace shape: exactly one Invoke-PfbApiRequest call, so -Type's
+    # $queryParams assignment resolves to exactly one (Method, Endpoint) pair.
+    Set-Content -Path (Join-Path $fixtureDir 'Get-PfbFixtureArraySpace.ps1') -Value @'
+function Get-PfbFixtureArraySpace {
+    [CmdletBinding()]
+    param(
+        [Parameter()] [PSCustomObject]$Array,
+        [Parameter()] [string]$Type
+    )
+    $queryParams = @{}
+    if ($Type) { $queryParams['type'] = $Type }
+    Invoke-PfbApiRequest -Array $Array -Method GET -Endpoint 'arrays/space' -QueryParams $queryParams -AutoPaginate
+}
+'@
+
+    # Real Get-PfbNode shape: the SAME $queryParams variable is reused across two calls
+    # against two genuinely different endpoints (a try/catch model-support fallback) --
+    # must resolve to $null, not a guessed pick of either endpoint.
+    Set-Content -Path (Join-Path $fixtureDir 'Get-PfbFixtureNode.ps1') -Value @'
+function Get-PfbFixtureNode {
+    [CmdletBinding()]
+    param(
+        [Parameter()] [PSCustomObject]$Array,
+        [Parameter()] [string]$Filter
+    )
+    $queryParams = @{}
+    if ($Filter) { $queryParams['filter'] = $Filter }
+    try {
+        Invoke-PfbApiRequest -Array $Array -Method GET -Endpoint 'nodes' -QueryParams $queryParams -AutoPaginate
+    } catch {
+        Invoke-PfbApiRequest -Array $Array -Method GET -Endpoint 'blades' -QueryParams $queryParams -AutoPaginate
+    }
 }
 '@
 
@@ -168,5 +205,33 @@ Describe 'Get-PfbWireNameForParameter' {
             'function Test-Fixture { param([string]$Unused) $body = @{} }', [ref]$tokens, [ref]$errs)
         $funcAst = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true) | Select-Object -First 1
         Get-PfbWireNameForParameter -FunctionAst $funcAst -ParameterName 'Unused' | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'Endpoint/Method resolution (Get-PfbEndpointForVariable, via the inventory)' {
+    It 'resolves Endpoint/Method for a parameter whose variable feeds exactly one Invoke-PfbApiRequest call' {
+        $rec = $inventory | Where-Object { $_.Cmdlet -eq 'Get-PfbFixtureArraySpace' -and $_.Parameter -eq 'Type' }
+        $rec.Endpoint | Should -Be 'arrays/space'
+        $rec.Method | Should -Be 'GET'
+    }
+
+    It 'leaves Endpoint/Method $null when the same variable feeds two calls with different endpoints (ambiguous, never guessed)' {
+        $rec = $inventory | Where-Object { $_.Cmdlet -eq 'Get-PfbFixtureNode' -and $_.Parameter -eq 'Filter' }
+        $rec.Endpoint | Should -BeNullOrEmpty
+        $rec.Method | Should -BeNullOrEmpty
+    }
+
+    It 'leaves Endpoint/Method $null when there is no resolvable wire-name assignment at all' {
+        $rec = $inventory | Where-Object { $_.Cmdlet -eq 'Get-PfbFixtureArrayPerformance' -and $_.Parameter -eq 'StartTime' }
+        $rec.Endpoint | Should -BeNullOrEmpty
+        $rec.Method | Should -BeNullOrEmpty
+    }
+
+    It 'directly returns $null from Get-PfbEndpointForVariable for a variable with zero matching Invoke-PfbApiRequest calls' {
+        $tokens = $null; $errs = $null
+        $ast = [System.Management.Automation.Language.Parser]::ParseInput(
+            'function Test-Fixture { param([string]$Unused) $queryParams = @{} }', [ref]$tokens, [ref]$errs)
+        $funcAst = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true) | Select-Object -First 1
+        Get-PfbEndpointForVariable -FunctionAst $funcAst -TargetVariable 'queryParams' | Should -BeNullOrEmpty
     }
 }

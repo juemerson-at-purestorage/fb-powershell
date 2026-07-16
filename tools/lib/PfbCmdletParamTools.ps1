@@ -27,6 +27,17 @@
 
     -Array and -Attributes are never returned as inventory records themselves -- they are
     plumbing, not spec-documented fields with values to validate.
+
+    Each 'Typed' record also carries a best-effort Endpoint/Method: the literal
+    -Endpoint/-Method arguments of the Invoke-PfbApiRequest call the parameter's
+    resolved body/queryParams variable actually feeds, IF every such call in the
+    function agrees on exactly one (Method, Endpoint) pair. Left $null (never guessed)
+    when the variable feeds zero calls, or more than one distinct pair -- e.g.
+    Get-PfbNode's try/catch fallback that reuses the same $queryParams against two
+    genuinely different endpoints ('nodes' then 'blades'). This is what lets
+    Build-PfbFieldCmdletMap.ps1 resolve an 'inline-parameter'-kind value-enum record
+    (see tools/lib/PfbValueEnumTools.ps1), which is keyed by exact endpoint identity,
+    against the one specific cmdlet parameter that calls it.
 #>
 
 # Deliberately NOT Set-StrictMode -- same reasoning as PfbSpecTools.ps1 / PfbValueEnumTools.ps1.
@@ -36,6 +47,11 @@ function Get-PfbWireNameForParameter {
     .SYNOPSIS
         Finds the request-body or query-string key a given parameter is assigned to
         inside a cmdlet function body, or $null if no simple assignment pattern matches.
+    .OUTPUTS
+        $null, or [PSCustomObject]@{ WireName; TargetVariable } -- TargetVariable is the
+        literal variable name the assignment targeted ('body' or 'queryParams'), needed
+        by Get-PfbEndpointForVariable to find the specific Invoke-PfbApiRequest call(s)
+        that variable is later passed to.
     #>
     [CmdletBinding()]
     param(
@@ -66,11 +82,92 @@ function Get-PfbWireNameForParameter {
         $wrapped = '@(' + $simple + ')'
 
         if ($rhsText -eq $simple -or $rhsText -eq $wrapped) {
-            return $keyExpr.Value
+            return [PSCustomObject]@{
+                WireName       = $keyExpr.Value
+                TargetVariable = $targetVar.VariablePath.UserPath
+            }
         }
     }
 
     return $null
+}
+
+function Get-PfbEndpointForVariable {
+    <#
+    .SYNOPSIS
+        Finds the (Method, Endpoint) pair a body/queryParams variable is passed to via
+        Invoke-PfbApiRequest -Body/-QueryParams within a function, IF every such call
+        agrees on exactly one (Method, Endpoint) pair.
+    .DESCRIPTION
+        Never guesses: returns $null when the variable feeds zero Invoke-PfbApiRequest
+        calls, or more than one call with a DIFFERENT (Method, Endpoint) pair (e.g.
+        Get-PfbNode's try/catch fallback that reuses the same $queryParams against two
+        genuinely different endpoints, 'nodes' then 'blades' -- correctly ambiguous,
+        not a case to force-pick one of). Only literal, unquoted-bareword-or-quoted-
+        string -Method/-Endpoint arguments are recognized, matching the exclusively
+        literal style every cmdlet in this repo actually uses for both.
+    .OUTPUTS
+        $null, or [PSCustomObject]@{ Method; Endpoint }
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [System.Management.Automation.Language.FunctionDefinitionAst]$FunctionAst,
+
+        [Parameter(Mandatory)]
+        [string]$TargetVariable
+    )
+
+    $targetParamName = switch ($TargetVariable) {
+        'body' { 'Body' }
+        'queryParams' { 'QueryParams' }
+        default { $null }
+    }
+    if (-not $targetParamName) { return $null }
+
+    $commands = $FunctionAst.FindAll({
+        param($node)
+        $node -is [System.Management.Automation.Language.CommandAst] -and
+        $node.GetCommandName() -eq 'Invoke-PfbApiRequest'
+    }, $true)
+
+    $pairs = [System.Collections.Generic.List[string]]::new()
+
+    foreach ($cmd in $commands) {
+        $elements = $cmd.CommandElements
+        $usesVariable = $false
+        $method = $null
+        $endpoint = $null
+
+        for ($i = 0; $i -lt $elements.Count; $i++) {
+            $el = $elements[$i]
+            if ($el -isnot [System.Management.Automation.Language.CommandParameterAst]) { continue }
+            $next = if ($i + 1 -lt $elements.Count) { $elements[$i + 1] } else { $null }
+            if (-not $next) { continue }
+
+            if ($el.ParameterName -eq $targetParamName -and
+                $next -is [System.Management.Automation.Language.VariableExpressionAst] -and
+                $next.VariablePath.UserPath -eq $TargetVariable) {
+                $usesVariable = $true
+            }
+            elseif ($el.ParameterName -eq 'Method' -and $next -is [System.Management.Automation.Language.StringConstantExpressionAst]) {
+                $method = $next.Value
+            }
+            elseif ($el.ParameterName -eq 'Endpoint' -and $next -is [System.Management.Automation.Language.StringConstantExpressionAst]) {
+                $endpoint = $next.Value
+            }
+        }
+
+        if ($usesVariable -and $method -and $endpoint) {
+            $pairs.Add("$($method.ToUpperInvariant())|$endpoint")
+        }
+    }
+
+    $distinct = @($pairs | Select-Object -Unique)
+    if ($distinct.Count -ne 1) { return $null }
+
+    $parts = $distinct[0] -split '\|', 2
+    return [PSCustomObject]@{ Method = $parts[0]; Endpoint = $parts[1] }
 }
 
 function Get-PfbCmdletParameterInventory {
@@ -80,7 +177,11 @@ function Get-PfbCmdletParameterInventory {
         across every function defined under -PublicDirectory.
     .OUTPUTS
         [PSCustomObject]@{ File; Cmdlet; Parameter; HasValidateSet; ValidateSetValues;
-        WireName; Surface }
+        WireName; Surface; Endpoint; Method }
+
+        Endpoint/Method are $null unless the parameter's wire-name assignment resolved
+        to exactly one Invoke-PfbApiRequest call's endpoint (see
+        Get-PfbEndpointForVariable) -- never guessed.
     #>
     [CmdletBinding()]
     param(
@@ -115,7 +216,10 @@ function Get-PfbCmdletParameterInventory {
                     }
                 }
 
-                $wireName = Get-PfbWireNameForParameter -FunctionAst $funcAst -ParameterName $paramName
+                $wireInfo = Get-PfbWireNameForParameter -FunctionAst $funcAst -ParameterName $paramName
+                $wireName = if ($wireInfo) { $wireInfo.WireName } else { $null }
+
+                $endpointInfo = if ($wireInfo) { Get-PfbEndpointForVariable -FunctionAst $funcAst -TargetVariable $wireInfo.TargetVariable } else { $null }
 
                 $surface = if ($wireName) { 'Typed' }
                 elseif ($hasAttributesParam) { 'AttributesOnly' }
@@ -129,6 +233,8 @@ function Get-PfbCmdletParameterInventory {
                     ValidateSetValues = $validateSetValues
                     WireName          = $wireName
                     Surface           = $surface
+                    Endpoint          = if ($endpointInfo) { $endpointInfo.Endpoint } else { $null }
+                    Method            = if ($endpointInfo) { $endpointInfo.Method } else { $null }
                 })
             }
         }

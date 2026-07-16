@@ -9,6 +9,18 @@
     Data-extraction and reporting only -- does NOT add a ValidateSet or ArgumentCompleter
     to any Public/ cmdlet. See docs/superpowers/plans/2026-07-16-field-cmdlet-mapping.md
     for the full design rationale and the exact ValidateSet-recommendation rule.
+
+    Resolves a candidate's wire name against three kinds of value-enum record (see
+    tools/lib/PfbValueEnumTools.ps1): 'schema' (resource-hint filtered, a heuristic),
+    'parameter' (a shared components.parameters dictionary name with no relationship to
+    the owning resource, resolved only when every same-named definition agrees), and
+    'inline-parameter' (an exact "<METHOD> <endpoint>#<wireName>" identity, resolvable
+    only when tools/lib/PfbCmdletParamTools.ps1's AST inventory could determine exactly
+    which endpoint this specific cmdlet parameter calls). An exact inline-parameter match
+    takes priority -- it settles ambiguity the other two kinds cannot (the real
+    Get-PfbArraySpace -Type case: two same-named-but-different-valued
+    components.parameters definitions, 'Type' and 'Type_for_performance', disambiguated
+    by knowing this cmdlet calls GET arrays/space specifically).
 .PARAMETER SpecsDirectory
     Where cached spec JSON files live. Defaults to tools/specs relative to this script.
 .PARAMETER PublicDirectory
@@ -109,6 +121,20 @@ $entries = foreach ($cand in $candidates) {
     $paramMatches  = @($allMatches | Where-Object { $history[$_].Kind -eq 'parameter' })
     $hintedSchema  = @($schemaMatches | Where-Object { $_ -like "$hint*" })
 
+    # 'inline-parameter'-kind records (see tools/lib/PfbValueEnumTools.ps1) are keyed by
+    # "<METHOD> <endpoint>#<wireName>" -- an exact, unambiguous identity for one specific
+    # endpoint, unlike either 'schema' (resource-hint, a heuristic) or 'parameter' (a
+    # shared dictionary name with no endpoint identity at all). If the AST inventory
+    # (tools/lib/PfbCmdletParamTools.ps1) resolved this cmdlet parameter's own
+    # -Endpoint/-Method unambiguously, this is the single most precise resolution
+    # available -- an exact match here is not a heuristic, it IS the endpoint this
+    # cmdlet calls.
+    $inlineKey = if ($cand.Endpoint -and $cand.Method) { "$($cand.Method.ToUpperInvariant()) $($cand.Endpoint)#$($cand.WireName)" } else { $null }
+    $inlineMatches = @()
+    if ($inlineKey -and $history.Contains($inlineKey) -and $history[$inlineKey].Kind -eq 'inline-parameter') {
+        $inlineMatches = @($inlineKey)
+    }
+
     $status = $null
     $matchedKey = $null
     $specValues = $null
@@ -128,15 +154,22 @@ $entries = foreach ($cand in $candidates) {
         # specific components.parameters definition this cmdlet's endpoint actually
         # references. If they disagree, the wire name is genuinely ambiguous across
         # different parameter definitions and must be reported as a collision, never
-        # guessed at.
+        # guessed at -- UNLESS an exact inline-parameter match (above) already settles
+        # which definition this cmdlet's endpoint actually uses; in that case the
+        # ambiguity among the *other* components.parameters definitions is irrelevant,
+        # because we're not choosing between them at all (this is exactly the real
+        # Get-PfbArraySpace -Type case: 'Type' and 'Type_for_performance' disagree, but
+        # the endpoint-exact inline-parameter record settles it without needing either).
         $paramValueSets = @($paramMatches | ForEach-Object { ($history[$_].CurrentValues | Sort-Object) -join ',' } | Select-Object -Unique)
         $paramAmbiguous = ($paramMatches.Count -gt 0) -and (@($paramValueSets).Count -gt 1)
         $paramCandidates = if ($paramMatches.Count -eq 0 -or $paramAmbiguous) { @() } else { @($paramMatches[0]) }
 
-        $resolved = @($hintedSchema + $paramCandidates)
+        $resolved = @($inlineMatches + $hintedSchema + $paramCandidates)
         $resolvedValueSets = @($resolved | ForEach-Object { ($history[$_].CurrentValues | Sort-Object) -join ',' } | Select-Object -Unique)
 
-        if ($paramAmbiguous -or @($resolvedValueSets).Count -gt 1) {
+        $forceCollisionFromParamAmbiguity = ($inlineMatches.Count -eq 0) -and $paramAmbiguous
+
+        if ($forceCollisionFromParamAmbiguity -or @($resolvedValueSets).Count -gt 1) {
             $status = 'collision'
         }
         elseif ($resolved.Count -eq 0) {

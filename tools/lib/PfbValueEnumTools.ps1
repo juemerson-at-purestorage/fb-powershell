@@ -42,6 +42,26 @@
     ('root-squash'/'all-squash'/'no-root-squash') are two distinct schemas that happen
     to share a property name with non-identical value spellings - collapsing by bare
     name would silently merge them into one incoherent value list.
+
+    3. A THIRD source exists beyond components.schemas and components.parameters: a
+       parameter defined INLINE, directly under spec.paths.<path>.<method>.parameters,
+       never registered in the shared components.parameters dictionary at all. Confirmed
+       live: GET /arrays/space's `type` query parameter (valid values `array`,
+       `file-system`, `object-store`) was inline, with a full "Valid values..."
+       description, from REST 2.0 through 2.16 - only becoming a
+       $ref: '#/components/parameters/Type' at 2.17 (same description, word for word;
+       a pure documentation refactor, not an API change). Also confirmed live: spec
+       path keys carry the version prefix (e.g. "/api/2.27/arrays/space", not
+       "/arrays/space") - that prefix MUST be stripped before keying, or the same
+       logical endpoint would get a different Key per spec version and the
+       introduced-in-version diffing in Build-PfbValueEnumMap.ps1 would never see it as
+       the same field twice. Keyed by "<METHOD> <path>#<paramName>" (Kind =
+       'inline-parameter') - never just the bare parameter name, for the same
+       never-collapse-by-bare-name reason as above: two different operations can each
+       inline-define a same-named parameter with different value sets. $ref entries
+       under spec.paths.<path>.<method>.parameters are deliberately NOT reprocessed by
+       this pass - they're already covered by the components.parameters pass over the
+       referenced dictionary; reprocessing them here would double-count.
 #>
 
 # Deliberately NOT Set-StrictMode — same reasoning as PfbSpecTools.ps1: these functions
@@ -213,14 +233,17 @@ function Get-PfbSpecValueEnums {
     <#
     .SYNOPSIS
         Extracts every prose-documented value enumeration from a single FlashBlade
-        OpenAPI spec, across both components.schemas properties and
-        components.parameters.
+        OpenAPI spec, across components.schemas properties, components.parameters, and
+        inline (non-$ref) parameters defined directly on a spec.paths operation.
     .DESCRIPTION
         Never collapses by bare property/parameter name — each record's Key is
-        "<SchemaName>.<PropertyName>" for schema properties (Kind = 'schema') or the
-        parameter's own component name (Kind = 'parameter'). Two schemas sharing a
-        property name with different value sets (e.g. the squash-mode case) always
-        produce two separate records.
+        "<SchemaName>.<PropertyName>" for schema properties (Kind = 'schema'), the
+        parameter's own component name (Kind = 'parameter'), or
+        "<METHOD> <path>#<paramName>" for a parameter defined inline on a path operation
+        rather than via a components.parameters $ref (Kind = 'inline-parameter'). Two
+        schemas sharing a property name with different value sets (e.g. the squash-mode
+        case) always produce two separate records; likewise two operations that each
+        inline-define a same-named parameter with a different value set.
 
         Every description that matches the trigger phrase produces a record, whether or
         not it successfully parsed into values — callers must check .Parsed rather than
@@ -229,13 +252,17 @@ function Get-PfbSpecValueEnums {
     .OUTPUTS
         [PSCustomObject]@{ Key; Kind; Name; Values; Parsed; TriggerText }
 
-        Key is the collision-safe identity ("SchemaName.PropertyName", or the parameter's
-        own components.parameters dictionary key) — always unique, always what downstream
-        diffing/storage should key on. Name is the field's own short name as it actually
-        appears on the wire (the schema property name, or the parameter's "name" field,
-        e.g. "protocol") — the more useful match target for reconciling against a
-        cmdlet's hand-written parameter, since a query parameter's components.parameters
-        dictionary key does not have to equal its wire "name".
+        Key is the collision-safe identity ("SchemaName.PropertyName", the parameter's
+        own components.parameters dictionary key, or "<METHOD> <path>#<paramName>" for an
+        inline-parameter record) — always unique, always what downstream diffing/storage
+        should key on. Name is the field's own short name as it actually appears on the
+        wire (the schema property name, or the parameter's "name" field, e.g.
+        "protocol") — the more useful match target for reconciling against a cmdlet's
+        hand-written parameter, since a query parameter's components.parameters
+        dictionary key does not have to equal its wire "name". For inline-parameter
+        records, Key already ends in "#<Name>", so Name is always redundant with the
+        tail of Key by construction — kept as its own field anyway, for the same
+        uniform-shape reason 'schema'/'parameter' records carry it.
     #>
     [CmdletBinding()]
     param(
@@ -285,6 +312,59 @@ function Get-PfbSpecValueEnums {
                 Parsed      = $parsed.Parsed
                 TriggerText = $parsed.TriggerText
             })
+        }
+    }
+
+    if ($Spec.paths) {
+        foreach ($pathKey in $Spec.paths.PSObject.Properties.Name) {
+            $pathItem = $Spec.paths.$pathKey
+            # Strip the version prefix every real path carries (e.g.
+            # "/api/2.27/arrays/space") down to the version-stable form
+            # ("arrays/space") that also matches the literal -Endpoint string every
+            # cmdlet passes to Invoke-PfbApiRequest (see PfbCmdletParamTools.ps1) — the
+            # same normalized path MUST produce the same Key across every spec version
+            # or the introduced-in-version diffing in Build-PfbValueEnumMap.ps1 would
+            # never recognize the field as the same one release to release. A handful
+            # of paths (e.g. /oauth2/1.0/token) carry no /api/<version>/ prefix at all;
+            # for those, only the leading slash is stripped.
+            $normalizedPath = ($pathKey -replace '^/api/\d+\.\d+/', '') -replace '^/', ''
+
+            foreach ($methodKey in $pathItem.PSObject.Properties.Name) {
+                if ($methodKey -notin @('get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace')) { continue }
+
+                $operation = $pathItem.$methodKey
+                if (-not $operation -or $operation.PSObject.Properties.Name -notcontains 'parameters' -or -not $operation.parameters) { continue }
+
+                foreach ($paramNode in $operation.parameters) {
+                    # A bare $ref pointer, e.g. { "$ref": "#/components/parameters/Type" }
+                    # — already covered by the components.parameters pass above.
+                    # Reprocessing it here would double-count the same definition under
+                    # two different Keys and inflate entryCount without adding real
+                    # coverage.
+                    if ($paramNode.PSObject.Properties.Name -contains '$ref') { continue }
+
+                    if ($paramNode.PSObject.Properties.Name -notcontains 'description' -or -not $paramNode.description) { continue }
+                    if ($paramNode.PSObject.Properties.Name -notcontains 'name' -or -not $paramNode.name) { continue }
+                    if ($paramNode.PSObject.Properties.Name -notcontains 'in') { continue }
+
+                    $trigger = Get-PfbValueEnumTriggerSentence -Description $paramNode.description
+                    if (-not $trigger) { continue }
+
+                    $methodUpper = $methodKey.ToUpperInvariant()
+                    $wireName = $paramNode.name
+                    $key = "$methodUpper $normalizedPath#$wireName"
+
+                    $parsed = ConvertFrom-PfbValueEnumProse -TriggerSentence $trigger
+                    $results.Add([PSCustomObject]@{
+                        Key         = $key
+                        Kind        = 'inline-parameter'
+                        Name        = $wireName
+                        Values      = $parsed.Values
+                        Parsed      = $parsed.Parsed
+                        TriggerText = $parsed.TriggerText
+                    })
+                }
+            }
         }
     }
 
