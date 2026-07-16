@@ -79,6 +79,18 @@ Describe 'ConvertFrom-PfbValueEnumProse' {
         $result.TriggerText | Should -Not -BeNullOrEmpty
     }
 
+    It 'does not force-parse a backtick-quoted list with a missing opening backtick (real spec bug: policy_type/smb-client)' {
+        # Real, confirmed-malformed text from the FlashBlade OpenAPI spec (present in every
+        # cached version REST 2.14-2.27): the opening backtick before `smb-client` is
+        # missing. A naive backtick-pair regex re-synchronizes on the next backtick and
+        # silently drops `smb-client` from the value list while injecting garbage
+        # (comma/whitespace-only) "values" -- this must be classified unparsed instead.
+        $result = ConvertFrom-PfbValueEnumProse -TriggerSentence 'Valid values include `alert`, `audit`, `s3-export`, smb-client`, `smb-share`, and `telemetry-metrics`.'
+        $result.Parsed | Should -BeFalse
+        $result.Values | Should -BeNullOrEmpty
+        $result.TriggerText | Should -Not -BeNullOrEmpty
+    }
+
     It 'does not force-parse a numeric-range sentence that happens to match the trigger phrase' {
         $result = ConvertFrom-PfbValueEnumProse -TriggerSentence "Valid values are`nin the range of 300000 and 10800000."
         $result.Parsed | Should -BeFalse

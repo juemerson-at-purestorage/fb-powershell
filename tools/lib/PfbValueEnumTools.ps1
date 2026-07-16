@@ -117,27 +117,46 @@ function ConvertFrom-PfbValueEnumProse {
     )
 
     # Backtick-quoted: `none`, `enabled`, and `suspended`.
-    $backtickMatches = [regex]::Matches($TriggerSentence, '`([^`]+)`')
-    if ($backtickMatches.Count -gt 0) {
-        $values = $backtickMatches | ForEach-Object { $_.Groups[1].Value }
-        return [PSCustomObject]@{ Values = @($values); Parsed = $true; TriggerText = $TriggerSentence }
+    # Guarded by a parity check: a real, confirmed spec bug (policy_type's `smb-client`,
+    # present in every cached version REST 2.14-2.27) has a missing opening backtick, which
+    # makes [regex]::Matches silently re-synchronize on the next backtick and return
+    # corrupted values (a dropped real value plus garbage comma/whitespace "values") while
+    # still reporting success. An odd backtick count can never validly pair, so treat it as
+    # unparsed rather than trust a match set built from misaligned pairs -- no real value in
+    # this spec has ever contained a literal backtick, so this is a safe structural signal,
+    # not a guess.
+    $backtickCount = ([regex]::Matches($TriggerSentence, '`')).Count
+    if ($backtickCount % 2 -eq 0) {
+        $backtickMatches = [regex]::Matches($TriggerSentence, '`([^`]+)`')
+        if ($backtickMatches.Count -gt 0) {
+            $values = $backtickMatches | ForEach-Object { $_.Groups[1].Value }
+            return [PSCustomObject]@{ Values = @($values); Parsed = $true; TriggerText = $TriggerSentence }
+        }
     }
 
-    # Double-quoted: "policy", "sacl".
-    $quoteMatches = [regex]::Matches($TriggerSentence, '"([^"]+)"')
-    if ($quoteMatches.Count -gt 0) {
-        $values = $quoteMatches | ForEach-Object { $_.Groups[1].Value }
-        return [PSCustomObject]@{ Values = @($values); Parsed = $true; TriggerText = $TriggerSentence }
+    # Double-quoted: "policy", "sacl". Same parity guard as the backtick pattern above.
+    $quoteCount = ([regex]::Matches($TriggerSentence, '"')).Count
+    if ($quoteCount % 2 -eq 0) {
+        $quoteMatches = [regex]::Matches($TriggerSentence, '"([^"]+)"')
+        if ($quoteMatches.Count -gt 0) {
+            $values = $quoteMatches | ForEach-Object { $_.Groups[1].Value }
+            return [PSCustomObject]@{ Values = @($values); Parsed = $true; TriggerText = $TriggerSentence }
+        }
     }
 
     # Bare comma-separated tokens after "are"/"include", e.g.:
     #   "Valid values include QSFP, QSFP+, QSFP28, QSFP56, QSFP-DD, RJ-45, and -."
-    # Deliberately conservative: only fires when the sentence has no quote characters at
-    # all (so it can't misfire on the malformed-quote case, e.g. "include 'success' or
-    # failure'." — a real, confirmed-malformed example in the source spec that is left
-    # unparsed rather than force-parsed) and the tail actually looks like a short
-    # comma/space-separated token list (no long runs of lowercase prose words).
-    if ($TriggerSentence -notmatch '[''"]') {
+    # Deliberately conservative: only fires when the sentence has no quote characters or
+    # backticks at all (so it can't misfire on the malformed-quote case, e.g. "include
+    # 'success' or failure'." — a real, confirmed-malformed example in the source spec that
+    # is left unparsed rather than force-parsed -- nor on a malformed *backtick* case, e.g.
+    # policy_type's missing-backtick `smb-client` bug: without this exclusion, a sentence
+    # that fails the backtick-parity guard above would fall through here and this
+    # whitespace-only rejection check would wrongly accept tokens that still contain their
+    # stray backtick characters, since a backtick isn't whitespace) and the tail actually
+    # looks like a short comma/space-separated token list (no long runs of lowercase prose
+    # words).
+    if ($TriggerSentence -notmatch '[''"``]') {
         # [\s\S] (not '.') so the lazy capture can span an embedded newline — real spec
         # prose wraps mid-sentence (e.g. "...`all-squash`, and\n`no-root-squash`.") and
         # '.' does not match '\n' by default, which would otherwise force the match to
