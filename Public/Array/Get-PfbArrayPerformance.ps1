@@ -7,7 +7,8 @@ function Get-PfbArrayPerformance {
     .PARAMETER Array
         The FlashBlade connection object. If not specified, uses the default connection.
     .PARAMETER Protocol
-        Filter by protocol type: 'nfs', 'smb', 'http', 's3'.
+        Filter by protocol type: 'all', 'nfs', 'smb', 'http', 's3'. Defaults to 'all' (combined
+        performance of all available protocols) when omitted.
     .PARAMETER Resolution
         Time resolution for historical data in milliseconds.
     .PARAMETER StartTime
@@ -25,7 +26,7 @@ function Get-PfbArrayPerformance {
         [PSCustomObject]$Array,
 
         [Parameter()]
-        [ValidateSet('nfs', 'smb', 'http', 's3')]
+        [ValidateSet('all', 'nfs', 'smb', 'http', 's3')]
         [string]$Protocol,
 
         [Parameter()]
