@@ -71,6 +71,7 @@ foreach ($entry in $specFiles) {
         if (-not $history.Contains($rec.Key)) {
             $history[$rec.Key] = [ordered]@{
                 Name           = $rec.Name
+                Kind           = $rec.Kind
                 MinVersion     = $version
                 CurrentValues  = $rec.Values
                 DistinctValueSets = [System.Collections.Generic.HashSet[string]]::new()
@@ -104,7 +105,9 @@ function Get-PfbResourceHint {
 $entries = foreach ($cand in $candidates) {
     $hint = Get-PfbResourceHint -CmdletName $cand.Cmdlet
     $allMatches = @($history.Keys | Where-Object { $history[$_].Name -eq $cand.WireName })
-    $hinted = @($allMatches | Where-Object { $_ -like "$hint*" })
+    $schemaMatches = @($allMatches | Where-Object { $history[$_].Kind -eq 'schema' })
+    $paramMatches  = @($allMatches | Where-Object { $history[$_].Kind -eq 'parameter' })
+    $hintedSchema  = @($schemaMatches | Where-Object { $_ -like "$hint*" })
 
     $status = $null
     $matchedKey = $null
@@ -115,16 +118,32 @@ $entries = foreach ($cand in $candidates) {
     if ($allMatches.Count -eq 0) {
         $status = 'no-spec-enum-found'
     }
-    elseif ($hinted.Count -eq 0) {
-        $status = 'not-found-in-resource'
-    }
     else {
-        $distinctCurrentSets = $hinted | ForEach-Object { ($history[$_].CurrentValues | Sort-Object) -join ',' } | Select-Object -Unique
-        if (@($distinctCurrentSets).Count -gt 1) {
+        # Parameter-kind records (OpenAPI components.parameters) are keyed by a shared
+        # dictionary name with no relationship to the owning resource/cmdlet, so the
+        # resource-hint filter above (built for "$schemaName.$propName"-shaped schema
+        # keys) can never apply to them. Instead: if every parameter-kind record
+        # sharing this wire name currently agrees on one value set, treat that as a
+        # single resolved candidate -- the answer is the same regardless of which
+        # specific components.parameters definition this cmdlet's endpoint actually
+        # references. If they disagree, the wire name is genuinely ambiguous across
+        # different parameter definitions and must be reported as a collision, never
+        # guessed at.
+        $paramValueSets = @($paramMatches | ForEach-Object { ($history[$_].CurrentValues | Sort-Object) -join ',' } | Select-Object -Unique)
+        $paramAmbiguous = ($paramMatches.Count -gt 0) -and (@($paramValueSets).Count -gt 1)
+        $paramCandidates = if ($paramMatches.Count -eq 0 -or $paramAmbiguous) { @() } else { @($paramMatches[0]) }
+
+        $resolved = @($hintedSchema + $paramCandidates)
+        $resolvedValueSets = @($resolved | ForEach-Object { ($history[$_].CurrentValues | Sort-Object) -join ',' } | Select-Object -Unique)
+
+        if ($paramAmbiguous -or @($resolvedValueSets).Count -gt 1) {
             $status = 'collision'
         }
+        elseif ($resolved.Count -eq 0) {
+            $status = 'not-found-in-resource'
+        }
         else {
-            $matchedKey = $hinted[0]
+            $matchedKey = $resolved[0]
             $h = $history[$matchedKey]
             $specValues = $h.CurrentValues
             $stable = ($h.MinVersion -eq $oldestVersion) -and ($h.DistinctValueSets.Count -eq 1)

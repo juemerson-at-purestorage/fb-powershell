@@ -159,7 +159,7 @@ Reporting only -- no `Public/` cmdlet is edited by this script. Every `matched` 
 | `Get-PfbArrayS3Performance` | `-StartTime` | start_time | no-spec-enum-found |  |  |
 | `Get-PfbArrayS3Performance` | `-EndTime` | end_time | no-spec-enum-found |  |  |
 | `Get-PfbArrayS3Performance` | `-Resolution` | resolution | no-spec-enum-found |  |  |
-| `Get-PfbArraySpace` | `-Type` | type | not-found-in-resource |  |  |
+| `Get-PfbArraySpace` | `-Type` | type | collision |  |  |
 | `Get-PfbArraySshCaPolicy` | `-Filter` | filter | no-spec-enum-found |  |  |
 | `Get-PfbArraySshCaPolicy` | `-Limit` | limit | no-spec-enum-found |  |  |
 | `Get-PfbArrayStorageClass` | `-Filter` | filter | no-spec-enum-found |  |  |
