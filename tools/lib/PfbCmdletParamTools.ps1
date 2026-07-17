@@ -81,7 +81,23 @@ function Get-PfbWireNameForParameter {
         $simple = '$' + $ParameterName
         $wrapped = '@(' + $simple + ')'
 
-        if ($rhsText -eq $simple -or $rhsText -eq $wrapped) {
+        $isJoinOfParameter = $false
+        # AssignmentStatementAst.Right is a StatementAst -- for a single-expression RHS (the
+        # only shape these cmdlets ever use) the parser always wraps it in a CommandExpressionAst,
+        # never exposing a BinaryExpressionAst directly, so unwrap one level before casting.
+        $rhsExpr = $assign.Right
+        if ($rhsExpr -is [System.Management.Automation.Language.CommandExpressionAst]) {
+            $rhsExpr = $rhsExpr.Expression
+        }
+        $rhsBinary = $rhsExpr -as [System.Management.Automation.Language.BinaryExpressionAst]
+        if ($rhsBinary -and $rhsBinary.Operator -eq [System.Management.Automation.Language.TokenKind]::Join) {
+            $joinLeft = $rhsBinary.Left -as [System.Management.Automation.Language.VariableExpressionAst]
+            if ($joinLeft -and $joinLeft.VariablePath.UserPath -eq $ParameterName) {
+                $isJoinOfParameter = $true
+            }
+        }
+
+        if ($rhsText -eq $simple -or $rhsText -eq $wrapped -or $isJoinOfParameter) {
             return [PSCustomObject]@{
                 WireName       = $keyExpr.Value
                 TargetVariable = $targetVar.VariablePath.UserPath
