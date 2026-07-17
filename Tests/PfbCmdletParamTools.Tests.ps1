@@ -169,6 +169,53 @@ function Get-PfbFixtureFileSystemSession {
 }
 '@
 
+    # Real cross-file idiom (130/130 files that use it at all, byte-for-byte identical):
+    # accumulate into a list across `process`, then join it into the wire name in `end`.
+    Set-Content -Path (Join-Path $fixtureDir 'Get-PfbFixtureFileSystemByName.ps1') -Value @'
+function Get-PfbFixtureFileSystemByName {
+    [CmdletBinding()]
+    param(
+        [Parameter()] [PSCustomObject]$Array,
+        [Parameter(ValueFromPipeline)] [string[]]$Name
+    )
+    begin {
+        $allNames = [System.Collections.Generic.List[string]]::new()
+        $queryParams = @{}
+    }
+    process {
+        if ($Name) {
+            foreach ($n in $Name) {
+                $allNames.Add($n)
+            }
+        }
+    }
+    end {
+        if ($allNames.Count -gt 0) { $queryParams['names'] = $allNames -join ',' }
+        Invoke-PfbApiRequest -Array $Array -Method GET -Endpoint 'file-systems' -QueryParams $queryParams -AutoPaginate
+    }
+}
+'@
+
+    # Ambiguous-accumulator case: the SAME accumulator is fed by two different parameters'
+    # foreach loops -- must bail to TypedUnresolved for both, never guess which one "owns"
+    # the eventual wire name.
+    Set-Content -Path (Join-Path $fixtureDir 'Get-PfbFixtureSharedAccumulator.ps1') -Value @'
+function Get-PfbFixtureSharedAccumulator {
+    [CmdletBinding()]
+    param(
+        [Parameter()] [PSCustomObject]$Array,
+        [Parameter()] [string[]]$FirstNames,
+        [Parameter()] [string[]]$SecondNames
+    )
+    $allNames = [System.Collections.Generic.List[string]]::new()
+    $queryParams = @{}
+    foreach ($n in $FirstNames) { $allNames.Add($n) }
+    foreach ($n in $SecondNames) { $allNames.Add($n) }
+    if ($allNames.Count -gt 0) { $queryParams['names'] = $allNames -join ',' }
+    Invoke-PfbApiRequest -Array $Array -Method GET -Endpoint 'shared' -QueryParams $queryParams -AutoPaginate
+}
+'@
+
     $script:inventory = Get-PfbCmdletParameterInventory -PublicDirectory $fixtureDir
 }
 
@@ -238,6 +285,21 @@ Describe 'Get-PfbCmdletParameterInventory' {
         $rec.WireName | Should -Be 'total_only'
         $rec.Surface | Should -Be 'Typed'
     }
+
+    It 'resolves a parameter traced through a foreach-accumulator-then-join pipeline' {
+        $rec = $inventory | Where-Object { $_.Cmdlet -eq 'Get-PfbFixtureFileSystemByName' -and $_.Parameter -eq 'Name' }
+        $rec.WireName | Should -Be 'names'
+        $rec.Surface | Should -Be 'Typed'
+    }
+
+    It 'bails to TypedUnresolved when an accumulator is fed by more than one parameter (never guesses ownership)' {
+        $first = $inventory | Where-Object { $_.Cmdlet -eq 'Get-PfbFixtureSharedAccumulator' -and $_.Parameter -eq 'FirstNames' }
+        $second = $inventory | Where-Object { $_.Cmdlet -eq 'Get-PfbFixtureSharedAccumulator' -and $_.Parameter -eq 'SecondNames' }
+        $first.WireName | Should -BeNullOrEmpty
+        $first.Surface | Should -Be 'TypedUnresolved'
+        $second.WireName | Should -BeNullOrEmpty
+        $second.Surface | Should -Be 'TypedUnresolved'
+    }
 }
 
 Describe 'Get-PfbWireNameForParameter' {
@@ -293,5 +355,23 @@ Describe 'Endpoint/Method resolution (Get-PfbEndpointForVariable, via the invent
             'function Test-Fixture { param([string]$Unused) $queryParams = @{} }', [ref]$tokens, [ref]$errs)
         $funcAst = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true) | Select-Object -First 1
         Get-PfbEndpointForVariable -FunctionAst $funcAst -TargetVariable 'queryParams' | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'Find-PfbAccumulatorVariable' {
+    It 'returns $null when the parameter has no foreach loop over it at all' {
+        $tokens = $null; $errs = $null
+        $ast = [System.Management.Automation.Language.Parser]::ParseInput(
+            'function Test-Fixture { param([string[]]$Unused) $body = @{} }', [ref]$tokens, [ref]$errs)
+        $funcAst = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true) | Select-Object -First 1
+        Find-PfbAccumulatorVariable -FunctionAst $funcAst -ParameterName 'Unused' | Should -BeNullOrEmpty
+    }
+
+    It 'returns $null when the loop body calls .Add(...) on more than one target variable' {
+        $tokens = $null; $errs = $null
+        $ast = [System.Management.Automation.Language.Parser]::ParseInput(
+            'function Test-Fixture { param([string[]]$Name) $a = [System.Collections.Generic.List[string]]::new(); $b = [System.Collections.Generic.List[string]]::new(); foreach ($n in $Name) { $a.Add($n); $b.Add($n) } }', [ref]$tokens, [ref]$errs)
+        $funcAst = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true) | Select-Object -First 1
+        Find-PfbAccumulatorVariable -FunctionAst $funcAst -ParameterName 'Name' | Should -BeNullOrEmpty
     }
 }

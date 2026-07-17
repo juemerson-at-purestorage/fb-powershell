@@ -150,6 +150,85 @@ function Get-PfbWireNameForParameter {
     return $null
 }
 
+function Find-PfbAccumulatorVariable {
+    <#
+    .SYNOPSIS
+        Finds the accumulator variable a parameter feeds via
+        `foreach ($x in $Param) { $accumulator.Add($x) }`, so its eventual wire-name
+        assignment can be traced by re-running Get-PfbWireNameForParameter against the
+        accumulator's own name.
+    .DESCRIPTION
+        Never guesses: returns $null unless there is exactly one such foreach loop over
+        $ParameterName, its body contains exactly one .Add(...) call whose target is a
+        bare variable and whose single argument is the loop variable, AND that same
+        accumulator variable is never .Add()-ed to from anywhere else in the function
+        (an ambiguous shared accumulator fed by more than one parameter's own loop).
+    .OUTPUTS
+        $null, or the accumulator's bare variable name (string, no leading '$').
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [System.Management.Automation.Language.FunctionDefinitionAst]$FunctionAst,
+
+        [Parameter(Mandatory)]
+        [string]$ParameterName
+    )
+
+    # ForEachStatementAst.Condition (the collection expression after `in`) is always wrapped
+    # in a PipelineAst containing a single CommandExpressionAst -- the parser never exposes
+    # a bare VariableExpressionAst directly here, so unwrap two levels before casting (the
+    # same wrapping phenomenon as AssignmentStatementAst.Right, documented on
+    # Get-PfbWireNameForParameter's $rhsExpr, just one layer deeper for a loop condition).
+    $allForeachLoops = @($FunctionAst.FindAll({
+        param($node)
+        $node -is [System.Management.Automation.Language.ForEachStatementAst]
+    }, $true))
+
+    $foreachLoops = @($allForeachLoops | Where-Object {
+        $cond = $_.Condition
+        if ($cond -is [System.Management.Automation.Language.PipelineAst] -and $cond.PipelineElements.Count -eq 1) {
+            $cond = $cond.PipelineElements[0]
+        }
+        if ($cond -is [System.Management.Automation.Language.CommandExpressionAst]) {
+            $cond = $cond.Expression
+        }
+        $cond -is [System.Management.Automation.Language.VariableExpressionAst] -and
+        $cond.VariablePath.UserPath -eq $ParameterName
+    })
+
+    if ($foreachLoops.Count -ne 1) { return $null }
+    $loop = $foreachLoops[0]
+    $loopVarName = $loop.Variable.VariablePath.UserPath
+
+    $addCallsInLoop = @($loop.Body.FindAll({
+        param($node)
+        $node -is [System.Management.Automation.Language.InvokeMemberExpressionAst] -and
+        $node.Member -is [System.Management.Automation.Language.StringConstantExpressionAst] -and
+        $node.Member.Value -eq 'Add' -and
+        $node.Expression -is [System.Management.Automation.Language.VariableExpressionAst] -and
+        $node.Arguments.Count -eq 1 -and
+        $node.Arguments[0] -is [System.Management.Automation.Language.VariableExpressionAst] -and
+        $node.Arguments[0].VariablePath.UserPath -eq $loopVarName
+    }, $true))
+
+    if ($addCallsInLoop.Count -ne 1) { return $null }
+    $accumulatorName = $addCallsInLoop[0].Expression.VariablePath.UserPath
+
+    $allAddCallsForAccumulator = @($FunctionAst.FindAll({
+        param($node)
+        $node -is [System.Management.Automation.Language.InvokeMemberExpressionAst] -and
+        $node.Member -is [System.Management.Automation.Language.StringConstantExpressionAst] -and
+        $node.Member.Value -eq 'Add' -and
+        $node.Expression -is [System.Management.Automation.Language.VariableExpressionAst] -and
+        $node.Expression.VariablePath.UserPath -eq $accumulatorName
+    }, $true))
+
+    if ($allAddCallsForAccumulator.Count -ne 1) { return $null }
+
+    return $accumulatorName
+}
+
 function Get-PfbEndpointForVariable {
     <#
     .SYNOPSIS
@@ -276,6 +355,12 @@ function Get-PfbCmdletParameterInventory {
 
                 $isSwitch = $p.StaticType -eq [System.Management.Automation.SwitchParameter]
                 $wireInfo = Get-PfbWireNameForParameter -FunctionAst $funcAst -ParameterName $paramName -IsSwitchParameter:$isSwitch
+                if (-not $wireInfo) {
+                    $accumulatorName = Find-PfbAccumulatorVariable -FunctionAst $funcAst -ParameterName $paramName
+                    if ($accumulatorName) {
+                        $wireInfo = Get-PfbWireNameForParameter -FunctionAst $funcAst -ParameterName $accumulatorName
+                    }
+                }
                 $wireName = if ($wireInfo) { $wireInfo.WireName } else { $null }
 
                 $endpointInfo = if ($wireInfo) { Get-PfbEndpointForVariable -FunctionAst $funcAst -TargetVariable $wireInfo.TargetVariable } else { $null }
