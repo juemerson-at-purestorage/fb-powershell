@@ -11,6 +11,9 @@ name: Update API Capability Map
 # Data/PfbCapabilityMap.json is tracked and diffed for the PR below.
 
 on:
+  push:
+    branches: [main]
+    paths: ['Public/**']
   schedule:
     # Mondays 03:17 UTC - arbitrary off-peak time, avoids the top-of-hour thundering herd.
     - cron: '17 3 * * 1'
@@ -37,9 +40,24 @@ jobs:
           }
           "versions=$($versions -join ',')" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
+      - name: Restore cached spec files
+        uses: actions/cache@v4
+        with:
+          path: tools/specs
+          key: pfb-specs-${{ github.run_id }}
+          restore-keys: |
+            pfb-specs-
+
       - name: Fetch all published REST API spec versions
         shell: pwsh
         run: ./tools/Update-PfbApiSpecs.ps1
+
+      - name: Save spec cache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: tools/specs
+          key: pfb-specs-${{ github.run_id }}
 
       - name: Build capability map
         shell: pwsh
@@ -50,6 +68,18 @@ jobs:
         env:
           EVERPURE_SUPPORT_TOKEN: ${{ secrets.EVERPURE_SUPPORT_TOKEN }}
         run: ./tools/Update-PfbVersionMap.ps1
+
+      - name: Build value-enum map
+        shell: pwsh
+        run: ./tools/Build-PfbValueEnumMap.ps1
+
+      - name: Build field-cmdlet map
+        shell: pwsh
+        run: ./tools/Build-PfbFieldCmdletMap.ps1
+
+      - name: Build API drift report
+        shell: pwsh
+        run: ./tools/Build-PfbApiDriftReport.ps1
 
       - name: Run tests
         shell: pwsh
@@ -71,7 +101,7 @@ jobs:
       - name: Check for changes
         id: diff
         run: |
-          if [ -n "$(git status --porcelain -- Data)" ]; then
+          if [ -n "$(git status --porcelain -- Data Reports)" ]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -87,8 +117,12 @@ jobs:
           $newlyAdded = $newManifest.generatedFrom | Where-Object { $oldVersions -notcontains $_ }
           "new_versions=$($newlyAdded -join ', ')" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
+          $drift = Get-Content 'Reports/PfbApiDriftReport.json' -Raw | ConvertFrom-Json -Depth 20
+          $driftSummary = "$($drift.uncoveredEndpoints.Count) uncovered endpoints, $($drift.parameterGaps.Count) parameter gaps, $($drift.validateSetDrift.Count) ValidateSet drift findings, $($drift.newValidateSetCandidates.Count) new ValidateSet candidates"
+          "drift_summary=$driftSummary" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
       - name: Open pull request
-        if: steps.diff.outputs.changed == 'true'
+        if: steps.diff.outputs.changed == 'true' && github.repository == 'dmann000/fb-powershell'
         uses: peter-evans/create-pull-request@v6
         with:
           commit-message: 'Update API capability map'
@@ -101,9 +135,15 @@ jobs:
               `Data/PfbCapabilityMap.json` from the full history.
             - Updated `Data/PfbVersionMap.json` if an `EVERPURE_SUPPORT_TOKEN` secret is
               configured; otherwise left untouched (see `tools/Update-PfbVersionMap.ps1`).
+            - Rebuilt `Reports/PfbValueEnumMap.json`, `Reports/PfbFieldCmdletMap.json`, and
+              `Reports/PfbApiDriftReport.json` (+ their Markdown companions) -- see
+              `Reports/README.md` for what each answers.
 
             New REST versions detected: ${{ steps.summary.outputs.new_versions || 'none - see diff (e.g. a version-map-only update once a support-site token was configured, or new parameters/fields added to existing endpoints in a point release)' }}
+
+            API drift report: ${{ steps.summary.outputs.drift_summary || 'no drift-report changes this run' }}
           branch: automated/update-api-capability-map
           delete-branch: true
           add-paths: |
             Data
+            Reports
