@@ -27,6 +27,8 @@ $script:PfbBespokeAuthEndpoints = @(
     'POST /oauth2/1.0/token'
 )
 
+. (Join-Path $PSScriptRoot 'PfbValueEnumTools.ps1')
+
 function Get-PfbModuleCalledEndpoints {
     <#
     .SYNOPSIS
@@ -131,6 +133,118 @@ function Get-PfbEndpointCoverageGaps {
         [PSCustomObject]@{
             Endpoint   = $key
             MinVersion = $CapabilityMap.endpoints.$key.minVersion
+        }
+    }
+}
+
+function Get-PfbParameterCoverageGaps {
+    <#
+    .SYNOPSIS
+        Category 2: for each endpoint an existing cmdlet already calls, flags a
+        capability-map-known parameter/body-field the cmdlet doesn't expose as a typed
+        parameter -- but ONLY for "fully mapped" cmdlets (every Public/ parameter on
+        every cmdlet calling this endpoint resolved Surface -eq 'Typed'; zero
+        AttributesOnly/TypedUnresolved anywhere). A cmdlet with any AttributesOnly/
+        TypedUnresolved parameter may already expose a "new" field through a path this
+        AST-only inventory can't see, so its endpoint gets a not-verified entry instead
+        of a guessed gap.
+    .OUTPUTS
+        [PSCustomObject]@{ ParameterGaps; NotVerified }. ParameterGaps is
+        [PSCustomObject]@{ Endpoint; Cmdlets; MissingParameters }[]. NotVerified is
+        [PSCustomObject]@{ Endpoint; Cmdlets; Reason }[].
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)] $CapabilityMap,
+        [Parameter(Mandatory)] [object[]]$CmdletInventory,
+        [Parameter(Mandatory)] [object[]]$CalledEndpoints
+    )
+
+    $inventoryByCmdlet = $CmdletInventory | Group-Object -Property Cmdlet -AsHashTable -AsString
+    $endpointGroups = @($CalledEndpoints | Where-Object { $_.Resolved } | Group-Object -Property Key)
+
+    $parameterGaps = [System.Collections.Generic.List[object]]::new()
+    $notVerified = [System.Collections.Generic.List[object]]::new()
+
+    foreach ($group in $endpointGroups) {
+        $key = $group.Name
+        $entry = $CapabilityMap.endpoints.$key
+        if (-not $entry) { continue }
+
+        $cmdlets = @($group.Group.Cmdlet | Select-Object -Unique)
+
+        $fullyMapped = $true
+        $exposedWireNames = [System.Collections.Generic.HashSet[string]]::new()
+        foreach ($cmdletName in $cmdlets) {
+            $rows = @($inventoryByCmdlet[$cmdletName])
+            foreach ($row in $rows) {
+                if ($row.Surface -ne 'Typed') { $fullyMapped = $false; continue }
+                if ($row.WireName) { [void]$exposedWireNames.Add($row.WireName) }
+            }
+        }
+
+        if (-not $fullyMapped) {
+            $notVerified.Add([PSCustomObject]@{ Endpoint = $key; Cmdlets = $cmdlets; Reason = 'has attributes/unresolved surface' })
+            continue
+        }
+
+        $knownFieldNames = [System.Collections.Generic.List[string]]::new()
+        if ($entry.parameters) { $knownFieldNames.AddRange([string[]]@($entry.parameters.PSObject.Properties.Name)) }
+        if ($entry.bodyProperties) { $knownFieldNames.AddRange([string[]]@($entry.bodyProperties.PSObject.Properties.Name)) }
+
+        $missing = @($knownFieldNames | Select-Object -Unique | Where-Object { -not $exposedWireNames.Contains($_) })
+        if ($missing.Count -gt 0) {
+            $parameterGaps.Add([PSCustomObject]@{ Endpoint = $key; Cmdlets = $cmdlets; MissingParameters = $missing })
+        }
+    }
+
+    return [PSCustomObject]@{ ParameterGaps = $parameterGaps.ToArray(); NotVerified = $notVerified.ToArray() }
+}
+
+function Get-PfbValidateSetDrift {
+    <#
+    .SYNOPSIS
+        Category 3: flags a typed Public/ parameter whose hand-written ValidateSet
+        disagrees with the spec's current documented value list for the same field --
+        missing values (the spec documents a legal value the ValidateSet rejects
+        client-side, e.g. the real Get-PfbArrayPerformance -Protocol 'all' bug),
+        stale values (the ValidateSet allows a value the spec no longer, or never did,
+        document), or both.
+    .OUTPUTS
+        [PSCustomObject]@{ Cmdlet; Parameter; CurrentValidateSet; SpecValues;
+        MissingValues; StaleValues }[] -- only for parameters whose wire name resolves
+        to exactly one spec value-enum record ('matched' via Resolve-PfbFieldValueEnum);
+        a HasValidateSet parameter that resolves to 'collision'/'not-found-in-resource'/
+        'no-spec-enum-found' is silently excluded (not enough signal to compare against).
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)] [object[]]$CmdletInventory,
+        [Parameter(Mandatory)] $History,
+        [Parameter(Mandatory)] [string]$OldestVersion
+    )
+
+    $withValidateSet = @($CmdletInventory | Where-Object { $_.Surface -eq 'Typed' -and $_.HasValidateSet })
+
+    foreach ($cand in $withValidateSet) {
+        $hint = Get-PfbResourceHint -CmdletName $cand.Cmdlet
+        $resolution = Resolve-PfbFieldValueEnum -WireName $cand.WireName -ResourceHint $hint -Endpoint $cand.Endpoint -Method $cand.Method -History $History -OldestVersion $OldestVersion
+        if ($resolution.Status -ne 'matched') { continue }
+
+        $current = @($cand.ValidateSetValues)
+        $spec = @($resolution.SpecValues)
+        $missing = @($spec | Where-Object { $current -notcontains $_ })
+        $stale = @($current | Where-Object { $spec -notcontains $_ })
+
+        if ($missing.Count -eq 0 -and $stale.Count -eq 0) { continue }
+
+        [PSCustomObject]@{
+            Cmdlet             = $cand.Cmdlet
+            Parameter          = $cand.Parameter
+            CurrentValidateSet = $current
+            SpecValues         = $spec
+            MissingValues      = $missing
+            StaleValues        = $stale
         }
     }
 }

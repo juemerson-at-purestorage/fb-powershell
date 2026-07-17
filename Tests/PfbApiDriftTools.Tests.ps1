@@ -53,6 +53,31 @@ function Invoke-PfbFixtureInternalHelper {
             'POST /api/login'    = [PSCustomObject]@{ minVersion = '2.26' }
         }
     }
+
+    $script:capabilityMap.endpoints | Add-Member -NotePropertyName 'GET /arrays/space' -NotePropertyValue ([PSCustomObject]@{
+        minVersion     = '2.0'
+        parameters     = [PSCustomObject]@{ type = '2.0'; new_field = '2.27' }
+        bodyProperties = [PSCustomObject]@{}
+    })
+
+    $script:fullyMappedInventory = @(
+        [PSCustomObject]@{ Cmdlet = 'Get-PfbFixtureArraySpace'; Parameter = 'Type'; Surface = 'Typed'; WireName = 'type'; HasValidateSet = $false; ValidateSetValues = $null; Endpoint = 'arrays/space'; Method = 'GET' }
+    )
+    $script:notFullyMappedInventory = @(
+        [PSCustomObject]@{ Cmdlet = 'Get-PfbFixtureWidget'; Parameter = 'Name'; Surface = 'Typed'; WireName = 'name'; HasValidateSet = $false; ValidateSetValues = $null; Endpoint = 'widgets'; Method = 'GET' }
+        [PSCustomObject]@{ Cmdlet = 'Get-PfbFixtureWidget'; Parameter = 'Attributes'; Surface = 'AttributesOnly'; WireName = $null; HasValidateSet = $false; ValidateSetValues = $null; Endpoint = $null; Method = $null }
+    )
+
+    $script:driftHistory = [ordered]@{
+        'ArrayPerformance.protocol' = [ordered]@{
+            Name = 'protocol'; Kind = 'schema'; MinVersion = '2.0'
+            CurrentValues = @('all', 'nfs', 'smb', 'http', 's3')
+            DistinctValueSets = [System.Collections.Generic.HashSet[string]]::new([string[]]@('all,http,nfs,s3,smb'))
+        }
+    }
+    $script:driftInventory = @(
+        [PSCustomObject]@{ Cmdlet = 'Get-PfbArrayPerformance'; Parameter = 'Protocol'; Surface = 'Typed'; WireName = 'protocol'; HasValidateSet = $true; ValidateSetValues = @('nfs', 'smb', 'http', 's3'); Endpoint = 'arrays/performance'; Method = 'GET' }
+    )
 }
 
 Describe 'Get-PfbModuleCalledEndpoints' {
@@ -99,5 +124,55 @@ Describe 'Bespoke auth-endpoint allowlist (real, confirmed by reading Private/ +
             'POST /api/logout',
             'POST /oauth2/1.0/token'
         ) | Sort-Object
+    }
+}
+
+Describe 'Get-PfbParameterCoverageGaps' {
+    It 'flags a missing parameter on a fully-mapped cmdlet''s endpoint' {
+        $endpoints = @([PSCustomObject]@{ Key = 'GET /arrays/space'; Method = 'GET'; Endpoint = '/arrays/space'; Resolved = $true; Cmdlet = 'Get-PfbFixtureArraySpace'; File = 'x' })
+        $result = Get-PfbParameterCoverageGaps -CapabilityMap $capabilityMap -CmdletInventory $fullyMappedInventory -CalledEndpoints $endpoints
+        $gap = $result.ParameterGaps | Where-Object { $_.Endpoint -eq 'GET /arrays/space' }
+        $gap.MissingParameters | Should -Contain 'new_field'
+    }
+
+    It 'produces not-verified instead of a guessed gap for a cmdlet with an AttributesOnly parameter' {
+        $endpoints = @([PSCustomObject]@{ Key = 'GET /widgets'; Method = 'GET'; Endpoint = '/widgets'; Resolved = $true; Cmdlet = 'Get-PfbFixtureWidget'; File = 'x' })
+        $capMapWithWidgets = [PSCustomObject]@{ endpoints = [PSCustomObject]@{ 'GET /widgets' = [PSCustomObject]@{ minVersion = '2.0'; parameters = [PSCustomObject]@{ name = '2.0' }; bodyProperties = [PSCustomObject]@{} } } }
+        $result = Get-PfbParameterCoverageGaps -CapabilityMap $capMapWithWidgets -CmdletInventory $notFullyMappedInventory -CalledEndpoints $endpoints
+        $result.ParameterGaps | Where-Object { $_.Endpoint -eq 'GET /widgets' } | Should -BeNullOrEmpty
+        ($result.NotVerified | Where-Object { $_.Endpoint -eq 'GET /widgets' }).Reason | Should -Be 'has attributes/unresolved surface'
+    }
+}
+
+Describe 'Get-PfbValidateSetDrift' {
+    It 'flags the real Get-PfbArrayPerformance -Protocol bug shape: spec has "all", ValidateSet is missing it' {
+        $drift = Get-PfbValidateSetDrift -CmdletInventory $driftInventory -History $driftHistory -OldestVersion '2.0'
+        $rec = $drift | Where-Object { $_.Cmdlet -eq 'Get-PfbArrayPerformance' -and $_.Parameter -eq 'Protocol' }
+        $rec.MissingValues | Should -Contain 'all'
+        $rec.StaleValues | Should -BeNullOrEmpty
+    }
+
+    It 'flags a stale ValidateSet value the spec no longer documents' {
+        # Cmdlet deliberately follows the module's real <Verb>-Pfb<Noun> convention (not
+        # a bare 'Test-Fixture') so Get-PfbResourceHint derives 'ArrayPerformance' and
+        # Resolve-PfbFieldValueEnum's resource-hint match actually fires -- otherwise this
+        # would vacuously pass/fail on hint-resolution alone rather than on the stale-value
+        # comparison this test is meant to exercise.
+        $staleInventory = @(
+            [PSCustomObject]@{ Cmdlet = 'Test-PfbArrayPerformance'; Parameter = 'Protocol'; Surface = 'Typed'; WireName = 'protocol'; HasValidateSet = $true; ValidateSetValues = @('all', 'nfs', 'smb', 'http', 's3', 'ftp'); Endpoint = 'arrays/performance'; Method = 'GET' }
+        )
+        $drift = Get-PfbValidateSetDrift -CmdletInventory $staleInventory -History $driftHistory -OldestVersion '2.0'
+        $rec = $drift | Where-Object { $_.Cmdlet -eq 'Test-PfbArrayPerformance' }
+        $rec.StaleValues | Should -Contain 'ftp'
+    }
+
+    It 'does not flag a ValidateSet whose values exactly match the spec' {
+        # Same naming-convention reasoning as above -- must actually resolve to 'matched'
+        # so this asserts real match-with-no-drift behavior, not vacuous non-resolution.
+        $matchingInventory = @(
+            [PSCustomObject]@{ Cmdlet = 'Test-PfbArrayPerformance'; Parameter = 'Protocol'; Surface = 'Typed'; WireName = 'protocol'; HasValidateSet = $true; ValidateSetValues = @('all', 'nfs', 'smb', 'http', 's3'); Endpoint = 'arrays/performance'; Method = 'GET' }
+        )
+        $drift = Get-PfbValidateSetDrift -CmdletInventory $matchingInventory -History $driftHistory -OldestVersion '2.0'
+        $drift | Should -BeNullOrEmpty
     }
 }
