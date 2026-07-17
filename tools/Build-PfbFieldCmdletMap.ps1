@@ -67,34 +67,10 @@ $specFiles = $specFiles | ForEach-Object {
 # value set ever change since first seen?) can be computed. Deliberately a separate,
 # self-contained re-scan rather than modifying the prior phase's already-shipped output
 # shape, keeping this task's diff additive-only.
-$history = [ordered]@{}
-$processedVersions = [System.Collections.Generic.List[string]]::new()
-$oldestVersion = "$($specFiles[0].Major).$($specFiles[0].Minor)"
-
-foreach ($entry in $specFiles) {
-    $version = "$($entry.Major).$($entry.Minor)"
-    $spec = Get-Content -Path $entry.File.FullName -Raw | ConvertFrom-Json -Depth 64
-    $valueEnums = Get-PfbSpecValueEnums -Spec $spec
-
-    foreach ($rec in $valueEnums) {
-        if (-not $rec.Parsed) { continue }
-        $sortedValues = ($rec.Values | Sort-Object) -join ','
-
-        if (-not $history.Contains($rec.Key)) {
-            $history[$rec.Key] = [ordered]@{
-                Name           = $rec.Name
-                Kind           = $rec.Kind
-                MinVersion     = $version
-                CurrentValues  = $rec.Values
-                DistinctValueSets = [System.Collections.Generic.HashSet[string]]::new()
-            }
-        }
-        $history[$rec.Key].CurrentValues = $rec.Values
-        [void]$history[$rec.Key].DistinctValueSets.Add($sortedValues)
-    }
-
-    $processedVersions.Add($version)
-}
+$historyResult = Get-PfbValueEnumHistory -SpecsDirectory $SpecsDirectory
+$history = $historyResult.History
+$processedVersions = $historyResult.ProcessedVersions
+$oldestVersion = $historyResult.OldestVersion
 
 # --- Cmdlet parameter inventory, filtered to fields with no existing ValidateSet ---
 $inventory = Get-PfbCmdletParameterInventory -PublicDirectory $PublicDirectory
@@ -102,98 +78,19 @@ $candidates = @($inventory | Where-Object { $_.Surface -eq 'Typed' -and -not $_.
 $attributesOnly = @($inventory | Where-Object { $_.Surface -eq 'AttributesOnly' } | ForEach-Object { [ordered]@{ cmdlet = $_.Cmdlet; parameter = $_.Parameter } })
 $typedUnresolved = @($inventory | Where-Object { $_.Surface -eq 'TypedUnresolved' } | ForEach-Object { [ordered]@{ cmdlet = $_.Cmdlet; parameter = $_.Parameter } })
 
-function Get-PfbResourceHint {
-    param([string]$CmdletName)
-    # Strip the leading "<Verb>-Pfb" prefix to derive a resource-name hint, e.g.
-    # "New-PfbNetworkInterface" -> "NetworkInterface". Matches any verb generically --
-    # the "-Pfb" module prefix is the reliable marker, not the specific verb, and this
-    # repo uses far more verbs (Add/Export/Invoke/Grant/...) than are worth enumerating.
-    if ($CmdletName -match '^[A-Za-z]+-Pfb(.+)$') {
-        return $Matches[1]
-    }
-    return $CmdletName
-}
-
 $entries = foreach ($cand in $candidates) {
     $hint = Get-PfbResourceHint -CmdletName $cand.Cmdlet
-    $allMatches = @($history.Keys | Where-Object { $history[$_].Name -eq $cand.WireName })
-    $schemaMatches = @($allMatches | Where-Object { $history[$_].Kind -eq 'schema' })
-    $paramMatches  = @($allMatches | Where-Object { $history[$_].Kind -eq 'parameter' })
-    $hintedSchema  = @($schemaMatches | Where-Object { $_ -like "$hint*" })
-
-    # 'inline-parameter'-kind records (see tools/lib/PfbValueEnumTools.ps1) are keyed by
-    # "<METHOD> <endpoint>#<wireName>" -- an exact, unambiguous identity for one specific
-    # endpoint, unlike either 'schema' (resource-hint, a heuristic) or 'parameter' (a
-    # shared dictionary name with no endpoint identity at all). If the AST inventory
-    # (tools/lib/PfbCmdletParamTools.ps1) resolved this cmdlet parameter's own
-    # -Endpoint/-Method unambiguously, this is the single most precise resolution
-    # available -- an exact match here is not a heuristic, it IS the endpoint this
-    # cmdlet calls.
-    $inlineKey = if ($cand.Endpoint -and $cand.Method) { "$($cand.Method.ToUpperInvariant()) $($cand.Endpoint)#$($cand.WireName)" } else { $null }
-    $inlineMatches = @()
-    if ($inlineKey -and $history.Contains($inlineKey) -and $history[$inlineKey].Kind -eq 'inline-parameter') {
-        $inlineMatches = @($inlineKey)
-    }
-
-    $status = $null
-    $matchedKey = $null
-    $specValues = $null
-    $stable = $null
-    $recommendation = $null
-
-    if ($allMatches.Count -eq 0) {
-        $status = 'no-spec-enum-found'
-    }
-    else {
-        # Parameter-kind records (OpenAPI components.parameters) are keyed by a shared
-        # dictionary name with no relationship to the owning resource/cmdlet, so the
-        # resource-hint filter above (built for "$schemaName.$propName"-shaped schema
-        # keys) can never apply to them. Instead: if every parameter-kind record
-        # sharing this wire name currently agrees on one value set, treat that as a
-        # single resolved candidate -- the answer is the same regardless of which
-        # specific components.parameters definition this cmdlet's endpoint actually
-        # references. If they disagree, the wire name is genuinely ambiguous across
-        # different parameter definitions and must be reported as a collision, never
-        # guessed at -- UNLESS an exact inline-parameter match (above) already settles
-        # which definition this cmdlet's endpoint actually uses; in that case the
-        # ambiguity among the *other* components.parameters definitions is irrelevant,
-        # because we're not choosing between them at all (this is exactly the real
-        # Get-PfbArraySpace -Type case: 'Type' and 'Type_for_performance' disagree, but
-        # the endpoint-exact inline-parameter record settles it without needing either).
-        $paramValueSets = @($paramMatches | ForEach-Object { ($history[$_].CurrentValues | Sort-Object) -join ',' } | Select-Object -Unique)
-        $paramAmbiguous = ($paramMatches.Count -gt 0) -and (@($paramValueSets).Count -gt 1)
-        $paramCandidates = if ($paramMatches.Count -eq 0 -or $paramAmbiguous) { @() } else { @($paramMatches[0]) }
-
-        $resolved = @($inlineMatches + $hintedSchema + $paramCandidates)
-        $resolvedValueSets = @($resolved | ForEach-Object { ($history[$_].CurrentValues | Sort-Object) -join ',' } | Select-Object -Unique)
-
-        $forceCollisionFromParamAmbiguity = ($inlineMatches.Count -eq 0) -and $paramAmbiguous
-
-        if ($forceCollisionFromParamAmbiguity -or @($resolvedValueSets).Count -gt 1) {
-            $status = 'collision'
-        }
-        elseif ($resolved.Count -eq 0) {
-            $status = 'not-found-in-resource'
-        }
-        else {
-            $matchedKey = $resolved[0]
-            $h = $history[$matchedKey]
-            $specValues = $h.CurrentValues
-            $stable = ($h.MinVersion -eq $oldestVersion) -and ($h.DistinctValueSets.Count -eq 1)
-            $status = 'matched'
-            $recommendation = if ($stable) { 'ValidateSet' } else { 'ArgumentCompleter' }
-        }
-    }
+    $resolution = Resolve-PfbFieldValueEnum -WireName $cand.WireName -ResourceHint $hint -Endpoint $cand.Endpoint -Method $cand.Method -History $history -OldestVersion $oldestVersion
 
     [ordered]@{
         cmdlet                   = $cand.Cmdlet
         parameter                = $cand.Parameter
         wireName                 = $cand.WireName
-        status                   = $status
-        matchedKey               = $matchedKey
-        specValues                = $specValues
-        stableSinceOldestVersion = $stable
-        recommendation           = $recommendation
+        status                   = $resolution.Status
+        matchedKey               = $resolution.MatchedKey
+        specValues                = $resolution.SpecValues
+        stableSinceOldestVersion = $resolution.Stable
+        recommendation           = $resolution.Recommendation
     }
 }
 

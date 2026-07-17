@@ -389,3 +389,161 @@ function Get-PfbSpecValueEnums {
 
     return $results
 }
+
+function Get-PfbResourceHint {
+    <#
+    .SYNOPSIS
+        Strips the leading "<Verb>-Pfb" prefix to derive a resource-name hint, e.g.
+        "New-PfbNetworkInterface" -> "NetworkInterface". Matches any verb generically --
+        the "-Pfb" module prefix is the reliable marker, not the specific verb.
+    #>
+    [CmdletBinding()]
+    param([Parameter(Mandatory)] [string]$CmdletName)
+    if ($CmdletName -match '^[A-Za-z]+-Pfb(.+)$') {
+        return $Matches[1]
+    }
+    return $CmdletName
+}
+
+function Get-PfbValueEnumHistory {
+    <#
+    .SYNOPSIS
+        Re-derives the full per-version value-enum history Resolve-PfbFieldValueEnum
+        needs (MinVersion, CurrentValues, DistinctValueSets -- i.e. was this field's
+        value set ever unstable since first seen) by re-scanning every cached spec
+        version directly.
+    .DESCRIPTION
+        Deliberately NOT sourced from a Reports/PfbValueEnumMap.json-shaped summary --
+        that manifest only retains each entry's newest value list and earliest-seen
+        version, not per-version stability, which this history structure requires.
+        Shared by tools/Build-PfbFieldCmdletMap.ps1 (category 4: new ValidateSet
+        candidates) and tools/lib/PfbApiDriftTools.ps1's Get-PfbValidateSetDrift
+        (category 3: drift on ValidateSets that already exist) so both use identical
+        resolution data derived the same way.
+    .OUTPUTS
+        [PSCustomObject]@{ History; ProcessedVersions; OldestVersion }. History is an
+        [ordered] dictionary keyed by (schema/parameter/inline-parameter) Key (see
+        Get-PfbSpecValueEnums), each value [ordered]@{ Name; Kind; MinVersion;
+        CurrentValues; DistinctValueSets }, where DistinctValueSets is a
+        HashSet[string] of every distinct sorted-and-joined value set ever observed.
+    #>
+    [CmdletBinding()]
+    param([Parameter(Mandatory)] [string]$SpecsDirectory)
+
+    $specFiles = Get-ChildItem -Path $SpecsDirectory -Filter 'fb*.json' -ErrorAction SilentlyContinue
+    if (-not $specFiles) {
+        throw "No cached specs found in '$SpecsDirectory'. Run Update-PfbApiSpecs.ps1 first."
+    }
+    $specFiles = $specFiles | ForEach-Object {
+        if ($_.BaseName -match '^fb(\d+)\.(\d+)$') {
+            [PSCustomObject]@{ File = $_; Major = [int]$Matches[1]; Minor = [int]$Matches[2] }
+        }
+    } | Where-Object { $_ } | Sort-Object Major, Minor
+
+    $history = [ordered]@{}
+    $processedVersions = [System.Collections.Generic.List[string]]::new()
+    $oldestVersion = "$($specFiles[0].Major).$($specFiles[0].Minor)"
+
+    foreach ($entry in $specFiles) {
+        $version = "$($entry.Major).$($entry.Minor)"
+        $spec = Get-Content -Path $entry.File.FullName -Raw | ConvertFrom-Json -Depth 64
+        $valueEnums = Get-PfbSpecValueEnums -Spec $spec
+
+        foreach ($rec in $valueEnums) {
+            if (-not $rec.Parsed) { continue }
+            $sortedValues = ($rec.Values | Sort-Object) -join ','
+
+            if (-not $history.Contains($rec.Key)) {
+                $history[$rec.Key] = [ordered]@{
+                    Name              = $rec.Name
+                    Kind              = $rec.Kind
+                    MinVersion        = $version
+                    CurrentValues     = $rec.Values
+                    DistinctValueSets = [System.Collections.Generic.HashSet[string]]::new()
+                }
+            }
+            $history[$rec.Key].CurrentValues = $rec.Values
+            [void]$history[$rec.Key].DistinctValueSets.Add($sortedValues)
+        }
+
+        $processedVersions.Add($version)
+    }
+
+    return [PSCustomObject]@{
+        History           = $history
+        ProcessedVersions = $processedVersions
+        OldestVersion     = $oldestVersion
+    }
+}
+
+function Resolve-PfbFieldValueEnum {
+    <#
+    .SYNOPSIS
+        Resolves one candidate field's wire name against a Get-PfbValueEnumHistory
+        History using the three-kind resolution rule: schema-kind (resource-hint
+        heuristic), parameter-kind (shared-dictionary cross-source agreement), and
+        inline-parameter (exact endpoint identity, highest priority -- settles ambiguity
+        the other two kinds cannot, e.g. Get-PfbArraySpace -Type's 'Type' vs
+        'Type_for_performance' collision). Never guesses: ambiguous cases return
+        'collision', never a forced pick.
+    .OUTPUTS
+        [PSCustomObject]@{ Status; MatchedKey; SpecValues; Stable; Recommendation }.
+        Status is one of 'no-spec-enum-found', 'collision', 'not-found-in-resource',
+        'matched'. MatchedKey/SpecValues/Stable/Recommendation are all $null unless
+        Status -eq 'matched', in which case Recommendation is 'ValidateSet' (stable
+        since the oldest processed version) or 'ArgumentCompleter' (introduced later, or
+        its value set has changed at some point in the observed history).
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)] [string]$WireName,
+        [Parameter(Mandatory)] [string]$ResourceHint,
+        [string]$Endpoint,
+        [string]$Method,
+        [Parameter(Mandatory)] $History,
+        [Parameter(Mandatory)] [string]$OldestVersion
+    )
+
+    $allMatches = @($History.Keys | Where-Object { $History[$_].Name -eq $WireName })
+    $schemaMatches = @($allMatches | Where-Object { $History[$_].Kind -eq 'schema' })
+    $paramMatches  = @($allMatches | Where-Object { $History[$_].Kind -eq 'parameter' })
+    $hintedSchema  = @($schemaMatches | Where-Object { $_ -like "$ResourceHint*" })
+
+    $inlineKey = if ($Endpoint -and $Method) { "$($Method.ToUpperInvariant()) $Endpoint#$WireName" } else { $null }
+    $inlineMatches = @()
+    if ($inlineKey -and $History.Contains($inlineKey) -and $History[$inlineKey].Kind -eq 'inline-parameter') {
+        $inlineMatches = @($inlineKey)
+    }
+
+    if ($allMatches.Count -eq 0) {
+        return [PSCustomObject]@{ Status = 'no-spec-enum-found'; MatchedKey = $null; SpecValues = $null; Stable = $null; Recommendation = $null }
+    }
+
+    $paramValueSets = @($paramMatches | ForEach-Object { ($History[$_].CurrentValues | Sort-Object) -join ',' } | Select-Object -Unique)
+    $paramAmbiguous = ($paramMatches.Count -gt 0) -and (@($paramValueSets).Count -gt 1)
+    $paramCandidates = if ($paramMatches.Count -eq 0 -or $paramAmbiguous) { @() } else { @($paramMatches[0]) }
+
+    $resolved = @($inlineMatches + $hintedSchema + $paramCandidates)
+    $resolvedValueSets = @($resolved | ForEach-Object { ($History[$_].CurrentValues | Sort-Object) -join ',' } | Select-Object -Unique)
+
+    $forceCollisionFromParamAmbiguity = ($inlineMatches.Count -eq 0) -and $paramAmbiguous
+
+    if ($forceCollisionFromParamAmbiguity -or @($resolvedValueSets).Count -gt 1) {
+        return [PSCustomObject]@{ Status = 'collision'; MatchedKey = $null; SpecValues = $null; Stable = $null; Recommendation = $null }
+    }
+    if ($resolved.Count -eq 0) {
+        return [PSCustomObject]@{ Status = 'not-found-in-resource'; MatchedKey = $null; SpecValues = $null; Stable = $null; Recommendation = $null }
+    }
+
+    $matchedKey = $resolved[0]
+    $h = $History[$matchedKey]
+    $specValues = $h.CurrentValues
+    $stable = ($h.MinVersion -eq $OldestVersion) -and ($h.DistinctValueSets.Count -eq 1)
+    return [PSCustomObject]@{
+        Status         = 'matched'
+        MatchedKey     = $matchedKey
+        SpecValues     = $specValues
+        Stable         = $stable
+        Recommendation = if ($stable) { 'ValidateSet' } else { 'ArgumentCompleter' }
+    }
+}

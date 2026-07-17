@@ -396,6 +396,49 @@ Describe 'Get-PfbSpecValueEnums: inline path-operation parameters' {
     }
 }
 
+Describe 'Get-PfbResourceHint' {
+    It 'strips the leading <Verb>-Pfb prefix' {
+        Get-PfbResourceHint -CmdletName 'New-PfbNetworkInterface' | Should -Be 'NetworkInterface'
+    }
+
+    It 'returns the input unchanged when it does not match the <Verb>-Pfb shape' {
+        Get-PfbResourceHint -CmdletName 'SomethingElse' | Should -Be 'SomethingElse'
+    }
+}
+
+Describe 'Resolve-PfbFieldValueEnum' {
+    BeforeAll {
+        $script:history = [ordered]@{
+            'Widget.color' = [ordered]@{ Name = 'color'; Kind = 'schema'; MinVersion = '2.0'; CurrentValues = @('red', 'blue'); DistinctValueSets = [System.Collections.Generic.HashSet[string]]::new([string[]]@('blue,red')) }
+            'Type'                    = [ordered]@{ Name = 'type'; Kind = 'parameter'; MinVersion = '2.0'; CurrentValues = @('array', 'file-system'); DistinctValueSets = [System.Collections.Generic.HashSet[string]]::new([string[]]@('array,file-system')) }
+            'Type_for_performance'    = [ordered]@{ Name = 'type'; Kind = 'parameter'; MinVersion = '2.0'; CurrentValues = @('array', 'client'); DistinctValueSets = [System.Collections.Generic.HashSet[string]]::new([string[]]@('array,client')) }
+            'GET arrays/space#type'   = [ordered]@{ Name = 'type'; Kind = 'inline-parameter'; MinVersion = '2.0'; CurrentValues = @('array', 'file-system'); DistinctValueSets = [System.Collections.Generic.HashSet[string]]::new([string[]]@('array,file-system')) }
+        }
+    }
+
+    It 'returns no-spec-enum-found when the wire name matches nothing' {
+        $r = Resolve-PfbFieldValueEnum -WireName 'nope' -ResourceHint 'Widget' -History $history -OldestVersion '2.0'
+        $r.Status | Should -Be 'no-spec-enum-found'
+    }
+
+    It 'matches via resource-hint-filtered schema kind' {
+        $r = Resolve-PfbFieldValueEnum -WireName 'color' -ResourceHint 'Widget' -History $history -OldestVersion '2.0'
+        $r.Status | Should -Be 'matched'
+        $r.Recommendation | Should -Be 'ValidateSet'
+    }
+
+    It 'reports collision when parameter-kind records disagree and no inline match settles it' {
+        $r = Resolve-PfbFieldValueEnum -WireName 'type' -ResourceHint 'Nothing' -History $history -OldestVersion '2.0'
+        $r.Status | Should -Be 'collision'
+    }
+
+    It 'an exact inline-parameter match settles an otherwise-ambiguous parameter-kind wire name' {
+        $r = Resolve-PfbFieldValueEnum -WireName 'type' -ResourceHint 'Nothing' -Endpoint 'arrays/space' -Method 'GET' -History $history -OldestVersion '2.0'
+        $r.Status | Should -Be 'matched'
+        $r.MatchedKey | Should -Be 'GET arrays/space#type'
+    }
+}
+
 Describe 'Build-PfbValueEnumMap.ps1: inline-parameter-to-$ref refactor keeps the field''s minVersion at its original (inline) version' {
     BeforeAll {
         $repoRoot = Split-Path -Parent $PSScriptRoot
