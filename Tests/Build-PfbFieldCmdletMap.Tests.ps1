@@ -3,7 +3,7 @@
 .SYNOPSIS
     Unit tests for tools/Build-PfbFieldCmdletMap.ps1's classification logic, against
     small synthetic inventory + spec fixtures. Also includes one real-artifact check that
-    skips gracefully if tools/specs/ or Data/PfbValueEnumMap.json aren't present, matching
+    skips gracefully if tools/specs/ isn't present, matching
     Tests/Build-PfbValueEnumMap.Tests.ps1's convention.
 #>
 
