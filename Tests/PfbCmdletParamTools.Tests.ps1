@@ -139,6 +139,21 @@ function Get-PfbFixtureNode {
 }
 '@
 
+    # Real Get-PfbPolicyAllMember shape: a plural wire name built by joining a string-array
+    # parameter, not assigning it directly or wrapping it in @(...).
+    Set-Content -Path (Join-Path $fixtureDir 'Get-PfbFixturePolicyAllMember.ps1') -Value @'
+function Get-PfbFixturePolicyAllMember {
+    [CmdletBinding()]
+    param(
+        [Parameter()] [PSCustomObject]$Array,
+        [Parameter()] [string[]]$MemberName
+    )
+    $queryParams = @{}
+    if ($MemberName) { $queryParams['member_names'] = $MemberName -join ',' }
+    Invoke-PfbApiRequest -Array $Array -Method GET -Endpoint 'policies/members' -QueryParams $queryParams -AutoPaginate
+}
+'@
+
     $script:inventory = Get-PfbCmdletParameterInventory -PublicDirectory $fixtureDir
 }
 
@@ -195,6 +210,12 @@ Describe 'Get-PfbCmdletParameterInventory' {
         $rec = $inventory | Where-Object { $_.Cmdlet -eq 'Get-PfbFixtureArrayPerformance' -and $_.Parameter -eq 'StartTime' }
         $rec.WireName | Should -BeNullOrEmpty
         $rec.Surface | Should -Be 'TypedUnresolved'
+    }
+
+    It 'resolves a parameter joined into a plural wire name via -join' {
+        $rec = $inventory | Where-Object { $_.Cmdlet -eq 'Get-PfbFixturePolicyAllMember' -and $_.Parameter -eq 'MemberName' }
+        $rec.WireName | Should -Be 'member_names'
+        $rec.Surface | Should -Be 'Typed'
     }
 }
 
