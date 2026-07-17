@@ -7,8 +7,8 @@
 .DESCRIPTION
     Every invocation below passes explicit -OutputPath AND -ReconciliationPath under
     TestDrive: — never let the script fall back to its real-repo defaults, or running
-    these tests would overwrite Data/PfbValueEnumMap.json and
-    tools/PfbValueEnumReconciliation.md as a side effect.
+    these tests would overwrite Reports/PfbValueEnumMap.json and
+    Reports/PfbValueEnumReconciliation.md as a side effect.
 #>
 
 BeforeAll {
@@ -180,13 +180,13 @@ Describe 'Build-PfbValueEnumMap: manifest shape' {
 Describe 'Real committed value-enum map (skips gracefully if not yet generated)' {
     BeforeAll {
         $repoRoot = Split-Path -Parent $PSScriptRoot
-        $script:realManifestPath = Join-Path $repoRoot 'Data/PfbValueEnumMap.json'
+        $script:realManifestPath = Join-Path $repoRoot 'Reports/PfbValueEnumMap.json'
         $script:realSpecsDir = Join-Path $repoRoot 'tools/specs'
     }
 
     It 'Bucket.versioning regression: extracts exactly [none, enabled, suspended] with no per-value version claim' {
         if (-not (Test-Path $realManifestPath)) {
-            Set-ItResult -Skipped -Because 'Data/PfbValueEnumMap.json not present (run Build-PfbValueEnumMap.ps1 first)'
+            Set-ItResult -Skipped -Because 'Reports/PfbValueEnumMap.json not present (run Build-PfbValueEnumMap.ps1 first)'
             return
         }
 
@@ -197,7 +197,7 @@ Describe 'Real committed value-enum map (skips gracefully if not yet generated)'
 
     It 'never collapses NfsExportPolicyRuleBase.access and the presets-only variant into one entry (squash-mode gotcha)' {
         if (-not (Test-Path $realManifestPath)) {
-            Set-ItResult -Skipped -Because 'Data/PfbValueEnumMap.json not present (run Build-PfbValueEnumMap.ps1 first)'
+            Set-ItResult -Skipped -Because 'Reports/PfbValueEnumMap.json not present (run Build-PfbValueEnumMap.ps1 first)'
             return
         }
 
@@ -214,7 +214,7 @@ Describe 'Real committed value-enum map (skips gracefully if not yet generated)'
 
     It 'meets the acceptance-criteria entry-count floor and reports unparsedCount as a first-class field' {
         if (-not (Test-Path $realManifestPath)) {
-            Set-ItResult -Skipped -Because 'Data/PfbValueEnumMap.json not present (run Build-PfbValueEnumMap.ps1 first)'
+            Set-ItResult -Skipped -Because 'Reports/PfbValueEnumMap.json not present (run Build-PfbValueEnumMap.ps1 first)'
             return
         }
 
@@ -226,7 +226,7 @@ Describe 'Real committed value-enum map (skips gracefully if not yet generated)'
 
     It 'every (schema, property) value-enum extractable from the newest cached spec is represented in the manifest' {
         if (-not (Test-Path $realManifestPath) -or -not (Test-Path $realSpecsDir)) {
-            Set-ItResult -Skipped -Because 'Data/PfbValueEnumMap.json or tools/specs/ not present (run Update-PfbApiSpecs.ps1 and Build-PfbValueEnumMap.ps1 first)'
+            Set-ItResult -Skipped -Because 'Reports/PfbValueEnumMap.json or tools/specs/ not present (run Update-PfbApiSpecs.ps1 and Build-PfbValueEnumMap.ps1 first)'
             return
         }
 

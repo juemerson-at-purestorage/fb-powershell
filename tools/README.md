@@ -56,10 +56,21 @@ Run in this order:
 4. **`Build-PfbValueEnumMap.ps1`** — a separate, later phase (see "Value-enum extraction"
    below): loads the same cached specs and extracts prose-documented value enumerations
    (e.g. `Bucket.versioning`'s "Valid values are `none`, `enabled`, and `suspended`.")
-   into `Data/PfbValueEnumMap.json`. Also runs entirely offline once specs are cached.
+   into `Reports/PfbValueEnumMap.json`. Also runs entirely offline once specs are cached.
 
    ```powershell
    ./tools/Build-PfbValueEnumMap.ps1
+   ```
+
+5. **`Build-PfbApiDriftReport.ps1`** — the newest phase (see `Reports/README.md`): composes
+   the capability map, cmdlet inventory, and value-enum data above into one combined
+   "what's changed that we haven't caught up to" report, covering uncovered endpoints, new
+   parameters on endpoints we already call, drift on existing `ValidateSet`s, and new
+   `ValidateSet` candidates (reusing `Build-PfbFieldCmdletMap.ps1`'s `matched` output
+   directly). See `tools/lib/PfbApiDriftTools.ps1` for the underlying functions.
+
+   ```powershell
+   ./tools/Build-PfbApiDriftReport.ps1
    ```
 
 ## What's deliberately NOT in the capability map
@@ -86,7 +97,7 @@ parses the "Valid/Possible values are/include ..." prose sentence out of a schem
 property's or parameter's `description` — the only place these specs record a field's
 legal value set, since (as above) there is no structural `enum` to read instead — and
 `tools/Build-PfbValueEnumMap.ps1` diffs that across every cached spec version into
-`Data/PfbValueEnumMap.json`:
+`Reports/PfbValueEnumMap.json`:
 
 ```powershell
 ./tools/Build-PfbValueEnumMap.ps1
@@ -120,13 +131,13 @@ Key correctness rules (each has a dedicated regression test in
   manifest's `unparsedCount`/`unparsed` fields, same "never silently over-claim coverage"
   norm as the capability map's own coverage reporting.
 
-The builder also writes `tools/PfbValueEnumReconciliation.md`, comparing every existing
+The builder also writes `Reports/PfbValueEnumReconciliation.md`, comparing every existing
 hand-written cmdlet `ValidateSet` that encodes a spec-documented enum against this newly
 extracted data (exact match / stale / not-found / collision with an unrelated same-named
 field elsewhere in the spec). That report is informational only — it does not edit any
 `Public/` cmdlet.
 
-**`Data/PfbValueEnumMap.json`'s output is not consumed anywhere at runtime yet** — no
+**`Reports/PfbValueEnumMap.json`'s output is not consumed anywhere at runtime yet** — no
 `ArgumentCompleter`, no `Assert-PfbApiCapability` enforcement. Whether/how to consume it
 is a deliberate later decision once real coverage/accuracy numbers exist from this data,
 same as how the capability map above sat idle until its own Phase 2 wired it in.
@@ -174,10 +185,10 @@ Key correctness rules:
   decisions (add a new typed parameter, or leave as-is); the script does not edit any
   `Public/` cmdlet.
 
-The builder also writes `tools/PfbFieldCmdletMapping.md`, a Markdown table summarizing
+The builder also writes `Reports/PfbFieldCmdletMapping.md`, a Markdown table summarizing
 every candidate and its recommendation — informational only, not consumed at runtime.
 
-**`Data/PfbFieldCmdletMap.json`'s output is not consumed anywhere at runtime yet** — no
+**`Reports/PfbFieldCmdletMap.json`'s output is not consumed anywhere at runtime yet** — no
 `ValidateSet` or `ArgumentCompleter` is added to any `Public/` cmdlet by this script.
 Whether/how to consume it is a deliberate follow-on decision.
 
@@ -193,7 +204,7 @@ against the newest locally-cached spec, and skips gracefully if `tools/specs/` (
 `Tests/PfbValueEnumTools.Tests.ps1` and `Tests/Build-PfbValueEnumMap.Tests.ps1` cover the
 value-enum extraction/diffing logic the same way, plus a `Bucket.versioning` regression
 fixture and a squash-mode-gotcha fixture (see "Value-enum extraction" above). Their real-
-manifest checks skip gracefully if `tools/specs/` or `Data/PfbValueEnumMap.json` aren't
+manifest checks skip gracefully if `tools/specs/` or `Reports/PfbValueEnumMap.json` aren't
 present.
 
 ## CI

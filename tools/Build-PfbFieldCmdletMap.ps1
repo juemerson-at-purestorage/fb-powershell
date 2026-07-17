@@ -26,9 +26,9 @@
 .PARAMETER PublicDirectory
     Where Public/ cmdlet files live. Defaults to Public/ relative to the repo root.
 .PARAMETER OutputPath
-    Where to write Data/PfbFieldCmdletMap.json. Defaults there.
+    Where to write Reports/PfbFieldCmdletMap.json. Defaults there.
 .PARAMETER ReportPath
-    Where to write tools/PfbFieldCmdletMapping.md. Defaults there.
+    Where to write Reports/PfbFieldCmdletMapping.md. Defaults there.
 #>
 [CmdletBinding()]
 param(
@@ -48,8 +48,8 @@ $scriptDir = $PSScriptRoot
 $repoRoot = Split-Path -Parent $scriptDir
 if (-not $SpecsDirectory)  { $SpecsDirectory = Join-Path $scriptDir 'specs' }
 if (-not $PublicDirectory) { $PublicDirectory = Join-Path $repoRoot 'Public' }
-if (-not $OutputPath)      { $OutputPath = Join-Path (Join-Path $repoRoot 'Data') 'PfbFieldCmdletMap.json' }
-if (-not $ReportPath)      { $ReportPath = Join-Path $scriptDir 'PfbFieldCmdletMapping.md' }
+if (-not $OutputPath)      { $OutputPath = Join-Path (Join-Path $repoRoot 'Reports') 'PfbFieldCmdletMap.json' }
+if (-not $ReportPath)      { $ReportPath = Join-Path (Join-Path $repoRoot 'Reports') 'PfbFieldCmdletMapping.md' }
 
 $specFiles = Get-ChildItem -Path $SpecsDirectory -Filter 'fb*.json' -ErrorAction SilentlyContinue
 if (-not $specFiles) {
@@ -63,7 +63,7 @@ $specFiles = $specFiles | ForEach-Object {
 } | Where-Object { $_ } | Sort-Object Major, Minor
 
 # Re-derive, per (schema/param) Key, the full per-version value-set history -- NOT just
-# the "latest wins" summary Data/PfbValueEnumMap.json stores -- so stability (did the
+# the "latest wins" summary Reports/PfbValueEnumMap.json stores -- so stability (did the
 # value set ever change since first seen?) can be computed. Deliberately a separate,
 # self-contained re-scan rather than modifying the prior phase's already-shipped output
 # shape, keeping this task's diff additive-only.
