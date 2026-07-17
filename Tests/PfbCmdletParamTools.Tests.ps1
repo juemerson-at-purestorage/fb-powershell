@@ -374,4 +374,12 @@ Describe 'Find-PfbAccumulatorVariable' {
         $funcAst = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true) | Select-Object -First 1
         Find-PfbAccumulatorVariable -FunctionAst $funcAst -ParameterName 'Name' | Should -BeNullOrEmpty
     }
+
+    It 'returns the accumulator variable name for a single unambiguous foreach-Add loop over the parameter' {
+        $tokens = $null; $errs = $null
+        $ast = [System.Management.Automation.Language.Parser]::ParseInput(
+            'function Test-Fixture { param([string[]]$Name) $names = [System.Collections.Generic.List[string]]::new(); foreach ($n in $Name) { $names.Add($n) } }', [ref]$tokens, [ref]$errs)
+        $funcAst = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true) | Select-Object -First 1
+        Find-PfbAccumulatorVariable -FunctionAst $funcAst -ParameterName 'Name' | Should -Be 'names'
+    }
 }
