@@ -42,6 +42,39 @@
 
 # Deliberately NOT Set-StrictMode -- same reasoning as PfbSpecTools.ps1 / PfbValueEnumTools.ps1.
 
+function Test-PfbAssignmentGuardedBySwitch {
+    <#
+    .SYNOPSIS
+        True if $Assignment is lexically inside an `if ($ParameterName) { ... }` clause
+        whose condition is exactly a bare reference to $ParameterName -- the guard shape
+        Test-PfbAssignmentGuardedBySwitch's caller requires before trusting a literal
+        string assignment as switch-derived.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [System.Management.Automation.Language.Ast]$Assignment,
+
+        [Parameter(Mandatory)]
+        [string]$ParameterName
+    )
+
+    $expectedCondition = '$' + $ParameterName
+    $node = $Assignment.Parent
+    while ($node) {
+        if ($node -is [System.Management.Automation.Language.IfStatementAst]) {
+            foreach ($clause in $node.Clauses) {
+                if ($clause.Item1.Extent.Text.Trim() -eq $expectedCondition) {
+                    $withinBody = $clause.Item2.FindAll({ param($n) $n -eq $Assignment }, $true)
+                    if (@($withinBody).Count -gt 0) { return $true }
+                }
+            }
+        }
+        $node = $node.Parent
+    }
+    return $false
+}
+
 function Get-PfbWireNameForParameter {
     <#
     .SYNOPSIS
@@ -59,7 +92,9 @@ function Get-PfbWireNameForParameter {
         [System.Management.Automation.Language.FunctionDefinitionAst]$FunctionAst,
 
         [Parameter(Mandatory)]
-        [string]$ParameterName
+        [string]$ParameterName,
+
+        [switch]$IsSwitchParameter
     )
 
     $assignments = $FunctionAst.FindAll({
@@ -97,7 +132,14 @@ function Get-PfbWireNameForParameter {
             }
         }
 
-        if ($rhsText -eq $simple -or $rhsText -eq $wrapped -or $isJoinOfParameter) {
+        $isSwitchLiteral = $false
+        if ($IsSwitchParameter -and $rhsExpr -is [System.Management.Automation.Language.StringConstantExpressionAst]) {
+            if (Test-PfbAssignmentGuardedBySwitch -Assignment $assign -ParameterName $ParameterName) {
+                $isSwitchLiteral = $true
+            }
+        }
+
+        if ($rhsText -eq $simple -or $rhsText -eq $wrapped -or $isJoinOfParameter -or $isSwitchLiteral) {
             return [PSCustomObject]@{
                 WireName       = $keyExpr.Value
                 TargetVariable = $targetVar.VariablePath.UserPath
@@ -232,7 +274,8 @@ function Get-PfbCmdletParameterInventory {
                     }
                 }
 
-                $wireInfo = Get-PfbWireNameForParameter -FunctionAst $funcAst -ParameterName $paramName
+                $isSwitch = $p.StaticType -eq [System.Management.Automation.SwitchParameter]
+                $wireInfo = Get-PfbWireNameForParameter -FunctionAst $funcAst -ParameterName $paramName -IsSwitchParameter:$isSwitch
                 $wireName = if ($wireInfo) { $wireInfo.WireName } else { $null }
 
                 $endpointInfo = if ($wireInfo) { Get-PfbEndpointForVariable -FunctionAst $funcAst -TargetVariable $wireInfo.TargetVariable } else { $null }
