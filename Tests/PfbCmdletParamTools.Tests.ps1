@@ -154,6 +154,21 @@ function Get-PfbFixturePolicyAllMember {
 }
 '@
 
+    # Real Get-PfbFileSystemSession shape: a switch's mere presence is keyed to a
+    # hardcoded string literal, not derived from the switch's own value at all.
+    Set-Content -Path (Join-Path $fixtureDir 'Get-PfbFixtureFileSystemSession.ps1') -Value @'
+function Get-PfbFixtureFileSystemSession {
+    [CmdletBinding()]
+    param(
+        [Parameter()] [PSCustomObject]$Array,
+        [Parameter()] [switch]$TotalOnly
+    )
+    $queryParams = @{}
+    if ($TotalOnly) { $queryParams['total_only'] = 'true' }
+    Invoke-PfbApiRequest -Array $Array -Method GET -Endpoint 'file-system-sessions' -QueryParams $queryParams -AutoPaginate
+}
+'@
+
     $script:inventory = Get-PfbCmdletParameterInventory -PublicDirectory $fixtureDir
 }
 
@@ -217,6 +232,12 @@ Describe 'Get-PfbCmdletParameterInventory' {
         $rec.WireName | Should -Be 'member_names'
         $rec.Surface | Should -Be 'Typed'
     }
+
+    It 'resolves a [switch] parameter keyed to a hardcoded literal, guarded by if ($Param)' {
+        $rec = $inventory | Where-Object { $_.Cmdlet -eq 'Get-PfbFixtureFileSystemSession' -and $_.Parameter -eq 'TotalOnly' }
+        $rec.WireName | Should -Be 'total_only'
+        $rec.Surface | Should -Be 'Typed'
+    }
 }
 
 Describe 'Get-PfbWireNameForParameter' {
@@ -226,6 +247,24 @@ Describe 'Get-PfbWireNameForParameter' {
             'function Test-Fixture { param([string]$Unused) $body = @{} }', [ref]$tokens, [ref]$errs)
         $funcAst = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true) | Select-Object -First 1
         Get-PfbWireNameForParameter -FunctionAst $funcAst -ParameterName 'Unused' | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'Get-PfbWireNameForParameter: switch-to-literal pattern' {
+    It 'does NOT treat an unguarded literal assignment as switch-derived (false-positive guard)' {
+        $tokens = $null; $errs = $null
+        $ast = [System.Management.Automation.Language.Parser]::ParseInput(
+            'function Test-Fixture { param([switch]$Foo) $body = @{}; $body["bar"] = "literal" }', [ref]$tokens, [ref]$errs)
+        $funcAst = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true) | Select-Object -First 1
+        Get-PfbWireNameForParameter -FunctionAst $funcAst -ParameterName 'Foo' -IsSwitchParameter | Should -BeNullOrEmpty
+    }
+
+    It 'does NOT apply the switch-literal match when -IsSwitchParameter is not passed' {
+        $tokens = $null; $errs = $null
+        $ast = [System.Management.Automation.Language.Parser]::ParseInput(
+            'function Test-Fixture { param([switch]$Foo) if ($Foo) { $body["bar"] = "literal" } }', [ref]$tokens, [ref]$errs)
+        $funcAst = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true) | Select-Object -First 1
+        Get-PfbWireNameForParameter -FunctionAst $funcAst -ParameterName 'Foo' | Should -BeNullOrEmpty
     }
 }
 
