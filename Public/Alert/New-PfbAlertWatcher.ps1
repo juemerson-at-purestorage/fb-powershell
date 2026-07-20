@@ -5,7 +5,7 @@ function New-PfbAlertWatcher {
     .PARAMETER Name
         The email address of the watcher.
     .PARAMETER MinimumSeverity
-        Minimum severity level for notifications ('warning', 'info', 'error', 'critical').
+        Minimum severity level for notifications ('info', 'warning', 'critical').
     .PARAMETER Attributes
         A hashtable of additional attributes.
     .PARAMETER Array
@@ -19,7 +19,7 @@ function New-PfbAlertWatcher {
         [string]$Name,
 
         [Parameter()]
-        [ValidateSet('info', 'warning', 'error', 'critical')]
+        [ValidateSet('info', 'warning', 'critical')]
         [string]$MinimumSeverity,
 
         [Parameter()] [hashtable]$Attributes,
