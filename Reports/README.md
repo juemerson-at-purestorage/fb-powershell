@@ -18,7 +18,7 @@ locally first — see `tools/README.md`'s `Update-PfbApiSpecs.ps1` step):
 | `PfbValueEnumReconciliation.md` | "Does an existing hand-written `ValidateSet` match the spec?" | `tools/Build-PfbValueEnumMap.ps1` |
 | `PfbFieldCmdletMap.json` | "Which typed `Public/` parameters lacking a `ValidateSet` today should get one?" | `tools/Build-PfbFieldCmdletMap.ps1` |
 | `PfbFieldCmdletMapping.md` | Same, as a readable table. | `tools/Build-PfbFieldCmdletMap.ps1` |
-| `PfbApiDriftReport.json` / `.md` | "What's changed in the API that this module hasn't caught up to yet?" — new endpoints with no cmdlet, new parameters on endpoints we already call, drift on existing `ValidateSet`s, and new `ValidateSet` candidates. | `tools/Build-PfbApiDriftReport.ps1` |
+| `PfbApiDriftReport.json` / `.md` | "What's changed in the API that this module hasn't caught up to yet?" — new endpoints with no cmdlet, new parameters on endpoints we already call, drift on existing `ValidateSet`s, and new `ValidateSet` candidates. Pass `-SinceVersion '<prior version>'` to isolate just the newest release's additions (uncovered endpoints + parameter gaps only) instead of the full backlog. | `tools/Build-PfbApiDriftReport.ps1` |
 
 All of the above are **reporting only** — none of them edit any `Public/` cmdlet. A human
 (or an agent, on request) reads a report and decides what, if anything, to build next.

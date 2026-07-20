@@ -29,6 +29,28 @@ $script:PfbBespokeAuthEndpoints = @(
 
 . (Join-Path $PSScriptRoot 'PfbValueEnumTools.ps1')
 
+function Test-PfbApiVersionNewerThan {
+    <#
+    .SYNOPSIS
+        Tests whether REST version string -Version is numerically newer than -Baseline.
+        Naive string comparison ranks '2.9' above '2.26' -- splits each into Major/Minor
+        integers instead (same idiom as Get-PfbValueEnumHistory in PfbValueEnumTools.ps1).
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)] [string]$Version,
+        [Parameter(Mandatory)] [string]$Baseline
+    )
+
+    $vParts = $Version -split '\.'
+    $bParts = $Baseline -split '\.'
+    $vMajor = [int]$vParts[0]; $vMinor = [int]$vParts[1]
+    $bMajor = [int]$bParts[0]; $bMinor = [int]$bParts[1]
+
+    if ($vMajor -ne $bMajor) { return $vMajor -gt $bMajor }
+    return $vMinor -gt $bMinor
+}
+
 function Get-PfbModuleCalledEndpoints {
     <#
     .SYNOPSIS
@@ -113,6 +135,10 @@ function Get-PfbEndpointCoverageGaps {
     .SYNOPSIS
         Category 1: every Data/PfbCapabilityMap.json endpoint key that no
         Get-PfbModuleCalledEndpoints result covers and that isn't on -BespokeAllowlist.
+    .PARAMETER SinceVersion
+        When given, only endpoints whose minVersion is strictly newer than this REST
+        version are returned -- e.g. -SinceVersion '2.26' isolates gaps introduced by
+        2.27 only, dropping the rest of the accumulated backlog.
     .OUTPUTS
         [PSCustomObject]@{ Endpoint; MinVersion }[]
     #>
@@ -120,7 +146,8 @@ function Get-PfbEndpointCoverageGaps {
     param(
         [Parameter(Mandatory)] $CapabilityMap,
         [Parameter(Mandatory)] [object[]]$CalledEndpoints,
-        [string[]]$BespokeAllowlist = @()
+        [string[]]$BespokeAllowlist = @(),
+        [string]$SinceVersion
     )
 
     $calledKeys = [System.Collections.Generic.HashSet[string]]::new([string[]]@(
@@ -130,9 +157,11 @@ function Get-PfbEndpointCoverageGaps {
     foreach ($key in $CapabilityMap.endpoints.PSObject.Properties.Name) {
         if ($calledKeys.Contains($key)) { continue }
         if ($BespokeAllowlist -contains $key) { continue }
+        $minVersion = $CapabilityMap.endpoints.$key.minVersion
+        if ($SinceVersion -and -not (Test-PfbApiVersionNewerThan -Version $minVersion -Baseline $SinceVersion)) { continue }
         [PSCustomObject]@{
             Endpoint   = $key
-            MinVersion = $CapabilityMap.endpoints.$key.minVersion
+            MinVersion = $minVersion
         }
     }
 }
@@ -148,6 +177,12 @@ function Get-PfbParameterCoverageGaps {
         TypedUnresolved parameter may already expose a "new" field through a path this
         AST-only inventory can't see, so its endpoint gets a not-verified entry instead
         of a guessed gap.
+    .PARAMETER SinceVersion
+        When given, a gap's MissingParameters is filtered down to only fields whose
+        capability-map version is strictly newer than this REST version -- e.g.
+        -SinceVersion '2.26' isolates fields introduced by 2.27 only. An endpoint whose
+        every missing field predates -SinceVersion is dropped from ParameterGaps
+        entirely (not emitted with an empty MissingParameters list).
     .OUTPUTS
         [PSCustomObject]@{ ParameterGaps; NotVerified }. ParameterGaps is
         [PSCustomObject]@{ Endpoint; Cmdlets; MissingParameters }[]. NotVerified is
@@ -157,7 +192,8 @@ function Get-PfbParameterCoverageGaps {
     param(
         [Parameter(Mandatory)] $CapabilityMap,
         [Parameter(Mandatory)] [object[]]$CmdletInventory,
-        [Parameter(Mandatory)] [object[]]$CalledEndpoints
+        [Parameter(Mandatory)] [object[]]$CalledEndpoints,
+        [string]$SinceVersion
     )
 
     $inventoryByCmdlet = $CmdletInventory | Group-Object -Property Cmdlet -AsHashTable -AsString
@@ -188,11 +224,17 @@ function Get-PfbParameterCoverageGaps {
             continue
         }
 
+        $fieldVersions = @{}
+        if ($entry.parameters) { foreach ($p in $entry.parameters.PSObject.Properties) { $fieldVersions[$p.Name] = $p.Value } }
+        if ($entry.bodyProperties) { foreach ($p in $entry.bodyProperties.PSObject.Properties) { $fieldVersions[$p.Name] = $p.Value } }
+
         $knownFieldNames = [System.Collections.Generic.List[string]]::new()
-        if ($entry.parameters) { $knownFieldNames.AddRange([string[]]@($entry.parameters.PSObject.Properties.Name)) }
-        if ($entry.bodyProperties) { $knownFieldNames.AddRange([string[]]@($entry.bodyProperties.PSObject.Properties.Name)) }
+        $knownFieldNames.AddRange([string[]]@($fieldVersions.Keys))
 
         $missing = @($knownFieldNames | Select-Object -Unique | Where-Object { -not $exposedWireNames.Contains($_) })
+        if ($SinceVersion) {
+            $missing = @($missing | Where-Object { Test-PfbApiVersionNewerThan -Version $fieldVersions[$_] -Baseline $SinceVersion })
+        }
         if ($missing.Count -gt 0) {
             $parameterGaps.Add([PSCustomObject]@{ Endpoint = $key; Cmdlets = $cmdlets; MissingParameters = $missing })
         }

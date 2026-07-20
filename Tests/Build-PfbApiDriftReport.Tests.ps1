@@ -68,8 +68,9 @@ function Get-PfbFixtureArrayPerformance {
         schemaVersion = 1
         generatedFrom = @('9.0', '9.1')
         endpoints     = [ordered]@{
-            'GET /arrays/performance' = [ordered]@{ minVersion = '9.0'; parameters = [ordered]@{ protocol = '9.0' }; bodyProperties = [ordered]@{} }
+            'GET /arrays/performance' = [ordered]@{ minVersion = '9.0'; parameters = [ordered]@{ protocol = '9.0'; region = '9.0'; timezone = '9.1' }; bodyProperties = [ordered]@{} }
             'GET /gadgets'            = [ordered]@{ minVersion = '9.1'; parameters = [ordered]@{}; bodyProperties = [ordered]@{} }
+            'GET /widgets'            = [ordered]@{ minVersion = '9.0'; parameters = [ordered]@{}; bodyProperties = [ordered]@{} }
         }
     } | ConvertTo-Json -Depth 20 | Set-Content -Path $capabilityMapPath
 
@@ -117,6 +118,44 @@ Describe 'Build-PfbApiDriftReport' {
     It 'the JSON manifest contains no non-deterministic content (no timestamp fields)' {
         $manifest.PSObject.Properties.Name | Should -Not -Contain 'generatedAt'
         $manifest.PSObject.Properties.Name | Should -Not -Contain 'timestamp'
+    }
+
+    It 'without -SinceVersion, sinceVersion is not set and older gaps are present' {
+        $manifest.sinceVersion | Should -BeNullOrEmpty
+        ($manifest.uncoveredEndpoints | Where-Object { $_.endpoint -eq 'GET /widgets' }) | Should -Not -BeNullOrEmpty
+    }
+}
+
+Describe 'Build-PfbApiDriftReport -SinceVersion filter' {
+    BeforeAll {
+        $script:filteredOutputPath = Join-Path $TestDrive 'output/PfbApiDriftReportSince.json'
+        $script:filteredReportPath = Join-Path $TestDrive 'output/PfbApiDriftReportSince.md'
+        & $builderScript -SpecsDirectory $specsDir -PublicDirectory $publicDir -PrivateDirectory $privateDir `
+            -CapabilityMapPath $capabilityMapPath -FieldCmdletMapPath $fieldCmdletMapPath `
+            -OutputPath $filteredOutputPath -ReportPath $filteredReportPath -SinceVersion '9.0'
+        $script:filteredManifest = Get-Content -Path $filteredOutputPath -Raw | ConvertFrom-Json -Depth 20
+        $script:filteredReportText = Get-Content -Path $filteredReportPath -Raw
+    }
+
+    It 'records the requested SinceVersion in the manifest' {
+        $filteredManifest.sinceVersion | Should -Be '9.0'
+    }
+
+    It 'excludes an uncovered endpoint introduced at or before -SinceVersion' {
+        ($filteredManifest.uncoveredEndpoints | Where-Object { $_.endpoint -eq 'GET /widgets' }) | Should -BeNullOrEmpty
+    }
+
+    It 'keeps an uncovered endpoint introduced after -SinceVersion' {
+        ($filteredManifest.uncoveredEndpoints | Where-Object { $_.endpoint -eq 'GET /gadgets' }) | Should -Not -BeNullOrEmpty
+    }
+
+    It 'filters a parameter gap down to only fields introduced after -SinceVersion' {
+        $gap = $filteredManifest.parameterGaps | Where-Object { $_.endpoint -eq 'GET /arrays/performance' }
+        $gap.missingParameters | Should -Be @('timezone')
+    }
+
+    It 'notes the SinceVersion filter in the Markdown report' {
+        $filteredReportText | Should -Match 'introduced after REST 9\.0'
     }
 }
 
