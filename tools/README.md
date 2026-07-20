@@ -83,6 +83,11 @@ Run in this order:
    ./tools/Build-PfbApiDriftReport.ps1 -SinceVersion '2.26'
    ```
 
+   `parameterGaps` also never reports a small set of non-actionable fields
+   (`$script:PfbNonActionableParameters` in `tools/lib/PfbApiDriftTools.ps1`:
+   `X-Request-ID`, `continuation_token`, `offset`) -- these are declared on nearly every
+   endpoint and would otherwise drown out real gaps.
+
 ## What's deliberately NOT in the capability map
 
 The FlashBlade OpenAPI spec has no structural JSON Schema `enum` anywhere — verified

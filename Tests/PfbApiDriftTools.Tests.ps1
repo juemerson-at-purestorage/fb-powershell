@@ -56,7 +56,7 @@ function Invoke-PfbFixtureInternalHelper {
 
     $script:capabilityMap.endpoints | Add-Member -NotePropertyName 'GET /arrays/space' -NotePropertyValue ([PSCustomObject]@{
         minVersion     = '2.0'
-        parameters     = [PSCustomObject]@{ type = '2.0'; new_field = '2.27' }
+        parameters     = [PSCustomObject]@{ type = '2.0'; new_field = '2.27'; 'X-Request-ID' = '2.12' }
         bodyProperties = [PSCustomObject]@{}
     })
 
@@ -137,6 +137,16 @@ Describe 'Bespoke auth-endpoint allowlist (real, confirmed by reading Private/ +
     }
 }
 
+Describe 'Non-actionable parameter allowlist (X-Request-ID: no functional effect; continuation_token/offset: superseded by -AutoPaginate)' {
+    It 'contains exactly the three confirmed non-actionable fields, no more, no fewer' {
+        $script:PfbNonActionableParameters | Sort-Object | Should -Be @(
+            'continuation_token',
+            'offset',
+            'X-Request-ID'
+        ) | Sort-Object
+    }
+}
+
 Describe 'Get-PfbParameterCoverageGaps' {
     It 'flags a missing parameter on a fully-mapped cmdlet''s endpoint' {
         $endpoints = @([PSCustomObject]@{ Key = 'GET /arrays/space'; Method = 'GET'; Endpoint = '/arrays/space'; Resolved = $true; Cmdlet = 'Get-PfbFixtureArraySpace'; File = 'x' })
@@ -164,6 +174,29 @@ Describe 'Get-PfbParameterCoverageGaps' {
         $endpoints = @([PSCustomObject]@{ Key = 'GET /arrays/space'; Method = 'GET'; Endpoint = '/arrays/space'; Resolved = $true; Cmdlet = 'Get-PfbFixtureArraySpace'; File = 'x' })
         $result = Get-PfbParameterCoverageGaps -CapabilityMap $capabilityMap -CmdletInventory $fullyMappedInventory -CalledEndpoints $endpoints -SinceVersion '2.27'
         $result.ParameterGaps | Where-Object { $_.Endpoint -eq 'GET /arrays/space' } | Should -BeNullOrEmpty
+    }
+
+    It 'flags X-Request-ID as a missing parameter when -ExcludedFields is not given' {
+        $endpoints = @([PSCustomObject]@{ Key = 'GET /arrays/space'; Method = 'GET'; Endpoint = '/arrays/space'; Resolved = $true; Cmdlet = 'Get-PfbFixtureArraySpace'; File = 'x' })
+        $result = Get-PfbParameterCoverageGaps -CapabilityMap $capabilityMap -CmdletInventory $fullyMappedInventory -CalledEndpoints $endpoints
+        $gap = $result.ParameterGaps | Where-Object { $_.Endpoint -eq 'GET /arrays/space' }
+        $gap.MissingParameters | Should -Contain 'X-Request-ID'
+    }
+
+    It 'with -ExcludedFields, excludes a named field but keeps other real gaps on the same endpoint' {
+        $endpoints = @([PSCustomObject]@{ Key = 'GET /arrays/space'; Method = 'GET'; Endpoint = '/arrays/space'; Resolved = $true; Cmdlet = 'Get-PfbFixtureArraySpace'; File = 'x' })
+        $result = Get-PfbParameterCoverageGaps -CapabilityMap $capabilityMap -CmdletInventory $fullyMappedInventory -CalledEndpoints $endpoints -ExcludedFields @('X-Request-ID')
+        $gap = $result.ParameterGaps | Where-Object { $_.Endpoint -eq 'GET /arrays/space' }
+        $gap.MissingParameters | Should -Not -Contain 'X-Request-ID'
+        $gap.MissingParameters | Should -Contain 'new_field'
+    }
+
+    It 'with -ExcludedFields, drops a gap entirely when every missing field is excluded' {
+        $endpoints = @([PSCustomObject]@{ Key = 'GET /widgets'; Method = 'GET'; Endpoint = '/widgets'; Resolved = $true; Cmdlet = 'Get-PfbFixtureWidget'; File = 'x' })
+        $capMapOnlyXRid = [PSCustomObject]@{ endpoints = [PSCustomObject]@{ 'GET /widgets' = [PSCustomObject]@{ minVersion = '2.0'; parameters = [PSCustomObject]@{ 'X-Request-ID' = '2.12' }; bodyProperties = [PSCustomObject]@{} } } }
+        $inventory = @([PSCustomObject]@{ Cmdlet = 'Get-PfbFixtureWidget'; Parameter = 'Name'; Surface = 'Typed'; WireName = 'name'; HasValidateSet = $false; ValidateSetValues = $null; Endpoint = 'widgets'; Method = 'GET' })
+        $result = Get-PfbParameterCoverageGaps -CapabilityMap $capMapOnlyXRid -CmdletInventory $inventory -CalledEndpoints $endpoints -ExcludedFields @('X-Request-ID')
+        $result.ParameterGaps | Where-Object { $_.Endpoint -eq 'GET /widgets' } | Should -BeNullOrEmpty
     }
 }
 
