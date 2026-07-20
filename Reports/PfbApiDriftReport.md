@@ -7,7 +7,7 @@ Reporting only -- no `Public/` cmdlet is edited by this script.
 ## Summary
 
 - Uncovered endpoints: 117
-- Parameter gaps: 347
+- Parameter gaps: 282
 - Not-verified endpoints (has attributes/unresolved surface): 164
 - ValidateSet drift: 2
 - New ValidateSet candidates: 1
@@ -138,353 +138,288 @@ Reporting only -- no `Public/` cmdlet is edited by this script.
 
 | Endpoint | Cmdlets | Missing parameters |
 |---|---|---|
-| `DELETE /active-directory` | Remove-PfbActiveDirectory | local_only, X-Request-ID,  |
-| `DELETE /admins/api-tokens` | Remove-PfbApiToken | admin_ids, admin_names, X-Request-ID, context_names,  |
-| `DELETE /admins/cache` | Remove-PfbAdminCache | X-Request-ID, context_names,  |
-| `DELETE /admins/management-access-policies` | Remove-PfbAdminManagementAccessPolicy | X-Request-ID, context_names,  |
-| `DELETE /admins/ssh-certificate-authority-policies` | Remove-PfbAdminSshCaPolicy | X-Request-ID, context_names,  |
-| `DELETE /alert-watchers` | Remove-PfbAlertWatcher | X-Request-ID,  |
-| `DELETE /api-clients` | Remove-PfbApiClient | X-Request-ID,  |
-| `DELETE /array-connections` | Remove-PfbArrayConnection | remote_ids, remote_names, X-Request-ID, context_names,  |
-| `DELETE /arrays/ssh-certificate-authority-policies` | Remove-PfbArraySshCaPolicy | X-Request-ID, context_names,  |
-| `DELETE /audit-file-systems-policies` | Remove-PfbAuditFileSystemPolicy | X-Request-ID, context_names,  |
-| `DELETE /audit-file-systems-policies/members` | Remove-PfbAuditFileSystemPolicyMember | X-Request-ID, context_names,  |
-| `DELETE /audit-object-store-policies` | Remove-PfbAuditObjectStorePolicy | X-Request-ID, context_names,  |
-| `DELETE /audit-object-store-policies/members` | Remove-PfbAuditObjectStorePolicyMember | X-Request-ID, context_names,  |
-| `DELETE /buckets/audit-filters` | Remove-PfbBucketAuditFilter | X-Request-ID, bucket_ids, bucket_names, context_names, names,  |
-| `DELETE /buckets/cross-origin-resource-sharing-policies` | Remove-PfbBucketCorsPolicy | bucket_ids, bucket_names, names, X-Request-ID, context_names,  |
-| `DELETE /certificate-groups` | Remove-PfbCertificateGroup | X-Request-ID,  |
-| `DELETE /certificates` | Remove-PfbCertificate | X-Request-ID,  |
-| `DELETE /certificates/certificate-groups` | Remove-PfbCertificateCertificateGroup | certificate_ids, certificate_group_ids, X-Request-ID,  |
-| `DELETE /data-eviction-policies` | Remove-PfbDataEvictionPolicy | X-Request-ID, context_names,  |
-| `DELETE /data-eviction-policies/file-systems` | Remove-PfbDataEvictionPolicyFileSystem | X-Request-ID, context_names,  |
-| `DELETE /directory-services/local/groups` | Remove-PfbLocalGroup | X-Request-ID, context_names, gids, local_directory_service_ids, local_directory_service_names, sids,  |
-| `DELETE /directory-services/roles` | Remove-PfbDirectoryServiceRole | X-Request-ID,  |
-| `DELETE /directory-services/roles/management-access-policies` | Remove-PfbDirectoryServiceRoleManagementPolicy | X-Request-ID,  |
-| `DELETE /dns` | Remove-PfbDns | X-Request-ID, context_names,  |
-| `DELETE /file-system-exports` | Remove-PfbFileSystemExport | X-Request-ID, context_names,  |
-| `DELETE /file-system-replica-links` | Remove-PfbFileSystemReplicaLink | local_file_system_ids, remote_file_system_ids, remote_ids, X-Request-ID, context_names,  |
-| `DELETE /file-system-replica-links/policies` | Remove-PfbFileSystemReplicaLinkPolicy | local_file_system_ids, local_file_system_names, remote_ids, remote_names, X-Request-ID, context_names,  |
-| `DELETE /file-system-snapshots/policies` | Remove-PfbFileSystemSnapshotPolicy | X-Request-ID, context_names,  |
-| `DELETE /file-system-snapshots/transfer` | Remove-PfbFileSystemSnapshotTransfer | remote_names, remote_ids, X-Request-ID, context_names,  |
-| `DELETE /file-systems/audit-policies` | Remove-PfbFileSystemAuditPolicy | X-Request-ID, context_names,  |
-| `DELETE /file-systems/locks` | Remove-PfbFileLock | client_names, file_system_ids, file_system_names, inodes, paths, recursive, X-Request-ID, context_names,  |
-| `DELETE /file-systems/open-files` | Remove-PfbOpenFile | X-Request-ID,  |
-| `DELETE /file-systems/policies` | Remove-PfbFileSystemPolicy | X-Request-ID, context_names,  |
-| `DELETE /file-systems/sessions` | Remove-PfbFileSystemSession | client_names, disruptive, protocols, user_names, X-Request-ID, context_names,  |
-| `DELETE /fleets` | Remove-PfbFleet | X-Request-ID,  |
-| `DELETE /fleets/members` | Remove-PfbFleetMember | X-Request-ID, member_ids, unreachable,  |
-| `DELETE /keytabs` | Remove-PfbKeytab | X-Request-ID,  |
-| `DELETE /legal-holds` | Remove-PfbLegalHold | X-Request-ID,  |
-| `DELETE /lifecycle-rules` | Remove-PfbLifecycleRule | bucket_ids, bucket_names, X-Request-ID, context_names,  |
-| `DELETE /link-aggregation-groups` | Remove-PfbLag | X-Request-ID,  |
-| `DELETE /log-targets/file-systems` | Remove-PfbLogTargetFileSystem | X-Request-ID, context_names,  |
-| `DELETE /log-targets/object-store` | Remove-PfbLogTargetObjectStore | X-Request-ID, context_names,  |
-| `DELETE /maintenance-windows` | Remove-PfbMaintenanceWindow | X-Request-ID,  |
-| `DELETE /management-access-policies` | Remove-PfbManagementAccessPolicy | X-Request-ID, context_names,  |
-| `DELETE /management-access-policies/admins` | Remove-PfbManagementAccessPolicyAdmin | X-Request-ID, context_names,  |
-| `DELETE /management-access-policies/directory-services/roles` | Remove-PfbManagementAccessPolicyDirectoryRole | X-Request-ID,  |
-| `DELETE /network-interfaces` | Remove-PfbNetworkInterface | X-Request-ID,  |
-| `DELETE /network-interfaces/tls-policies` | Remove-PfbNetworkInterfaceTlsPolicy | X-Request-ID, member_ids, policy_ids,  |
-| `DELETE /nfs-export-policies` | Remove-PfbNfsExportPolicy | versions, X-Request-ID, context_names,  |
-| `DELETE /node-groups` | Remove-PfbNodeGroup | X-Request-ID,  |
-| `DELETE /node-groups/nodes` | Remove-PfbNodeGroupNode | X-Request-ID, node_group_ids, node_group_names, node_ids, node_names,  |
-| `DELETE /object-store-access-keys` | Remove-PfbObjectStoreAccessKey | X-Request-ID, context_names,  |
-| `DELETE /object-store-access-policies` | Remove-PfbObjectStoreAccessPolicy | X-Request-ID, context_names,  |
-| `DELETE /object-store-account-exports` | Remove-PfbObjectStoreAccountExport | X-Request-ID, context_names,  |
-| `DELETE /object-store-accounts` | Remove-PfbObjectStoreAccount | X-Request-ID, context_names,  |
-| `DELETE /object-store-remote-credentials` | Remove-PfbObjectStoreRemoteCredential | X-Request-ID, context_names,  |
-| `DELETE /object-store-roles` | Remove-PfbObjectStoreRole | X-Request-ID, context_names,  |
-| `DELETE /object-store-users` | Remove-PfbObjectStoreUser | X-Request-ID, context_names,  |
-| `DELETE /object-store-virtual-hosts` | Remove-PfbObjectStoreVirtualHost | X-Request-ID, context_names,  |
-| `DELETE /policies` | Remove-PfbPolicy | X-Request-ID, context_names,  |
-| `DELETE /policies/file-system-replica-links` | Remove-PfbPolicyFileSystemReplicaLink | local_file_system_ids, local_file_system_names, remote_ids, remote_names, X-Request-ID, context_names,  |
-| `DELETE /policies/file-systems` | Remove-PfbPolicyFileSystem | X-Request-ID, context_names,  |
-| `DELETE /presets/workload` | Remove-PfbPresetWorkload | X-Request-ID, context_names,  |
-| `DELETE /public-keys` | Remove-PfbPublicKey | X-Request-ID,  |
-| `DELETE /qos-policies` | Remove-PfbQosPolicy | X-Request-ID, context_names,  |
-| `DELETE /qos-policies/members` | Remove-PfbQosPolicyMember | X-Request-ID, member_types, context_names,  |
-| `DELETE /resource-accesses` | Remove-PfbResourceAccess | X-Request-ID,  |
-| `DELETE /s3-export-policies` | Remove-PfbS3ExportPolicy | X-Request-ID, context_names,  |
-| `DELETE /smb-client-policies` | Remove-PfbSmbClientPolicy | X-Request-ID, context_names,  |
-| `DELETE /smb-share-policies` | Remove-PfbSmbSharePolicy | X-Request-ID, context_names,  |
-| `DELETE /snmp-managers` | Remove-PfbSnmpManager | X-Request-ID,  |
-| `DELETE /ssh-certificate-authority-policies` | Remove-PfbSshCaPolicy | X-Request-ID,  |
-| `DELETE /ssh-certificate-authority-policies/admins` | Remove-PfbSshCaPolicyAdmin | X-Request-ID, context_names,  |
-| `DELETE /ssh-certificate-authority-policies/arrays` | Remove-PfbSshCaPolicyArray | X-Request-ID, context_names,  |
-| `DELETE /sso/oidc/idps` | Remove-PfbOidcIdp | X-Request-ID,  |
-| `DELETE /sso/saml2/idps` | Remove-PfbSaml2Idp | X-Request-ID,  |
-| `DELETE /storage-class-tiering-policies` | Remove-PfbStorageClassTieringPolicy | X-Request-ID,  |
-| `DELETE /subnets` | Remove-PfbSubnet | X-Request-ID,  |
-| `DELETE /syslog-servers` | Remove-PfbSyslogServer | X-Request-ID,  |
-| `DELETE /targets` | Remove-PfbTarget | X-Request-ID,  |
-| `DELETE /tls-policies` | Remove-PfbTlsPolicy | X-Request-ID,  |
-| `DELETE /workloads` | Remove-PfbWorkload | X-Request-ID, context_names,  |
-| `DELETE /worm-data-policies` | Remove-PfbWormPolicy | X-Request-ID, context_names,  |
-| `GET /active-directory` | Get-PfbActiveDirectory | continuation_token, ids, limit, offset, sort, X-Request-ID,  |
-| `GET /active-directory/test` | Test-PfbActiveDirectory | filter, limit, sort, X-Request-ID, allow_errors, context_names, continuation_token,  |
-| `GET /admins` | Get-PfbAdmin | continuation_token, expose_api_token, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /admins/api-tokens` | Get-PfbApiToken | admin_ids, admin_names, continuation_token, expose_api_token, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /admins/cache` | Get-PfbAdminCache | continuation_token, offset, refresh, X-Request-ID, allow_errors, context_names,  |
-| `GET /admins/management-access-policies` | Get-PfbAdminManagementAccessPolicy | X-Request-ID, continuation_token, offset, sort, allow_errors, context_names,  |
-| `GET /admins/ssh-certificate-authority-policies` | Get-PfbAdminSshCaPolicy | X-Request-ID, continuation_token, offset, sort, allow_errors, context_names,  |
-| `GET /alert-watchers` | Get-PfbAlertWatcher | continuation_token, offset, X-Request-ID,  |
-| `GET /alert-watchers/test` | Test-PfbAlertWatcher | filter, sort, X-Request-ID,  |
-| `GET /api-clients` | Get-PfbApiClient | continuation_token, offset, X-Request-ID,  |
-| `GET /array-connections` | Get-PfbArrayConnection | continuation_token, offset, remote_ids, remote_names, X-Request-ID, allow_errors, context_names,  |
-| `GET /array-connections/connection-key` | Get-PfbArrayConnectionKey | continuation_token, ids, offset, X-Request-ID,  |
-| `GET /array-connections/path` | Get-PfbArrayConnectionPath | continuation_token, ids, offset, remote_ids, remote_names, X-Request-ID, allow_errors, context_names,  |
-| `GET /array-connections/performance/replication` | Get-PfbArrayConnectionPerformanceReplication | continuation_token, ids, offset, remote_ids, remote_names, total_only, type, X-Request-ID,  |
-| `GET /arrays/clients/performance` | Get-PfbArrayClientPerformance | names, total_only, X-Request-ID, protocol,  |
-| `GET /arrays/clients/s3-specific-performance` | Get-PfbArrayClientS3Performance | X-Request-ID, names, total_only,  |
-| `GET /arrays/erasures` | Get-PfbArrayErasure | X-Request-ID,  |
-| `GET /arrays/http-specific-performance` | Get-PfbArrayHttpPerformance | X-Request-ID, allow_errors, context_names,  |
-| `GET /arrays/nfs-specific-performance` | Get-PfbArrayNfsPerformance | X-Request-ID, allow_errors, context_names,  |
-| `GET /arrays/performance` | Get-PfbArrayPerformance | X-Request-ID, allow_errors, context_names,  |
-| `GET /arrays/performance/replication` | Get-PfbArrayPerformanceReplication | type, X-Request-ID, allow_errors, context_names,  |
-| `GET /arrays/s3-specific-performance` | Get-PfbArrayS3Performance | X-Request-ID, allow_errors, context_names,  |
-| `GET /arrays/space` | Get-PfbArraySpace | end_time, resolution, start_time, X-Request-ID, allow_errors, context_names,  |
-| `GET /arrays/space/storage-classes` | Get-PfbArrayStorageClass | X-Request-ID, continuation_token, end_time, offset, resolution, start_time, storage_class_names, total_only,  |
-| `GET /arrays/ssh-certificate-authority-policies` | Get-PfbArraySshCaPolicy | X-Request-ID, continuation_token, offset, sort, allow_errors, context_names,  |
-| `GET /arrays/supported-time-zones` | Get-PfbArraySupportedTimeZone | continuation_token, names, offset, X-Request-ID,  |
-| `GET /audit-file-systems-policies` | Get-PfbAuditFileSystemPolicy | X-Request-ID, continuation_token, offset, allow_errors, context_names,  |
-| `GET /audit-file-systems-policies/members` | Get-PfbAuditFileSystemPolicyMember | X-Request-ID, continuation_token, offset, allow_errors, context_names,  |
-| `GET /audit-file-systems-policy-operations` | Get-PfbAuditFileSystemPolicyOperation | X-Request-ID, allow_errors, context_names, continuation_token, names, offset,  |
-| `GET /audit-object-store-policies` | Get-PfbAuditObjectStorePolicy | X-Request-ID, allow_errors, context_names, continuation_token, offset,  |
-| `GET /audit-object-store-policies/members` | Get-PfbAuditObjectStorePolicyMember | X-Request-ID, allow_errors, context_names, continuation_token, offset,  |
-| `GET /audits` | Get-PfbAudit | continuation_token, offset, X-Request-ID,  |
-| `GET /blades` | Get-PfbBlade, Get-PfbNode | continuation_token, offset, total_only, X-Request-ID,  |
-| `GET /bucket-audit-filter-actions` | Get-PfbBucketAuditFilterAction | X-Request-ID, allow_errors, context_names, continuation_token, names, offset,  |
-| `GET /bucket-replica-links` | Get-PfbBucketReplicaLink | continuation_token, ids, local_bucket_ids, offset, remote_ids, remote_names, total_only, X-Request-ID, allow_errors, context_names,  |
-| `GET /buckets` | Get-PfbBucket | continuation_token, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /buckets/audit-filters` | Get-PfbBucketAuditFilter | X-Request-ID, allow_errors, bucket_ids, bucket_names, context_names, continuation_token, names, offset,  |
-| `GET /buckets/bucket-access-policies` | Get-PfbBucketAccessPolicy | bucket_ids, bucket_names, continuation_token, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /buckets/bucket-access-policies/rules` | Get-PfbBucketAccessPolicyRule | bucket_ids, bucket_names, continuation_token, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /buckets/cross-origin-resource-sharing-policies` | Get-PfbBucketCorsPolicy | bucket_ids, bucket_names, continuation_token, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /buckets/cross-origin-resource-sharing-policies/rules` | Get-PfbBucketCorsPolicyRule | bucket_ids, bucket_names, continuation_token, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /buckets/performance` | Get-PfbBucketPerformance | continuation_token, offset, X-Request-ID,  |
-| `GET /buckets/s3-specific-performance` | Get-PfbBucketS3Performance | continuation_token, offset, X-Request-ID,  |
-| `GET /certificate-groups` | Get-PfbCertificateGroup | continuation_token, offset, X-Request-ID,  |
-| `GET /certificate-groups/certificates` | Get-PfbCertificateGroupCertificate | continuation_token, certificate_ids, certificate_group_ids, certificate_group_names, certificate_names, offset, X-Request-ID,  |
-| `GET /certificate-groups/uses` | Get-PfbCertificateGroupUse | continuation_token, ids, offset, X-Request-ID,  |
-| `GET /certificates` | Get-PfbCertificate | continuation_token, offset, X-Request-ID,  |
-| `GET /certificates/certificate-groups` | Get-PfbCertificateCertificateGroup | continuation_token, certificate_ids, certificate_group_ids, offset, sort, X-Request-ID,  |
-| `GET /certificates/uses` | Get-PfbCertificateUse | continuation_token, ids, offset, X-Request-ID,  |
-| `GET /data-eviction-policies` | Get-PfbDataEvictionPolicy | X-Request-ID, allow_errors, context_names, continuation_token, offset,  |
-| `GET /data-eviction-policies/file-systems` | Get-PfbDataEvictionPolicyFileSystem | X-Request-ID, allow_errors, context_names, continuation_token, offset,  |
-| `GET /data-eviction-policies/members` | Get-PfbDataEvictionPolicyMember | X-Request-ID, allow_errors, context_names, continuation_token, offset,  |
-| `GET /directory-services` | Get-PfbDirectoryService | continuation_token, ids, limit, offset, sort, X-Request-ID,  |
-| `GET /directory-services/local/directory-services` | Get-PfbLocalDirectoryService | X-Request-ID, allow_errors, context_names, continuation_token, destroyed, offset, total_item_count,  |
-| `GET /directory-services/local/groups` | Get-PfbLocalGroup | X-Request-ID, allow_errors, context_names, continuation_token, gids, offset, sids, total_item_count,  |
-| `GET /directory-services/local/groups/members` | Get-PfbLocalGroupMember | X-Request-ID, allow_errors, context_names, continuation_token, group_gids, group_sids, member_ids, member_sids, member_types, offset, total_item_count,  |
-| `GET /directory-services/roles` | Get-PfbDirectoryServiceRole | continuation_token, offset, role_ids, role_names, X-Request-ID,  |
-| `GET /directory-services/roles/management-access-policies` | Get-PfbDirectoryServiceRoleManagementPolicy | X-Request-ID, continuation_token, offset, sort,  |
-| `GET /drives` | Get-PfbDrive | continuation_token, offset, total_only, X-Request-ID,  |
-| `GET /file-system-exports` | Get-PfbFileSystemExport | X-Request-ID, continuation_token, offset, allow_errors, context_names, workload_ids, workload_names,  |
-| `GET /file-system-replica-links` | Get-PfbFileSystemReplicaLink | continuation_token, ids, local_file_system_ids, offset, remote_file_system_ids, remote_ids, remote_names, X-Request-ID, allow_errors, context_names,  |
-| `GET /file-system-replica-links/policies` | Get-PfbFileSystemReplicaLinkPolicy | continuation_token, local_file_system_ids, local_file_system_names, offset, remote_ids, remote_file_system_ids, remote_file_system_names, remote_names, X-Request-ID, allow_errors, context_names,  |
-| `GET /file-system-replica-links/transfer` | Get-PfbFileSystemReplicaLinkTransfer | continuation_token, names_or_owner_names, offset, remote_ids, remote_names, X-Request-ID, allow_errors, context_names,  |
-| `GET /file-system-snapshots` | Get-PfbFileSystemSnapshot | continuation_token, names_or_owner_names, offset, owner_ids, X-Request-ID, allow_errors, context_names,  |
-| `GET /file-system-snapshots/policies` | Get-PfbFileSystemSnapshotPolicy | continuation_token, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /file-system-snapshots/transfer` | Get-PfbFileSystemSnapshotTransfer | continuation_token, names_or_owner_names, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /file-systems` | Get-PfbFileSystem | continuation_token, offset, X-Request-ID, allow_errors, context_names, workload_ids, workload_names,  |
-| `GET /file-systems/audit-policies` | Get-PfbFileSystemAuditPolicy | X-Request-ID, continuation_token, offset, allow_errors, context_names,  |
-| `GET /file-systems/groups/performance` | Get-PfbFileSystemGroupPerformance | gids, group_names, names, X-Request-ID,  |
-| `GET /file-systems/locks` | Get-PfbFileLock | continuation_token, client_names, file_system_ids, file_system_names, inodes, paths, X-Request-ID, allow_errors, context_names,  |
-| `GET /file-systems/locks/clients` | Get-PfbFileLockClient | continuation_token, X-Request-ID, allow_errors, context_names,  |
-| `GET /file-systems/open-files` | Get-PfbOpenFile | X-Request-ID, client_names, continuation_token, file_system_ids, file_system_names, paths, protocols, session_names, user_names,  |
-| `GET /file-systems/policies` | Get-PfbFileSystemPolicy | continuation_token, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /file-systems/sessions` | Get-PfbFileSystemSession | continuation_token, client_names, protocols, user_names, X-Request-ID, allow_errors, context_names,  |
-| `GET /file-systems/space/storage-classes` | Get-PfbFileSystemStorageClass | X-Request-ID, continuation_token, offset, storage_class_names,  |
-| `GET /file-systems/users/performance` | Get-PfbFileSystemUserPerformance | names, uids, user_names, X-Request-ID,  |
-| `GET /file-systems/worm-data-policies` | Get-PfbFileSystemWormPolicy | X-Request-ID, continuation_token, offset, allow_errors, context_names,  |
-| `GET /fleets` | Get-PfbFleet | X-Request-ID, continuation_token, offset, total_only,  |
-| `GET /fleets/fleet-key` | Get-PfbFleetKey | X-Request-ID, continuation_token, offset, total_only,  |
-| `GET /fleets/members` | Get-PfbFleetMember | X-Request-ID, continuation_token, fleet_ids, member_ids, offset, total_only,  |
-| `GET /hardware-connectors` | Get-PfbHardwareConnector | continuation_token, offset, X-Request-ID,  |
-| `GET /hardware-connectors/performance` | Get-PfbHardwareConnectorPerformance | ids, offset, total_only, X-Request-ID,  |
-| `GET /keytabs` | Get-PfbKeytab | continuation_token, offset, X-Request-ID,  |
-| `GET /keytabs/download` | Get-PfbKeytabDownload | keytab_ids, keytab_names, X-Request-ID,  |
-| `GET /kmip` | Get-PfbKmip | offset, continuation_token, X-Request-ID,  |
-| `GET /kmip/test` | Test-PfbKmip | X-Request-ID,  |
-| `GET /legal-holds` | Get-PfbLegalHold | X-Request-ID, continuation_token, offset,  |
-| `GET /legal-holds/held-entities` | Get-PfbLegalHoldEntity | X-Request-ID, continuation_token, file_system_ids, file_system_names, ids, names, paths,  |
-| `GET /lifecycle-rules` | Get-PfbLifecycleRule | bucket_ids, continuation_token, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /link-aggregation-groups` | Get-PfbLag | continuation_token, offset, X-Request-ID,  |
-| `GET /log-targets/file-systems` | Get-PfbLogTargetFileSystem | X-Request-ID, allow_errors, context_names, continuation_token, offset,  |
-| `GET /log-targets/object-store` | Get-PfbLogTargetObjectStore | X-Request-ID, allow_errors, context_names, continuation_token, offset,  |
-| `GET /logs` | Get-PfbLog | X-Request-ID,  |
-| `GET /logs-async` | Get-PfbAsyncLog | continuation_token, offset, X-Request-ID,  |
-| `GET /logs-async/download` | Get-PfbAsyncLogDownload | X-Request-ID,  |
-| `GET /maintenance-windows` | Get-PfbMaintenanceWindow | X-Request-ID, continuation_token, offset,  |
-| `GET /management-access-policies` | Get-PfbManagementAccessPolicy | X-Request-ID, continuation_token, offset, allow_errors, context_names,  |
-| `GET /management-access-policies/admins` | Get-PfbManagementAccessPolicyAdmin | X-Request-ID, continuation_token, offset, sort, allow_errors, context_names,  |
-| `GET /management-access-policies/directory-services/roles` | Get-PfbManagementAccessPolicyDirectoryRole | X-Request-ID, continuation_token, offset, sort,  |
-| `GET /management-access-policies/members` | Get-PfbManagementAccessPolicyMember | X-Request-ID, continuation_token, offset, sort, allow_errors, context_names,  |
-| `GET /network-access-policies` | Get-PfbNetworkAccessPolicy | continuation_token, offset, X-Request-ID,  |
-| `GET /network-access-policies/members` | Get-PfbNetworkAccessPolicyMember | continuation_token, offset, X-Request-ID,  |
-| `GET /network-access-policies/rules` | Get-PfbNetworkAccessRule | continuation_token, ids, offset, X-Request-ID,  |
-| `GET /network-interfaces` | Get-PfbNetworkInterface | continuation_token, offset, X-Request-ID,  |
-| `GET /network-interfaces/connectors` | Get-PfbNetworkInterfaceConnector | X-Request-ID, continuation_token, offset,  |
-| `GET /network-interfaces/connectors/performance` | Get-PfbNetworkInterfaceConnectorPerformance | X-Request-ID, ids, offset, total_only,  |
-| `GET /network-interfaces/connectors/settings` | Get-PfbNetworkInterfaceConnectorSettings | X-Request-ID, continuation_token, ids, offset,  |
-| `GET /network-interfaces/neighbors` | Get-PfbNetworkInterfaceNeighbor | X-Request-ID, continuation_token, local_port_names, offset, total_item_count,  |
-| `GET /network-interfaces/network-connection-statistics` | Get-PfbNetworkConnectionStatistics | X-Request-ID, current_state, local_host, local_port, offset, remote_host, remote_port,  |
-| `GET /network-interfaces/tls-policies` | Get-PfbNetworkInterfaceTlsPolicy | X-Request-ID, continuation_token, offset,  |
-| `GET /nfs-export-policies` | Get-PfbNfsExportPolicy | continuation_token, offset, X-Request-ID, allow_errors, context_names, workload_ids, workload_names,  |
-| `GET /nfs-export-policies/rules` | Get-PfbNfsExportRule | continuation_token, ids, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /node-groups` | Get-PfbNodeGroup | X-Request-ID, continuation_token, offset,  |
-| `GET /node-groups/nodes` | Get-PfbNodeGroupNode | X-Request-ID, continuation_token, node_group_ids, node_group_names, node_ids, node_names, offset,  |
-| `GET /node-groups/uses` | Get-PfbNodeGroupUse | X-Request-ID, continuation_token, ids, offset,  |
-| `GET /nodes` | Get-PfbNode | X-Request-ID, continuation_token, offset, total_only,  |
-| `GET /object-store-access-keys` | Get-PfbObjectStoreAccessKey | continuation_token, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /object-store-access-policies` | Get-PfbObjectStoreAccessPolicy | continuation_token, offset, exclude_rules, X-Request-ID, allow_errors, context_names,  |
-| `GET /object-store-access-policies/object-store-roles` | Get-PfbObjectStoreAccessPolicyRole | X-Request-ID, allow_errors, context_names, continuation_token, offset,  |
-| `GET /object-store-access-policies/object-store-users` | Get-PfbObjectStoreAccessPolicyUser | continuation_token, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /object-store-access-policies/rules` | Get-PfbObjectStoreAccessPolicyRule | continuation_token, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /object-store-access-policy-actions` | Get-PfbObjectStoreAccessPolicyAction | continuation_token, names, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /object-store-account-exports` | Get-PfbObjectStoreAccountExport | X-Request-ID, allow_errors, context_names, continuation_token, offset,  |
-| `GET /object-store-accounts` | Get-PfbObjectStoreAccount | continuation_token, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /object-store-remote-credentials` | Get-PfbObjectStoreRemoteCredential | continuation_token, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /object-store-roles` | Get-PfbObjectStoreRole | X-Request-ID, allow_errors, context_names, continuation_token, offset,  |
-| `GET /object-store-roles/object-store-access-policies` | Get-PfbObjectStoreRoleAccessPolicy | X-Request-ID, allow_errors, context_names, continuation_token, offset, policy_ids, policy_names,  |
-| `GET /object-store-roles/object-store-trust-policies` | Get-PfbObjectStoreTrustPolicy | X-Request-ID, allow_errors, context_names, continuation_token, names, offset,  |
-| `GET /object-store-roles/object-store-trust-policies/rules` | Get-PfbObjectStoreTrustPolicyRule | X-Request-ID, allow_errors, context_names, continuation_token, indices, offset, role_ids, role_names,  |
-| `GET /object-store-users` | Get-PfbObjectStoreUser | continuation_token, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /object-store-users/object-store-access-policies` | Get-PfbObjectStoreUserAccessPolicy | continuation_token, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /object-store-virtual-hosts` | Get-PfbObjectStoreVirtualHost | continuation_token, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /policies` | Get-PfbPolicy | continuation_token, offset, X-Request-ID, allow_errors, context_names, workload_ids, workload_names,  |
-| `GET /policies-all` | Get-PfbPolicyAll | continuation_token, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /policies-all/members` | Get-PfbPolicyAllMember | continuation_token, local_file_system_ids, local_file_system_names, member_types, offset, remote_ids, remote_file_system_ids, remote_file_system_names, remote_names, sort, X-Request-ID, allow_errors, context_names,  |
-| `GET /policies/file-system-replica-links` | Get-PfbPolicyFileSystemReplicaLink | continuation_token, local_file_system_ids, local_file_system_names, offset, remote_ids, remote_file_system_ids, remote_file_system_names, remote_names, sort, X-Request-ID, allow_errors, context_names,  |
-| `GET /policies/file-system-snapshots` | Get-PfbPolicyFileSystemSnapshot | continuation_token, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /policies/file-systems` | Get-PfbPolicyFileSystem | continuation_token, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /presets/workload` | Get-PfbPresetWorkload | X-Request-ID, context_names,  |
-| `GET /public-keys` | Get-PfbPublicKey | X-Request-ID, continuation_token, offset,  |
-| `GET /public-keys/uses` | Get-PfbPublicKeyUse | X-Request-ID, continuation_token, ids, offset,  |
-| `GET /qos-policies` | Get-PfbQosPolicy | X-Request-ID, continuation_token, offset, allow_errors, context_names,  |
-| `GET /qos-policies/buckets` | Get-PfbQosPolicyBucket | X-Request-ID, continuation_token, offset, sort, allow_errors, context_names,  |
-| `GET /qos-policies/file-systems` | Get-PfbQosPolicyFileSystem | X-Request-ID, continuation_token, offset, sort, allow_errors, context_names,  |
-| `GET /qos-policies/members` | Get-PfbQosPolicyMember | X-Request-ID, continuation_token, offset, sort, member_types, allow_errors, context_names,  |
-| `GET /quotas/groups` | Get-PfbQuotaGroup | continuation_token, file_system_ids, gids, group_names, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /quotas/users` | Get-PfbQuotaUser | continuation_token, file_system_ids, offset, uids, user_names, X-Request-ID, allow_errors, context_names,  |
-| `GET /realms` | Get-PfbRealm | X-Request-ID, continuation_token, offset, allow_errors, context_names,  |
-| `GET /realms/defaults` | Get-PfbRealmDefaults | X-Request-ID, allow_errors, context_names, continuation_token, offset, realm_ids, realm_names,  |
-| `GET /realms/space` | Get-PfbRealmSpace | continuation_token, end_time, ids, offset, resolution, start_time, total_only, type,  |
-| `GET /realms/space/storage-classes` | Get-PfbRealmStorageClass | X-Request-ID, continuation_token, end_time, ids, offset, resolution, start_time, storage_class_names, total_only,  |
-| `GET /remote-arrays` | Get-PfbRemoteArray | X-Request-ID, continuation_token, offset, total_only,  |
-| `GET /resiliency-groups` | Get-PfbResiliencyGroup | X-Request-ID, continuation_token, offset,  |
-| `GET /resource-accesses` | Get-PfbResourceAccess | X-Request-ID, continuation_token, offset,  |
-| `GET /roles` | Get-PfbRole | continuation_token, ids, offset, X-Request-ID,  |
-| `GET /s3-export-policies` | Get-PfbS3ExportPolicy | X-Request-ID, allow_errors, context_names, continuation_token, offset,  |
-| `GET /s3-export-policies/rules` | Get-PfbS3ExportRule | X-Request-ID, allow_errors, context_names, continuation_token, offset,  |
-| `GET /servers` | Get-PfbServer | X-Request-ID, continuation_token, offset, allow_errors, context_names,  |
-| `GET /sessions` | Get-PfbSession | continuation_token, offset, X-Request-ID,  |
-| `GET /smb-client-policies` | Get-PfbSmbClientPolicy | continuation_token, offset, X-Request-ID, allow_errors, context_names, workload_ids, workload_names,  |
-| `GET /smb-client-policies/rules` | Get-PfbSmbClientRule | continuation_token, ids, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /smb-share-policies` | Get-PfbSmbSharePolicy | continuation_token, offset, X-Request-ID, allow_errors, context_names, workload_ids, workload_names,  |
-| `GET /smb-share-policies/rules` | Get-PfbSmbShareRule | continuation_token, ids, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /snmp-agents` | Get-PfbSnmpAgent | continuation_token, ids, limit, names, offset, sort, X-Request-ID,  |
-| `GET /snmp-managers` | Get-PfbSnmpManager | continuation_token, offset, X-Request-ID,  |
-| `GET /snmp-managers/test` | Test-PfbSnmpManager | continuation_token, filter, limit, offset, sort, X-Request-ID,  |
-| `GET /software-check` | Get-PfbSoftwareCheck | ids, names, offset, software_versions, software_names, total_item_count,  |
-| `GET /ssh-certificate-authority-policies` | Get-PfbSshCaPolicy | X-Request-ID, continuation_token, offset, allow_errors, context_names,  |
-| `GET /ssh-certificate-authority-policies/admins` | Get-PfbSshCaPolicyAdmin | X-Request-ID, continuation_token, offset, sort, allow_errors, context_names,  |
-| `GET /ssh-certificate-authority-policies/arrays` | Get-PfbSshCaPolicyArray | X-Request-ID, continuation_token, offset, sort, allow_errors, context_names,  |
-| `GET /ssh-certificate-authority-policies/members` | Get-PfbSshCaPolicyMember | X-Request-ID, continuation_token, offset, sort, allow_errors, context_names,  |
-| `GET /sso/oidc/idps` | Get-PfbOidcIdp | X-Request-ID, continuation_token, offset,  |
-| `GET /sso/saml2/idps` | Get-PfbSaml2Idp | X-Request-ID, continuation_token, offset,  |
-| `GET /sso/saml2/idps/test` | Test-PfbSaml2Idp | X-Request-ID, filter, limit, sort,  |
-| `GET /storage-class-tiering-policies` | Get-PfbStorageClassTieringPolicy | X-Request-ID, continuation_token, offset,  |
-| `GET /storage-class-tiering-policies/members` | Get-PfbStorageClassTieringPolicyMember | X-Request-ID, allow_errors, context_names, continuation_token, offset, sort,  |
-| `GET /subnets` | Get-PfbSubnet | continuation_token, offset, X-Request-ID,  |
-| `GET /support` | Get-PfbSupport | ids, X-Request-ID,  |
-| `GET /support-diagnostics` | Get-PfbSupportDiagnostics | X-Request-ID, continuation_token, offset,  |
-| `GET /support-diagnostics/details` | Get-PfbSupportDiagnosticsDetails | X-Request-ID, continuation_token, offset,  |
-| `GET /support/verification-keys` | Get-PfbSupportVerificationKey | continuation_token, offset, X-Request-ID,  |
-| `GET /syslog-servers` | Get-PfbSyslogServer | continuation_token, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /syslog-servers/test` | Test-PfbSyslogServer | continuation_token, X-Request-ID,  |
-| `GET /targets` | Get-PfbTarget | continuation_token, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /targets/performance/replication` | Get-PfbTargetPerformanceReplication | continuation_token, ids, offset, total_only, X-Request-ID,  |
-| `GET /tls-policies` | Get-PfbTlsPolicy | X-Request-ID, continuation_token, effective, offset, purity_defined,  |
-| `GET /tls-policies/members` | Get-PfbTlsPolicyMember | X-Request-ID, continuation_token, offset, sort,  |
-| `GET /usage/groups` | Get-PfbUsageGroup | continuation_token, file_system_ids, gids, group_names, offset, X-Request-ID, allow_errors, context_names,  |
-| `GET /usage/users` | Get-PfbUsageUser | continuation_token, file_system_ids, offset, uids, user_names, X-Request-ID, allow_errors, context_names,  |
-| `GET /workloads` | Get-PfbWorkload | X-Request-ID, allow_errors, context_names, continuation_token,  |
-| `GET /workloads/placement-recommendations` | Get-PfbWorkloadPlacementRecommendation | X-Request-ID, allow_errors, context_names, continuation_token,  |
-| `GET /workloads/tags` | Get-PfbWorkloadTag | X-Request-ID, allow_errors, context_names,  |
-| `GET /worm-data-policies` | Get-PfbWormPolicy | X-Request-ID, continuation_token, offset, allow_errors, context_names,  |
-| `GET /worm-data-policies/members` | Get-PfbWormPolicyMember | X-Request-ID, continuation_token, offset, sort, allow_errors, context_names,  |
-| `PATCH /active-directory` | Update-PfbActiveDirectory | X-Request-ID, directory_servers, encryption_types, fqdns, join_ou, kerberos_servers, service_principal_names, global_catalog_servers, ca_certificate, ca_certificate_group |
-| `PATCH /admins` | Update-PfbAdmin | X-Request-ID, context_names, old_password, password, public_key, locked, role, authorization_model, management_access_policies |
-| `PATCH /api-clients` | Update-PfbApiClient | X-Request-ID, name, id, max_role, issuer, public_key, key_id, enabled, access_token_ttl_in_ms, access_policies |
-| `PATCH /array-connections` | Update-PfbArrayConnection | remote_ids, remote_names, X-Request-ID, context_names, id, ca_certificate_group, encrypted, management_address, remote, replication_addresses, status, version, throttle, context, os, type |
-| `PATCH /buckets/audit-filters` | Update-PfbBucketAuditFilter | X-Request-ID, bucket_ids, bucket_names, context_names, names, actions, s3_prefixes |
-| `PATCH /certificates` | Update-PfbCertificate | X-Request-ID, generate_new_key, name, id, certificate, intermediate_certificate, passphrase, private_key, certificate_type, common_name, country, email, issued_by, issued_to, key_algorithm, key_size, locality, organization, organizational_unit, realms, state, status, subject_alternative_names, valid_from, valid_to, days |
-| `PATCH /directory-services/roles` | Update-PfbDirectoryServiceRole | role_ids, role_names, X-Request-ID, role, id, group, group_base, name, management_access_policies |
-| `PATCH /dns` | Update-PfbDns | ids, names, X-Request-ID, context_names, name, id, services, sources, realms, context, ca_certificate, ca_certificate_group |
-| `PATCH /file-system-exports` | Update-PfbFileSystemExport | X-Request-ID, context_names, name, id, enabled, export_name, member, policy, server, share_policy, status, policy_type, context |
-| `PATCH /fleets` | Update-PfbFleet | X-Request-ID, name |
-| `PATCH /hardware` | Update-PfbHardware | X-Request-ID, name, id, details, identify_enabled, index, model, serial, slot, speed, status, temperature, type, part_number, management_mac, data_mac, sensor_readings |
-| `PATCH /hardware-connectors` | Update-PfbHardwareConnector | X-Request-ID, name, id, connector_type, lane_speed, port_count, transceiver_type, port_speed, lanes_per_port |
-| `PATCH /kmip` | Update-PfbKmip | X-Request-ID, id, name, ca_certificate, ca_certificate_group, uris |
-| `PATCH /legal-holds` | Update-PfbLegalHold | X-Request-ID, id, name, description, realms |
-| `PATCH /legal-holds/held-entities` | Update-PfbLegalHoldEntity | X-Request-ID, file_system_ids, file_system_names, ids, paths, recursive, released,  |
-| `PATCH /lifecycle-rules` | Update-PfbLifecycleRule | bucket_ids, bucket_names, confirm_date, X-Request-ID, context_names, enabled, keep_previous_version_for, prefix, abort_incomplete_multipart_uploads_after, keep_current_version_for, keep_current_version_until |
-| `PATCH /link-aggregation-groups` | Update-PfbLag | X-Request-ID, ports, add_ports, remove_ports |
-| `PATCH /log-targets/file-systems` | Update-PfbLogTargetFileSystem | X-Request-ID, context_names, id, name, file_system, keep_for, keep_size |
-| `PATCH /log-targets/object-store` | Update-PfbLogTargetObjectStore | X-Request-ID, context_names, id, name, bucket, log_name_prefix, log_rotate |
-| `PATCH /logs-async` | Update-PfbAsyncLog | X-Request-ID, name, id, start_time, end_time, last_request_time, processing, progress, hardware_components, available_files |
-| `PATCH /management-access-policies` | Update-PfbManagementAccessPolicy | X-Request-ID, context_names, id, name, enabled, is_local, location, policy_type, realms, version, aggregation_strategy, rules, context |
-| `PATCH /network-interfaces` | Update-PfbNetworkInterface | X-Request-ID, services, server, attached_servers |
-| `PATCH /network-interfaces/connectors` | Update-PfbNetworkInterfaceConnector | X-Request-ID, id, name, connector_type, lane_speed, port_count, port_speed, transceiver_type, lanes_per_port |
-| `PATCH /node-groups` | Update-PfbNodeGroup | X-Request-ID, name |
-| `PATCH /nodes` | Update-PfbNode | X-Request-ID, id, name, capacity, data_addresses, details, management_address, raw_capacity, serial_number, status, unique, chassis_serial_number, node_key |
-| `PATCH /object-store-account-exports` | Update-PfbObjectStoreAccountExport | X-Request-ID, context_names, export_enabled, policy |
-| `PATCH /object-store-remote-credentials` | Update-PfbObjectStoreRemoteCredential | X-Request-ID, context_names, name, id, access_key_id, secret_access_key, remote, context, realms |
-| `PATCH /object-store-roles` | Update-PfbObjectStoreRole | X-Request-ID, context_names, name, id, context, trusted_entities, created, prn, account, max_session_duration |
-| `PATCH /object-store-virtual-hosts` | Update-PfbObjectStoreVirtualHost | X-Request-ID, context_names, id, name, add_attached_servers, attached_servers, hostname, remove_attached_servers |
-| `PATCH /qos-policies` | Update-PfbQosPolicy | X-Request-ID, context_names, name, id, policy_type, location, is_local, enabled, max_total_bytes_per_sec, max_total_ops_per_sec, realms, context |
-| `PATCH /realms/defaults` | Update-PfbRealmDefaults | X-Request-ID, context_names, realm_ids, realm_names, context, object_store, realm |
-| `PATCH /snmp-managers` | Update-PfbSnmpManager | X-Request-ID, name, id, host, notification, version, v2c, v3 |
-| `PATCH /ssh-certificate-authority-policies` | Update-PfbSshCaPolicy | X-Request-ID, policy_type, name, id, signing_authority, static_authorized_principals, enabled, is_local, location, realms, context |
-| `PATCH /sso/oidc/idps` | Update-PfbOidcIdp | X-Request-ID, idp, services, prn, enabled, name |
-| `PATCH /sso/saml2/idps` | Update-PfbSaml2Idp | X-Request-ID, name, id, enabled, array_url, sp, idp, binding, prn, services, management |
-| `PATCH /storage-class-tiering-policies` | Update-PfbStorageClassTieringPolicy | X-Request-ID, id, name, enabled, is_local, location, policy_type, archival_rules, retrieval_rules, realms |
-| `PATCH /subnets` | Update-PfbSubnet | X-Request-ID, id, name, enabled, interfaces, link_aggregation_group, services, vlan |
-| `PATCH /syslog-servers` | Update-PfbSyslogServer | X-Request-ID, uri, services, sources |
-| `PATCH /targets` | Update-PfbTarget | X-Request-ID, name, id, address, ca_certificate_group, status, status_details |
-| `PATCH /tls-policies` | Update-PfbTlsPolicy | X-Request-ID, name, id, policy_type, location, is_local, enabled, enabled_tls_ciphers, appliance_certificate, min_tls_version, disabled_tls_ciphers, client_certificates_required, trusted_client_certificate_authority, verify_client_certificate_trust, realms |
-| `PATCH /worm-data-policies` | Update-PfbWormPolicy | X-Request-ID, context_names, id, name, enabled, is_local, location, policy_type, default_retention, max_retention, min_retention, mode, retention_lock, context, realms |
-| `POST /admins/api-tokens` | New-PfbApiToken | admin_ids, admin_names, timeout, X-Request-ID, context_names,  |
-| `POST /admins/management-access-policies` | New-PfbAdminManagementAccessPolicy | X-Request-ID, context_names,  |
-| `POST /admins/ssh-certificate-authority-policies` | New-PfbAdminSshCaPolicy | X-Request-ID, context_names,  |
-| `POST /array-connections` | New-PfbArrayConnection | X-Request-ID, context_names, id, ca_certificate_group, encrypted, remote, status, version, throttle, context, os, type |
-| `POST /arrays/ssh-certificate-authority-policies` | New-PfbArraySshCaPolicy | X-Request-ID, context_names,  |
-| `POST /audit-file-systems-policies/members` | New-PfbAuditFileSystemPolicyMember | X-Request-ID, context_names,  |
-| `POST /audit-object-store-policies/members` | New-PfbAuditObjectStorePolicyMember | X-Request-ID, context_names,  |
-| `POST /certificates/certificate-groups` | New-PfbCertificateCertificateGroup | certificate_ids, certificate_group_ids, X-Request-ID,  |
-| `POST /data-eviction-policies/file-systems` | Add-PfbDataEvictionPolicyFileSystem | X-Request-ID, context_names,  |
-| `POST /directory-services/roles/management-access-policies` | New-PfbDirectoryServiceRoleManagementPolicy | X-Request-ID,  |
-| `POST /file-system-replica-links/policies` | New-PfbFileSystemReplicaLinkPolicy | local_file_system_ids, local_file_system_names, remote_ids, remote_names, X-Request-ID, context_names,  |
-| `POST /file-systems/audit-policies` | New-PfbFileSystemAuditPolicy | X-Request-ID, context_names,  |
-| `POST /file-systems/policies` | New-PfbFileSystemPolicy | X-Request-ID, context_names,  |
-| `POST /fleets/members` | New-PfbFleetMember | X-Request-ID, fleet_ids, members |
-| `POST /legal-holds/held-entities` | New-PfbLegalHoldEntity | X-Request-ID, file_system_ids, file_system_names, ids, names, paths, recursive,  |
-| `POST /management-access-policies/admins` | New-PfbManagementAccessPolicyAdmin | X-Request-ID, context_names,  |
-| `POST /management-access-policies/directory-services/roles` | New-PfbManagementAccessPolicyDirectoryRole | X-Request-ID,  |
-| `POST /network-access-policies/rules` | New-PfbNetworkAccessRule | before_rule_id, before_rule_name, versions, X-Request-ID, name, id, effect, client, interfaces, index |
-| `POST /network-interfaces/tls-policies` | New-PfbNetworkInterfaceTlsPolicy | X-Request-ID, member_ids, policy_ids,  |
-| `POST /nfs-export-policies/rules` | New-PfbNfsExportRule | before_rule_id, before_rule_name, versions, X-Request-ID, context_names, id, name, access, anongid, anonuid, atime, client, fileid_32bit, permission, policy, policy_version, required_transport_security, secure, security, index, context |
-| `POST /node-groups/nodes` | New-PfbNodeGroupNode | X-Request-ID, node_group_ids, node_group_names, node_ids, node_names,  |
-| `POST /policies/file-system-replica-links` | New-PfbPolicyFileSystemReplicaLink | local_file_system_ids, local_file_system_names, remote_ids, remote_names, X-Request-ID, context_names,  |
-| `POST /policies/file-systems` | New-PfbPolicyFileSystem | X-Request-ID, context_names,  |
-| `POST /qos-policies/members` | New-PfbQosPolicyMember | X-Request-ID, member_types, context_names,  |
-| `POST /s3-export-policies/rules` | New-PfbS3ExportRule | X-Request-ID, context_names, names, actions, effect, resources |
-| `POST /smb-client-policies/rules` | New-PfbSmbClientRule | before_rule_id, before_rule_name, versions, X-Request-ID, context_names, name, id, client, permission, index, encryption |
-| `POST /smb-share-policies/rules` | New-PfbSmbShareRule | X-Request-ID, context_names, name, id, change, full_control, principal, read |
-| `POST /ssh-certificate-authority-policies/admins` | New-PfbSshCaPolicyAdmin | X-Request-ID, context_names,  |
-| `POST /ssh-certificate-authority-policies/arrays` | New-PfbSshCaPolicyArray | X-Request-ID, context_names,  |
+| `DELETE /active-directory` | Remove-PfbActiveDirectory | local_only |
+| `DELETE /admins/api-tokens` | Remove-PfbApiToken | context_names, admin_names, admin_ids |
+| `DELETE /admins/cache` | Remove-PfbAdminCache | context_names |
+| `DELETE /admins/management-access-policies` | Remove-PfbAdminManagementAccessPolicy | context_names |
+| `DELETE /admins/ssh-certificate-authority-policies` | Remove-PfbAdminSshCaPolicy | context_names |
+| `DELETE /array-connections` | Remove-PfbArrayConnection | context_names, remote_ids, remote_names |
+| `DELETE /arrays/ssh-certificate-authority-policies` | Remove-PfbArraySshCaPolicy | context_names |
+| `DELETE /audit-file-systems-policies` | Remove-PfbAuditFileSystemPolicy | context_names |
+| `DELETE /audit-file-systems-policies/members` | Remove-PfbAuditFileSystemPolicyMember | context_names |
+| `DELETE /audit-object-store-policies` | Remove-PfbAuditObjectStorePolicy | context_names |
+| `DELETE /audit-object-store-policies/members` | Remove-PfbAuditObjectStorePolicyMember | context_names |
+| `DELETE /buckets/audit-filters` | Remove-PfbBucketAuditFilter | context_names, bucket_ids, names, bucket_names |
+| `DELETE /buckets/cross-origin-resource-sharing-policies` | Remove-PfbBucketCorsPolicy | bucket_ids, context_names, bucket_names, names |
+| `DELETE /certificates/certificate-groups` | Remove-PfbCertificateCertificateGroup | certificate_group_ids, certificate_ids |
+| `DELETE /data-eviction-policies` | Remove-PfbDataEvictionPolicy | context_names |
+| `DELETE /data-eviction-policies/file-systems` | Remove-PfbDataEvictionPolicyFileSystem | context_names |
+| `DELETE /directory-services/local/groups` | Remove-PfbLocalGroup | gids, local_directory_service_names, sids, context_names, local_directory_service_ids |
+| `DELETE /dns` | Remove-PfbDns | context_names |
+| `DELETE /file-system-exports` | Remove-PfbFileSystemExport | context_names |
+| `DELETE /file-system-replica-links` | Remove-PfbFileSystemReplicaLink | remote_ids, remote_file_system_ids, context_names, local_file_system_ids |
+| `DELETE /file-system-replica-links/policies` | Remove-PfbFileSystemReplicaLinkPolicy | local_file_system_names, remote_ids, context_names, remote_names, local_file_system_ids |
+| `DELETE /file-system-snapshots/policies` | Remove-PfbFileSystemSnapshotPolicy | context_names |
+| `DELETE /file-system-snapshots/transfer` | Remove-PfbFileSystemSnapshotTransfer | remote_ids, context_names, remote_names |
+| `DELETE /file-systems/audit-policies` | Remove-PfbFileSystemAuditPolicy | context_names |
+| `DELETE /file-systems/locks` | Remove-PfbFileLock | file_system_names, inodes, recursive, context_names, file_system_ids, paths, client_names |
+| `DELETE /file-systems/policies` | Remove-PfbFileSystemPolicy | context_names |
+| `DELETE /file-systems/sessions` | Remove-PfbFileSystemSession | protocols, disruptive, context_names, user_names, client_names |
+| `DELETE /fleets/members` | Remove-PfbFleetMember | unreachable, member_ids |
+| `DELETE /lifecycle-rules` | Remove-PfbLifecycleRule | bucket_names, context_names, bucket_ids |
+| `DELETE /log-targets/file-systems` | Remove-PfbLogTargetFileSystem | context_names |
+| `DELETE /log-targets/object-store` | Remove-PfbLogTargetObjectStore | context_names |
+| `DELETE /management-access-policies` | Remove-PfbManagementAccessPolicy | context_names |
+| `DELETE /management-access-policies/admins` | Remove-PfbManagementAccessPolicyAdmin | context_names |
+| `DELETE /network-interfaces/tls-policies` | Remove-PfbNetworkInterfaceTlsPolicy | member_ids, policy_ids |
+| `DELETE /nfs-export-policies` | Remove-PfbNfsExportPolicy | versions, context_names |
+| `DELETE /node-groups/nodes` | Remove-PfbNodeGroupNode | node_names, node_group_ids, node_ids, node_group_names |
+| `DELETE /object-store-access-keys` | Remove-PfbObjectStoreAccessKey | context_names |
+| `DELETE /object-store-access-policies` | Remove-PfbObjectStoreAccessPolicy | context_names |
+| `DELETE /object-store-account-exports` | Remove-PfbObjectStoreAccountExport | context_names |
+| `DELETE /object-store-accounts` | Remove-PfbObjectStoreAccount | context_names |
+| `DELETE /object-store-remote-credentials` | Remove-PfbObjectStoreRemoteCredential | context_names |
+| `DELETE /object-store-roles` | Remove-PfbObjectStoreRole | context_names |
+| `DELETE /object-store-users` | Remove-PfbObjectStoreUser | context_names |
+| `DELETE /object-store-virtual-hosts` | Remove-PfbObjectStoreVirtualHost | context_names |
+| `DELETE /policies` | Remove-PfbPolicy | context_names |
+| `DELETE /policies/file-system-replica-links` | Remove-PfbPolicyFileSystemReplicaLink | local_file_system_names, remote_ids, context_names, remote_names, local_file_system_ids |
+| `DELETE /policies/file-systems` | Remove-PfbPolicyFileSystem | context_names |
+| `DELETE /presets/workload` | Remove-PfbPresetWorkload | context_names |
+| `DELETE /qos-policies` | Remove-PfbQosPolicy | context_names |
+| `DELETE /qos-policies/members` | Remove-PfbQosPolicyMember | context_names, member_types |
+| `DELETE /s3-export-policies` | Remove-PfbS3ExportPolicy | context_names |
+| `DELETE /smb-client-policies` | Remove-PfbSmbClientPolicy | context_names |
+| `DELETE /smb-share-policies` | Remove-PfbSmbSharePolicy | context_names |
+| `DELETE /ssh-certificate-authority-policies/admins` | Remove-PfbSshCaPolicyAdmin | context_names |
+| `DELETE /ssh-certificate-authority-policies/arrays` | Remove-PfbSshCaPolicyArray | context_names |
+| `DELETE /workloads` | Remove-PfbWorkload | context_names |
+| `DELETE /worm-data-policies` | Remove-PfbWormPolicy | context_names |
+| `GET /active-directory` | Get-PfbActiveDirectory | ids, sort, limit |
+| `GET /active-directory/test` | Test-PfbActiveDirectory | sort, filter, limit, context_names, allow_errors |
+| `GET /admins` | Get-PfbAdmin | expose_api_token, context_names, allow_errors |
+| `GET /admins/api-tokens` | Get-PfbApiToken | admin_ids, admin_names, expose_api_token, context_names, allow_errors |
+| `GET /admins/cache` | Get-PfbAdminCache | context_names, refresh, allow_errors |
+| `GET /admins/management-access-policies` | Get-PfbAdminManagementAccessPolicy | sort, context_names, allow_errors |
+| `GET /admins/ssh-certificate-authority-policies` | Get-PfbAdminSshCaPolicy | sort, context_names, allow_errors |
+| `GET /alert-watchers/test` | Test-PfbAlertWatcher | sort, filter |
+| `GET /array-connections` | Get-PfbArrayConnection | remote_ids, context_names, remote_names, allow_errors |
+| `GET /array-connections/connection-key` | Get-PfbArrayConnectionKey | ids |
+| `GET /array-connections/path` | Get-PfbArrayConnectionPath | ids, remote_ids, context_names, remote_names, allow_errors |
+| `GET /array-connections/performance/replication` | Get-PfbArrayConnectionPerformanceReplication | remote_names, ids, total_only, remote_ids, type |
+| `GET /arrays/clients/performance` | Get-PfbArrayClientPerformance | total_only, names, protocol |
+| `GET /arrays/clients/s3-specific-performance` | Get-PfbArrayClientS3Performance | names, total_only |
+| `GET /arrays/http-specific-performance` | Get-PfbArrayHttpPerformance | context_names, allow_errors |
+| `GET /arrays/nfs-specific-performance` | Get-PfbArrayNfsPerformance | context_names, allow_errors |
+| `GET /arrays/performance` | Get-PfbArrayPerformance | context_names, allow_errors |
+| `GET /arrays/performance/replication` | Get-PfbArrayPerformanceReplication | type, context_names, allow_errors |
+| `GET /arrays/s3-specific-performance` | Get-PfbArrayS3Performance | context_names, allow_errors |
+| `GET /arrays/space` | Get-PfbArraySpace | start_time, end_time, context_names, resolution, allow_errors |
+| `GET /arrays/space/storage-classes` | Get-PfbArrayStorageClass | start_time, end_time, total_only, resolution, storage_class_names |
+| `GET /arrays/ssh-certificate-authority-policies` | Get-PfbArraySshCaPolicy | sort, context_names, allow_errors |
+| `GET /arrays/supported-time-zones` | Get-PfbArraySupportedTimeZone | names |
+| `GET /audit-file-systems-policies` | Get-PfbAuditFileSystemPolicy | context_names, allow_errors |
+| `GET /audit-file-systems-policies/members` | Get-PfbAuditFileSystemPolicyMember | context_names, allow_errors |
+| `GET /audit-file-systems-policy-operations` | Get-PfbAuditFileSystemPolicyOperation | names, context_names, allow_errors |
+| `GET /audit-object-store-policies` | Get-PfbAuditObjectStorePolicy | context_names, allow_errors |
+| `GET /audit-object-store-policies/members` | Get-PfbAuditObjectStorePolicyMember | context_names, allow_errors |
+| `GET /blades` | Get-PfbBlade, Get-PfbNode | total_only |
+| `GET /bucket-audit-filter-actions` | Get-PfbBucketAuditFilterAction | names, context_names, allow_errors |
+| `GET /bucket-replica-links` | Get-PfbBucketReplicaLink | remote_names, ids, local_bucket_ids, remote_ids, total_only, context_names, allow_errors |
+| `GET /buckets` | Get-PfbBucket | context_names, allow_errors |
+| `GET /buckets/audit-filters` | Get-PfbBucketAuditFilter | bucket_names, names, bucket_ids, context_names, allow_errors |
+| `GET /buckets/bucket-access-policies` | Get-PfbBucketAccessPolicy | bucket_names, bucket_ids, context_names, allow_errors |
+| `GET /buckets/bucket-access-policies/rules` | Get-PfbBucketAccessPolicyRule | bucket_names, bucket_ids, context_names, allow_errors |
+| `GET /buckets/cross-origin-resource-sharing-policies` | Get-PfbBucketCorsPolicy | bucket_names, bucket_ids, context_names, allow_errors |
+| `GET /buckets/cross-origin-resource-sharing-policies/rules` | Get-PfbBucketCorsPolicyRule | bucket_names, bucket_ids, context_names, allow_errors |
+| `GET /certificate-groups/certificates` | Get-PfbCertificateGroupCertificate | certificate_group_ids, certificate_group_names, certificate_names, certificate_ids |
+| `GET /certificate-groups/uses` | Get-PfbCertificateGroupUse | ids |
+| `GET /certificates/certificate-groups` | Get-PfbCertificateCertificateGroup | certificate_group_ids, sort, certificate_ids |
+| `GET /certificates/uses` | Get-PfbCertificateUse | ids |
+| `GET /data-eviction-policies` | Get-PfbDataEvictionPolicy | context_names, allow_errors |
+| `GET /data-eviction-policies/file-systems` | Get-PfbDataEvictionPolicyFileSystem | context_names, allow_errors |
+| `GET /data-eviction-policies/members` | Get-PfbDataEvictionPolicyMember | context_names, allow_errors |
+| `GET /directory-services` | Get-PfbDirectoryService | ids, sort, limit |
+| `GET /directory-services/local/directory-services` | Get-PfbLocalDirectoryService | context_names, allow_errors, destroyed, total_item_count |
+| `GET /directory-services/local/groups` | Get-PfbLocalGroup | gids, sids, total_item_count, context_names, allow_errors |
+| `GET /directory-services/local/groups/members` | Get-PfbLocalGroupMember | member_types, member_sids, group_sids, total_item_count, context_names, member_ids, allow_errors, group_gids |
+| `GET /directory-services/roles` | Get-PfbDirectoryServiceRole | role_ids, role_names |
+| `GET /directory-services/roles/management-access-policies` | Get-PfbDirectoryServiceRoleManagementPolicy | sort |
+| `GET /drives` | Get-PfbDrive | total_only |
+| `GET /file-system-exports` | Get-PfbFileSystemExport | context_names, allow_errors, workload_names, workload_ids |
+| `GET /file-system-replica-links` | Get-PfbFileSystemReplicaLink | remote_names, ids, local_file_system_ids, context_names, allow_errors, remote_ids, remote_file_system_ids |
+| `GET /file-system-replica-links/policies` | Get-PfbFileSystemReplicaLinkPolicy | remote_names, remote_ids, remote_file_system_names, local_file_system_ids, local_file_system_names, context_names, allow_errors, remote_file_system_ids |
+| `GET /file-system-replica-links/transfer` | Get-PfbFileSystemReplicaLinkTransfer | remote_names, remote_ids, context_names, allow_errors, names_or_owner_names |
+| `GET /file-system-snapshots` | Get-PfbFileSystemSnapshot | owner_ids, context_names, allow_errors, names_or_owner_names |
+| `GET /file-system-snapshots/policies` | Get-PfbFileSystemSnapshotPolicy | context_names, allow_errors |
+| `GET /file-system-snapshots/transfer` | Get-PfbFileSystemSnapshotTransfer | names_or_owner_names, allow_errors, context_names |
+| `GET /file-systems` | Get-PfbFileSystem | workload_names, context_names, workload_ids, allow_errors |
+| `GET /file-systems/audit-policies` | Get-PfbFileSystemAuditPolicy | context_names, allow_errors |
+| `GET /file-systems/groups/performance` | Get-PfbFileSystemGroupPerformance | names, gids, group_names |
+| `GET /file-systems/locks` | Get-PfbFileLock | file_system_names, allow_errors, inodes, context_names, file_system_ids, paths, client_names |
+| `GET /file-systems/locks/clients` | Get-PfbFileLockClient | context_names, allow_errors |
+| `GET /file-systems/open-files` | Get-PfbOpenFile | protocols, session_names, user_names, file_system_ids, file_system_names, paths, client_names |
+| `GET /file-systems/policies` | Get-PfbFileSystemPolicy | context_names, allow_errors |
+| `GET /file-systems/sessions` | Get-PfbFileSystemSession | protocols, context_names, allow_errors, user_names, client_names |
+| `GET /file-systems/space/storage-classes` | Get-PfbFileSystemStorageClass | storage_class_names |
+| `GET /file-systems/users/performance` | Get-PfbFileSystemUserPerformance | names, uids, user_names |
+| `GET /file-systems/worm-data-policies` | Get-PfbFileSystemWormPolicy | context_names, allow_errors |
+| `GET /fleets` | Get-PfbFleet | total_only |
+| `GET /fleets/fleet-key` | Get-PfbFleetKey | total_only |
+| `GET /fleets/members` | Get-PfbFleetMember | total_only, fleet_ids, member_ids |
+| `GET /hardware-connectors/performance` | Get-PfbHardwareConnectorPerformance | ids, total_only |
+| `GET /keytabs/download` | Get-PfbKeytabDownload | keytab_ids, keytab_names |
+| `GET /legal-holds/held-entities` | Get-PfbLegalHoldEntity | file_system_names, ids, names, file_system_ids, paths |
+| `GET /lifecycle-rules` | Get-PfbLifecycleRule | bucket_ids, context_names, allow_errors |
+| `GET /log-targets/file-systems` | Get-PfbLogTargetFileSystem | context_names, allow_errors |
+| `GET /log-targets/object-store` | Get-PfbLogTargetObjectStore | context_names, allow_errors |
+| `GET /management-access-policies` | Get-PfbManagementAccessPolicy | context_names, allow_errors |
+| `GET /management-access-policies/admins` | Get-PfbManagementAccessPolicyAdmin | sort, context_names, allow_errors |
+| `GET /management-access-policies/directory-services/roles` | Get-PfbManagementAccessPolicyDirectoryRole | sort |
+| `GET /management-access-policies/members` | Get-PfbManagementAccessPolicyMember | sort, context_names, allow_errors |
+| `GET /network-access-policies/rules` | Get-PfbNetworkAccessRule | ids |
+| `GET /network-interfaces/connectors/performance` | Get-PfbNetworkInterfaceConnectorPerformance | ids, total_only |
+| `GET /network-interfaces/connectors/settings` | Get-PfbNetworkInterfaceConnectorSettings | ids |
+| `GET /network-interfaces/neighbors` | Get-PfbNetworkInterfaceNeighbor | total_item_count, local_port_names |
+| `GET /network-interfaces/network-connection-statistics` | Get-PfbNetworkConnectionStatistics | current_state, local_host, remote_port, local_port, remote_host |
+| `GET /nfs-export-policies` | Get-PfbNfsExportPolicy | context_names, allow_errors, workload_names, workload_ids |
+| `GET /nfs-export-policies/rules` | Get-PfbNfsExportRule | ids, context_names, allow_errors |
+| `GET /node-groups/nodes` | Get-PfbNodeGroupNode | node_group_ids, node_names, node_group_names, node_ids |
+| `GET /node-groups/uses` | Get-PfbNodeGroupUse | ids |
+| `GET /nodes` | Get-PfbNode | total_only |
+| `GET /object-store-access-keys` | Get-PfbObjectStoreAccessKey | context_names, allow_errors |
+| `GET /object-store-access-policies` | Get-PfbObjectStoreAccessPolicy | context_names, exclude_rules, allow_errors |
+| `GET /object-store-access-policies/object-store-roles` | Get-PfbObjectStoreAccessPolicyRole | context_names, allow_errors |
+| `GET /object-store-access-policies/object-store-users` | Get-PfbObjectStoreAccessPolicyUser | context_names, allow_errors |
+| `GET /object-store-access-policies/rules` | Get-PfbObjectStoreAccessPolicyRule | context_names, allow_errors |
+| `GET /object-store-access-policy-actions` | Get-PfbObjectStoreAccessPolicyAction | names, context_names, allow_errors |
+| `GET /object-store-account-exports` | Get-PfbObjectStoreAccountExport | context_names, allow_errors |
+| `GET /object-store-accounts` | Get-PfbObjectStoreAccount | context_names, allow_errors |
+| `GET /object-store-remote-credentials` | Get-PfbObjectStoreRemoteCredential | context_names, allow_errors |
+| `GET /object-store-roles` | Get-PfbObjectStoreRole | context_names, allow_errors |
+| `GET /object-store-roles/object-store-access-policies` | Get-PfbObjectStoreRoleAccessPolicy | policy_ids, policy_names, context_names, allow_errors |
+| `GET /object-store-roles/object-store-trust-policies` | Get-PfbObjectStoreTrustPolicy | names, context_names, allow_errors |
+| `GET /object-store-roles/object-store-trust-policies/rules` | Get-PfbObjectStoreTrustPolicyRule | role_ids, role_names, indices, context_names, allow_errors |
+| `GET /object-store-users` | Get-PfbObjectStoreUser | context_names, allow_errors |
+| `GET /object-store-users/object-store-access-policies` | Get-PfbObjectStoreUserAccessPolicy | context_names, allow_errors |
+| `GET /object-store-virtual-hosts` | Get-PfbObjectStoreVirtualHost | context_names, allow_errors |
+| `GET /policies` | Get-PfbPolicy | context_names, allow_errors, workload_names, workload_ids |
+| `GET /policies-all` | Get-PfbPolicyAll | context_names, allow_errors |
+| `GET /policies-all/members` | Get-PfbPolicyAllMember | remote_names, remote_ids, remote_file_system_names, local_file_system_ids, local_file_system_names, context_names, allow_errors, sort, member_types, remote_file_system_ids |
+| `GET /policies/file-system-replica-links` | Get-PfbPolicyFileSystemReplicaLink | remote_names, remote_ids, remote_file_system_names, local_file_system_ids, local_file_system_names, context_names, allow_errors, sort, remote_file_system_ids |
+| `GET /policies/file-system-snapshots` | Get-PfbPolicyFileSystemSnapshot | context_names, allow_errors |
+| `GET /policies/file-systems` | Get-PfbPolicyFileSystem | context_names, allow_errors |
+| `GET /presets/workload` | Get-PfbPresetWorkload | context_names |
+| `GET /public-keys/uses` | Get-PfbPublicKeyUse | ids |
+| `GET /qos-policies` | Get-PfbQosPolicy | context_names, allow_errors |
+| `GET /qos-policies/buckets` | Get-PfbQosPolicyBucket | sort, context_names, allow_errors |
+| `GET /qos-policies/file-systems` | Get-PfbQosPolicyFileSystem | sort, context_names, allow_errors |
+| `GET /qos-policies/members` | Get-PfbQosPolicyMember | sort, context_names, allow_errors, member_types |
+| `GET /quotas/groups` | Get-PfbQuotaGroup | gids, group_names, file_system_ids, context_names, allow_errors |
+| `GET /quotas/users` | Get-PfbQuotaUser | uids, file_system_ids, context_names, allow_errors, user_names |
+| `GET /realms` | Get-PfbRealm | context_names, allow_errors |
+| `GET /realms/defaults` | Get-PfbRealmDefaults | realm_ids, realm_names, context_names, allow_errors |
+| `GET /realms/space` | Get-PfbRealmSpace | start_time, ids, end_time, total_only, resolution, type |
+| `GET /realms/space/storage-classes` | Get-PfbRealmStorageClass | start_time, ids, total_only, end_time, storage_class_names, resolution |
+| `GET /remote-arrays` | Get-PfbRemoteArray | total_only |
+| `GET /roles` | Get-PfbRole | ids |
+| `GET /s3-export-policies` | Get-PfbS3ExportPolicy | context_names, allow_errors |
+| `GET /s3-export-policies/rules` | Get-PfbS3ExportRule | context_names, allow_errors |
+| `GET /servers` | Get-PfbServer | context_names, allow_errors |
+| `GET /smb-client-policies` | Get-PfbSmbClientPolicy | context_names, allow_errors, workload_names, workload_ids |
+| `GET /smb-client-policies/rules` | Get-PfbSmbClientRule | ids, context_names, allow_errors |
+| `GET /smb-share-policies` | Get-PfbSmbSharePolicy | context_names, allow_errors, workload_names, workload_ids |
+| `GET /smb-share-policies/rules` | Get-PfbSmbShareRule | ids, context_names, allow_errors |
+| `GET /snmp-agents` | Get-PfbSnmpAgent | ids, sort, names, limit |
+| `GET /snmp-managers/test` | Test-PfbSnmpManager | sort, filter, limit |
+| `GET /software-check` | Get-PfbSoftwareCheck | ids, names, software_names, total_item_count, software_versions |
+| `GET /ssh-certificate-authority-policies` | Get-PfbSshCaPolicy | context_names, allow_errors |
+| `GET /ssh-certificate-authority-policies/admins` | Get-PfbSshCaPolicyAdmin | sort, context_names, allow_errors |
+| `GET /ssh-certificate-authority-policies/arrays` | Get-PfbSshCaPolicyArray | sort, context_names, allow_errors |
+| `GET /ssh-certificate-authority-policies/members` | Get-PfbSshCaPolicyMember | sort, context_names, allow_errors |
+| `GET /sso/saml2/idps/test` | Test-PfbSaml2Idp | sort, filter, limit |
+| `GET /storage-class-tiering-policies/members` | Get-PfbStorageClassTieringPolicyMember | sort, context_names, allow_errors |
+| `GET /support` | Get-PfbSupport | ids |
+| `GET /syslog-servers` | Get-PfbSyslogServer | context_names, allow_errors |
+| `GET /targets` | Get-PfbTarget | context_names, allow_errors |
+| `GET /targets/performance/replication` | Get-PfbTargetPerformanceReplication | ids, total_only |
+| `GET /tls-policies` | Get-PfbTlsPolicy | effective, purity_defined |
+| `GET /tls-policies/members` | Get-PfbTlsPolicyMember | sort |
+| `GET /usage/groups` | Get-PfbUsageGroup | gids, group_names, context_names, file_system_ids, allow_errors |
+| `GET /usage/users` | Get-PfbUsageUser | context_names, uids, file_system_ids, user_names, allow_errors |
+| `GET /workloads` | Get-PfbWorkload | context_names, allow_errors |
+| `GET /workloads/placement-recommendations` | Get-PfbWorkloadPlacementRecommendation | context_names, allow_errors |
+| `GET /workloads/tags` | Get-PfbWorkloadTag | context_names, allow_errors |
+| `GET /worm-data-policies` | Get-PfbWormPolicy | context_names, allow_errors |
+| `GET /worm-data-policies/members` | Get-PfbWormPolicyMember | sort, context_names, allow_errors |
+| `PATCH /active-directory` | Update-PfbActiveDirectory | service_principal_names, ca_certificate_group, directory_servers, encryption_types, fqdns, global_catalog_servers, ca_certificate, join_ou, kerberos_servers |
+| `PATCH /admins` | Update-PfbAdmin | old_password, locked, authorization_model, password, management_access_policies, context_names, role, public_key |
+| `PATCH /api-clients` | Update-PfbApiClient | name, access_policies, id, max_role, access_token_ttl_in_ms, enabled, issuer, public_key, key_id |
+| `PATCH /array-connections` | Update-PfbArrayConnection | id, status, type, replication_addresses, remote_names, version, remote_ids, throttle, management_address, ca_certificate_group, context_names, os, remote, encrypted, context |
+| `PATCH /buckets/audit-filters` | Update-PfbBucketAuditFilter | s3_prefixes, bucket_names, names, bucket_ids, context_names, actions |
+| `PATCH /certificates` | Update-PfbCertificate | days, subject_alternative_names, generate_new_key, country, common_name, valid_to, intermediate_certificate, issued_by, realms, name, locality, id, state, certificate_type, organizational_unit, valid_from, certificate, key_size, status, issued_to, email, key_algorithm, private_key, organization, passphrase |
+| `PATCH /directory-services/roles` | Update-PfbDirectoryServiceRole | name, id, role_ids, group_base, management_access_policies, role, role_names, group |
+| `PATCH /dns` | Update-PfbDns | sources, realms, id, ids, ca_certificate_group, context_names, names, services, name, ca_certificate, context |
+| `PATCH /file-system-exports` | Update-PfbFileSystemExport | id, status, policy, export_name, policy_type, member, context_names, server, share_policy, name, context, enabled |
+| `PATCH /fleets` | Update-PfbFleet | name |
+| `PATCH /hardware` | Update-PfbHardware | id, status, temperature, model, sensor_readings, slot, type, management_mac, serial, part_number, index, data_mac, details, identify_enabled, name, speed |
+| `PATCH /hardware-connectors` | Update-PfbHardwareConnector | transceiver_type, name, lanes_per_port, lane_speed, id, connector_type, port_speed, port_count |
+| `PATCH /kmip` | Update-PfbKmip | ca_certificate_group, name, id, uris, ca_certificate |
+| `PATCH /legal-holds` | Update-PfbLegalHold | name, id, description, realms |
+| `PATCH /legal-holds/held-entities` | Update-PfbLegalHoldEntity | file_system_names, ids, recursive, released, file_system_ids, paths |
+| `PATCH /lifecycle-rules` | Update-PfbLifecycleRule | keep_current_version_until, keep_current_version_for, prefix, confirm_date, abort_incomplete_multipart_uploads_after, bucket_names, bucket_ids, context_names, keep_previous_version_for, enabled |
+| `PATCH /link-aggregation-groups` | Update-PfbLag | add_ports, remove_ports, ports |
+| `PATCH /log-targets/file-systems` | Update-PfbLogTargetFileSystem | name, id, keep_size, context_names, keep_for, file_system |
+| `PATCH /log-targets/object-store` | Update-PfbLogTargetObjectStore | name, log_name_prefix, id, context_names, bucket, log_rotate |
+| `PATCH /logs-async` | Update-PfbAsyncLog | name, hardware_components, processing, end_time, id, progress, last_request_time, available_files, start_time |
+| `PATCH /management-access-policies` | Update-PfbManagementAccessPolicy | id, rules, realms, name, aggregation_strategy, is_local, version, context_names, location, policy_type, context, enabled |
+| `PATCH /network-interfaces` | Update-PfbNetworkInterface | attached_servers, server, services |
+| `PATCH /network-interfaces/connectors` | Update-PfbNetworkInterfaceConnector | transceiver_type, name, lanes_per_port, lane_speed, id, connector_type, port_speed, port_count |
+| `PATCH /node-groups` | Update-PfbNodeGroup | name |
+| `PATCH /nodes` | Update-PfbNode | id, status, unique, chassis_serial_number, node_key, data_addresses, management_address, serial_number, capacity, details, raw_capacity, name |
+| `PATCH /object-store-account-exports` | Update-PfbObjectStoreAccountExport | export_enabled, context_names, policy |
+| `PATCH /object-store-remote-credentials` | Update-PfbObjectStoreRemoteCredential | name, id, secret_access_key, context, context_names, remote, access_key_id, realms |
+| `PATCH /object-store-roles` | Update-PfbObjectStoreRole | name, max_session_duration, id, prn, trusted_entities, context_names, context, created, account |
+| `PATCH /object-store-virtual-hosts` | Update-PfbObjectStoreVirtualHost | attached_servers, name, id, add_attached_servers, remove_attached_servers, hostname, context_names |
+| `PATCH /qos-policies` | Update-PfbQosPolicy | id, realms, name, max_total_ops_per_sec, is_local, context_names, max_total_bytes_per_sec, context, location, policy_type, enabled |
+| `PATCH /realms/defaults` | Update-PfbRealmDefaults | object_store, realm_names, realm_ids, realm, context_names, context |
+| `PATCH /snmp-managers` | Update-PfbSnmpManager | name, id, notification, v2c, version, v3, host |
+| `PATCH /ssh-certificate-authority-policies` | Update-PfbSshCaPolicy | id, static_authorized_principals, realms, name, is_local, signing_authority, location, policy_type, context, enabled |
+| `PATCH /sso/oidc/idps` | Update-PfbOidcIdp | name, services, idp, enabled, prn |
+| `PATCH /sso/saml2/idps` | Update-PfbSaml2Idp | id, management, array_url, idp, sp, binding, prn, services, name, enabled |
+| `PATCH /storage-class-tiering-policies` | Update-PfbStorageClassTieringPolicy | name, location, id, policy_type, retrieval_rules, enabled, archival_rules, realms, is_local |
+| `PATCH /subnets` | Update-PfbSubnet | id, link_aggregation_group, interfaces, services, name, vlan, enabled |
+| `PATCH /syslog-servers` | Update-PfbSyslogServer | uri, services, sources |
+| `PATCH /targets` | Update-PfbTarget | ca_certificate_group, name, id, status_details, status, address |
+| `PATCH /tls-policies` | Update-PfbTlsPolicy | id, verify_client_certificate_trust, client_certificates_required, name, appliance_certificate, is_local, disabled_tls_ciphers, realms, trusted_client_certificate_authority, location, policy_type, enabled_tls_ciphers, min_tls_version, enabled |
+| `PATCH /worm-data-policies` | Update-PfbWormPolicy | id, retention_lock, realms, name, min_retention, is_local, max_retention, context_names, mode, location, policy_type, default_retention, context, enabled |
+| `POST /admins/api-tokens` | New-PfbApiToken | context_names, timeout, admin_names, admin_ids |
+| `POST /admins/management-access-policies` | New-PfbAdminManagementAccessPolicy | context_names |
+| `POST /admins/ssh-certificate-authority-policies` | New-PfbAdminSshCaPolicy | context_names |
+| `POST /array-connections` | New-PfbArrayConnection | id, status, type, version, throttle, ca_certificate_group, context_names, os, remote, encrypted, context |
+| `POST /arrays/ssh-certificate-authority-policies` | New-PfbArraySshCaPolicy | context_names |
+| `POST /audit-file-systems-policies/members` | New-PfbAuditFileSystemPolicyMember | context_names |
+| `POST /audit-object-store-policies/members` | New-PfbAuditObjectStorePolicyMember | context_names |
+| `POST /certificates/certificate-groups` | New-PfbCertificateCertificateGroup | certificate_group_ids, certificate_ids |
+| `POST /data-eviction-policies/file-systems` | Add-PfbDataEvictionPolicyFileSystem | context_names |
+| `POST /file-system-replica-links/policies` | New-PfbFileSystemReplicaLinkPolicy | local_file_system_names, remote_ids, context_names, remote_names, local_file_system_ids |
+| `POST /file-systems/audit-policies` | New-PfbFileSystemAuditPolicy | context_names |
+| `POST /file-systems/policies` | New-PfbFileSystemPolicy | context_names |
+| `POST /fleets/members` | New-PfbFleetMember | fleet_ids, members |
+| `POST /legal-holds/held-entities` | New-PfbLegalHoldEntity | file_system_names, ids, names, recursive, file_system_ids, paths |
+| `POST /management-access-policies/admins` | New-PfbManagementAccessPolicyAdmin | context_names |
+| `POST /network-access-policies/rules` | New-PfbNetworkAccessRule | before_rule_name, name, effect, id, client, index, versions, before_rule_id, interfaces |
+| `POST /network-interfaces/tls-policies` | New-PfbNetworkInterfaceTlsPolicy | member_ids, policy_ids |
+| `POST /nfs-export-policies/rules` | New-PfbNfsExportRule | id, before_rule_id, policy, security, fileid_32bit, secure, client, anongid, versions, policy_version, permission, context_names, required_transport_security, atime, context, index, name, before_rule_name, anonuid, access |
+| `POST /node-groups/nodes` | New-PfbNodeGroupNode | node_names, node_group_ids, node_ids, node_group_names |
+| `POST /policies/file-system-replica-links` | New-PfbPolicyFileSystemReplicaLink | local_file_system_names, remote_ids, context_names, remote_names, local_file_system_ids |
+| `POST /policies/file-systems` | New-PfbPolicyFileSystem | context_names |
+| `POST /qos-policies/members` | New-PfbQosPolicyMember | context_names, member_types |
+| `POST /s3-export-policies/rules` | New-PfbS3ExportRule | effect, names, context_names, actions, resources |
+| `POST /smb-client-policies/rules` | New-PfbSmbClientRule | id, before_rule_id, versions, before_rule_name, permission, context_names, encryption, index, name, client |
+| `POST /smb-share-policies/rules` | New-PfbSmbShareRule | name, change, id, read, context_names, full_control, principal |
+| `POST /ssh-certificate-authority-policies/admins` | New-PfbSshCaPolicyAdmin | context_names |
+| `POST /ssh-certificate-authority-policies/arrays` | New-PfbSshCaPolicyArray | context_names |
 
 ## ValidateSet drift
 
