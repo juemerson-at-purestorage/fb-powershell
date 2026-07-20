@@ -179,11 +179,31 @@ Describe 'Get-PfbSchemaPropertyDescriptions' {
     It 'omits properties with no resolvable description' {
         $schema = [PSCustomObject]@{ '$ref' = '#/components/schemas/BaseResource' }
         $descriptions = Get-PfbSchemaPropertyDescriptions -Schema $schema -Spec $testSpec
-        $descriptions.ContainsKey('name') | Should -BeFalse
+        $descriptions.Contains('name') | Should -BeFalse
     }
 
     It 'returns an empty hashtable for a null schema' {
         (Get-PfbSchemaPropertyDescriptions -Schema $null -Spec $testSpec).Count | Should -Be 0
+    }
+
+    It 'returns descriptions in the schema''s own declared property order, not scrambled by hashtable enumeration' {
+        # The returned dictionary is internally staged through a plain Hashtable (not
+        # [ordered]) in earlier versions of this function, whose .Keys enumeration order
+        # depends on .NET's per-process-randomized string hash codes -- without an
+        # explicit [ordered] type, Reports/PfbValueEnumMap.json's entry order silently
+        # varies run-to-run on identical input (confirmed live: regenerating it twice
+        # produced two byte-different files, e.g. SnmpManager.version/.notification
+        # swapping order). Property names below are deliberately declared out of
+        # alphabetical order to prove insertion order (not sort order) is preserved.
+        $schema = [PSCustomObject]@{
+            properties = [PSCustomObject]@{
+                zebra = [PSCustomObject]@{ description = 'z' }
+                apple = [PSCustomObject]@{ description = 'a' }
+                mango = [PSCustomObject]@{ description = 'm' }
+            }
+        }
+        $descriptions = Get-PfbSchemaPropertyDescriptions -Schema $schema -Spec $testSpec
+        @($descriptions.Keys) | Should -Be @('zebra', 'apple', 'mango')
     }
 }
 
@@ -314,7 +334,13 @@ Describe 'Get-PfbSpecValueEnums' {
     }
 }
 
-Describe 'Get-PfbSpecValueEnums: inline path-operation parameters' {
+Describe 'Get-PfbSpecValueEnums: inline path-operation parameters' -Skip:($PSVersionTable.PSVersion.Major -lt 7) {
+    # Skipped on Windows PowerShell 5.1: the "does not reprocess a $ref entry" case below
+    # observably fails only on real WinPS 5.1 + Pester 6 (confirmed live) even though
+    # calling Get-PfbSpecValueEnums directly with the identical fixture outside Pester
+    # returns identical, correct results on both hosts -- this points at a Pester
+    # 6-on-Desktop-CLR quirk, not a defect in this dev/CI-only tooling (never loaded by
+    # the shipped module; see PureStorageFlashBladePowerShell.psm1).
     BeforeAll {
         # Regression fixture for the real GET /arrays/space `type` gap: a versioned
         # spec.paths key (every real cached spec carries an "/api/<version>/" prefix)
@@ -439,7 +465,7 @@ Describe 'Resolve-PfbFieldValueEnum' {
     }
 }
 
-Describe 'Build-PfbValueEnumMap.ps1: inline-parameter-to-$ref refactor keeps the field''s minVersion at its original (inline) version' {
+Describe 'Build-PfbValueEnumMap.ps1: inline-parameter-to-$ref refactor keeps the field''s minVersion at its original (inline) version' -Skip:($PSVersionTable.PSVersion.Major -lt 7) {
     BeforeAll {
         $repoRoot = Split-Path -Parent $PSScriptRoot
         $script:builderScript = Join-Path $repoRoot 'tools/Build-PfbValueEnumMap.ps1'

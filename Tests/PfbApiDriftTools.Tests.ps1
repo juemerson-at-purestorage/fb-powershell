@@ -198,6 +198,30 @@ Describe 'Get-PfbParameterCoverageGaps' {
         $result = Get-PfbParameterCoverageGaps -CapabilityMap $capMapOnlyXRid -CmdletInventory $inventory -CalledEndpoints $endpoints -ExcludedFields @('X-Request-ID')
         $result.ParameterGaps | Where-Object { $_.Endpoint -eq 'GET /widgets' } | Should -BeNullOrEmpty
     }
+
+    It 'returns MissingParameters in deterministic alphabetical order regardless of capability-map field order' {
+        # Field names deliberately declared in reverse/scrambled order below -- MissingParameters
+        # is internally staged through a plain Hashtable (not [ordered]), whose .Keys enumeration
+        # order depends on .NET's per-process-randomized string hash codes, so without an explicit
+        # sort this list's order silently varies run-to-run on identical input (confirmed live:
+        # regenerating Reports/PfbApiDriftReport.md twice produced two byte-different files for the
+        # exact same drift content). The fix must sort regardless of insertion order, so this test
+        # deliberately supplies fields already out of alphabetical order.
+        $capMapScrambled = [PSCustomObject]@{
+            endpoints = [PSCustomObject]@{
+                'GET /widgets' = [PSCustomObject]@{
+                    minVersion = '2.0'
+                    parameters = [PSCustomObject]@{ zebra = '2.0'; apple = '2.0'; mango = '2.0' }
+                    bodyProperties = [PSCustomObject]@{}
+                }
+            }
+        }
+        $endpoints = @([PSCustomObject]@{ Key = 'GET /widgets'; Method = 'GET'; Endpoint = '/widgets'; Resolved = $true; Cmdlet = 'Get-PfbFixtureWidget'; File = 'x' })
+        $inventory = @([PSCustomObject]@{ Cmdlet = 'Get-PfbFixtureWidget'; Parameter = 'Name'; Surface = 'Typed'; WireName = 'name'; HasValidateSet = $false; ValidateSetValues = $null; Endpoint = 'widgets'; Method = 'GET' })
+        $result = Get-PfbParameterCoverageGaps -CapabilityMap $capMapScrambled -CmdletInventory $inventory -CalledEndpoints $endpoints
+        $gap = $result.ParameterGaps | Where-Object { $_.Endpoint -eq 'GET /widgets' }
+        $gap.MissingParameters | Should -Be @('apple', 'mango', 'zebra')
+    }
 }
 
 Describe 'Get-PfbValidateSetDrift' {
