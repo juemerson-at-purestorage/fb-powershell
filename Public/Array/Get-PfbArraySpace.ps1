@@ -7,7 +7,8 @@ function Get-PfbArraySpace {
     .PARAMETER Array
         The FlashBlade connection object. If not specified, uses the default connection.
     .PARAMETER Type
-        Filter by space type (e.g., 'array', 'file-system', 'object-store').
+        Filter by space type. Valid values: 'array', 'file-system', 'object-store'.
+        Defaults to 'array' if not specified.
     .EXAMPLE
         Get-PfbArraySpace
     #>
@@ -17,6 +18,7 @@ function Get-PfbArraySpace {
         [PSCustomObject]$Array,
 
         [Parameter()]
+        [ValidateSet('array', 'file-system', 'object-store')]
         [string]$Type
     )
 
