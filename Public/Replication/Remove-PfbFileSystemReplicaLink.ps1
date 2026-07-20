@@ -20,7 +20,7 @@ function Remove-PfbFileSystemReplicaLink {
     .PARAMETER Array
         FlashBlade connection.
     .EXAMPLE
-        Remove-PfbFileSystemReplicaLink -LocalFileSystemName fs01 -RemoteArrayName nypure009
+        Remove-PfbFileSystemReplicaLink -LocalFileSystemName fs01 -RemoteArrayName remote-fb
     #>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High', DefaultParameterSetName = 'ByName')]
     param(

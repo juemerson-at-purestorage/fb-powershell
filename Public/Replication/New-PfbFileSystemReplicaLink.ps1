@@ -29,10 +29,10 @@ function New-PfbFileSystemReplicaLink {
     .EXAMPLE
         New-PfbFileSystemReplicaLink -Array $sourceFb `
             -LocalFileSystemName 'project-data' `
-            -RemoteArrayName 'nypure009'
+            -RemoteArrayName 'remote-fb'
     .EXAMPLE
         New-PfbFileSystemReplicaLink -Array $sourceFb `
-            -LocalFileSystemName 'fs01' -RemoteArrayName 'nypure009' `
+            -LocalFileSystemName 'fs01' -RemoteArrayName 'remote-fb' `
             -RemoteFileSystemName 'fs01-dr'
     #>
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
