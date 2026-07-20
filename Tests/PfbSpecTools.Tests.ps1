@@ -18,7 +18,11 @@ BeforeAll {
     $script:fixtureHtml = Get-Content -Path $fixturePath -Raw
 }
 
-Describe 'ConvertFrom-PfbRedocHtml' {
+Describe 'ConvertFrom-PfbRedocHtml' -Skip:($PSVersionTable.PSVersion.Major -lt 7) {
+    # ConvertFrom-PfbRedocHtml (tools/lib/PfbSpecTools.ps1) calls ConvertFrom-Json -Depth,
+    # which does not exist on Windows PowerShell 5.1 (added in PS6) -- this function is
+    # dev/CI-only tooling never loaded by the shipped module (see PureStorageFlashBladePowerShell.psm1,
+    # which only sources Private/ and Public/), so it's out of scope for 5.1 support.
     It 'extracts the embedded OpenAPI document' {
         $spec = ConvertFrom-PfbRedocHtml -Html $fixtureHtml
         $spec.openapi | Should -Be '3.0.1'

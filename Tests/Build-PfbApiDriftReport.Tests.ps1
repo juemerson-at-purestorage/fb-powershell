@@ -95,7 +95,7 @@ function Get-PfbFixtureArrayPerformance {
     $script:manifest = Get-Content -Path $outputPath -Raw | ConvertFrom-Json -Depth 20
 }
 
-Describe 'Build-PfbApiDriftReport' {
+Describe 'Build-PfbApiDriftReport' -Skip:($PSVersionTable.PSVersion.Major -lt 7) {
     It 'category 1: flags GET /gadgets as an uncovered endpoint' {
         ($manifest.uncoveredEndpoints | Where-Object { $_.endpoint -eq 'GET /gadgets' }) | Should -Not -BeNullOrEmpty
     }
@@ -139,7 +139,7 @@ Describe 'Build-PfbApiDriftReport' {
     }
 }
 
-Describe 'Build-PfbApiDriftReport -SinceVersion filter' {
+Describe 'Build-PfbApiDriftReport -SinceVersion filter' -Skip:($PSVersionTable.PSVersion.Major -lt 7) {
     BeforeAll {
         $script:filteredOutputPath = Join-Path $TestDrive 'output/PfbApiDriftReportSince.json'
         $script:filteredReportPath = Join-Path $TestDrive 'output/PfbApiDriftReportSince.md'
@@ -172,7 +172,7 @@ Describe 'Build-PfbApiDriftReport -SinceVersion filter' {
     }
 }
 
-Describe 'Build-PfbApiDriftReport (real generated artifacts, skips gracefully if absent)' {
+Describe 'Build-PfbApiDriftReport (real generated artifacts, skips gracefully if absent)' -Skip:($PSVersionTable.PSVersion.Major -lt 7) {
     It 'produces a manifest against the real Public/Private tree and Reports/ + Data/ inputs' {
         $realCapabilityMapPath = Join-Path $repoRoot 'Data/PfbCapabilityMap.json'
         $realFieldCmdletMapPath = Join-Path $repoRoot 'Reports/PfbFieldCmdletMap.json'
