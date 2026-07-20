@@ -89,7 +89,7 @@ $uncoveredEndpoints = @(Get-PfbEndpointCoverageGaps -CapabilityMap $capabilityMa
     ForEach-Object { [ordered]@{ endpoint = $_.Endpoint; minVersion = $_.MinVersion } })
 
 # --- Category 2 ---
-$category2 = Get-PfbParameterCoverageGaps -CapabilityMap $capabilityMap -CmdletInventory $inventory -CalledEndpoints $calledEndpoints -SinceVersion $SinceVersion
+$category2 = Get-PfbParameterCoverageGaps -CapabilityMap $capabilityMap -CmdletInventory $inventory -CalledEndpoints $calledEndpoints -SinceVersion $SinceVersion -ExcludedFields $script:PfbNonActionableParameters
 $parameterGaps = @($category2.ParameterGaps | ForEach-Object { [ordered]@{ endpoint = $_.Endpoint; cmdlets = @($_.Cmdlets); missingParameters = @($_.MissingParameters) } })
 $notVerifiedEndpoints = @($category2.NotVerified | ForEach-Object { [ordered]@{ endpoint = $_.Endpoint; cmdlets = @($_.Cmdlets); reason = $_.Reason } })
 

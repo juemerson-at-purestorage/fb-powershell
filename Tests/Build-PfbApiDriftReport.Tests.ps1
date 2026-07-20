@@ -68,7 +68,7 @@ function Get-PfbFixtureArrayPerformance {
         schemaVersion = 1
         generatedFrom = @('9.0', '9.1')
         endpoints     = [ordered]@{
-            'GET /arrays/performance' = [ordered]@{ minVersion = '9.0'; parameters = [ordered]@{ protocol = '9.0'; region = '9.0'; timezone = '9.1' }; bodyProperties = [ordered]@{} }
+            'GET /arrays/performance' = [ordered]@{ minVersion = '9.0'; parameters = [ordered]@{ protocol = '9.0'; region = '9.0'; timezone = '9.1'; 'X-Request-ID' = '9.0'; continuation_token = '9.0'; offset = '9.0' }; bodyProperties = [ordered]@{} }
             'GET /gadgets'            = [ordered]@{ minVersion = '9.1'; parameters = [ordered]@{}; bodyProperties = [ordered]@{} }
             'GET /widgets'            = [ordered]@{ minVersion = '9.0'; parameters = [ordered]@{}; bodyProperties = [ordered]@{} }
         }
@@ -123,6 +123,19 @@ Describe 'Build-PfbApiDriftReport' {
     It 'without -SinceVersion, sinceVersion is not set and older gaps are present' {
         $manifest.sinceVersion | Should -BeNullOrEmpty
         ($manifest.uncoveredEndpoints | Where-Object { $_.endpoint -eq 'GET /widgets' }) | Should -Not -BeNullOrEmpty
+    }
+
+    It 'never reports X-Request-ID as a missing parameter, even though the fixture endpoint has it' {
+        $gap = $manifest.parameterGaps | Where-Object { $_.endpoint -eq 'GET /arrays/performance' }
+        $gap.missingParameters | Should -Not -Contain 'X-Request-ID'
+        $gap.missingParameters | Should -Contain 'region'
+    }
+
+    It 'never reports continuation_token or offset as a missing parameter, even though the fixture endpoint has both' {
+        $gap = $manifest.parameterGaps | Where-Object { $_.endpoint -eq 'GET /arrays/performance' }
+        $gap.missingParameters | Should -Not -Contain 'continuation_token'
+        $gap.missingParameters | Should -Not -Contain 'offset'
+        $gap.missingParameters | Should -Contain 'region'
     }
 }
 
