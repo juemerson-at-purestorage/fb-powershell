@@ -1,6 +1,6 @@
 @{
     RootModule        = 'PureStorageFlashBladePowerShell.psm1'
-    ModuleVersion     = '2.1.1'
+    ModuleVersion     = '2.1.2'
     GUID              = 'b25473b3-9eb7-414d-8da1-264e10f73d86'
     Author            = 'Pure Storage, Inc.'
     CompanyName       = 'Pure Storage, Inc.'
@@ -260,7 +260,6 @@
         'New-PfbManagementAccessPolicy',
         'New-PfbManagementAccessPolicyAdmin',
         'New-PfbManagementAccessPolicyDirectoryRole',
-        'New-PfbNetworkAccessPolicy',
         'New-PfbNetworkAccessRule',
         'New-PfbNetworkInterface',
         'New-PfbNetworkInterfaceTlsPolicy',
@@ -364,7 +363,6 @@
         'Remove-PfbManagementAccessPolicy',
         'Remove-PfbManagementAccessPolicyAdmin',
         'Remove-PfbManagementAccessPolicyDirectoryRole',
-        'Remove-PfbNetworkAccessPolicy',
         'Remove-PfbNetworkAccessRule',
         'Remove-PfbNetworkInterface',
         'Remove-PfbNetworkInterfaceTlsPolicy',
@@ -402,7 +400,6 @@
         'Remove-PfbS3ExportRule',
         'Remove-PfbSaml2Idp',
         'Remove-PfbServer',
-        'Remove-PfbSession',
         'Remove-PfbSmbClientPolicy',
         'Remove-PfbSmbClientRule',
         'Remove-PfbSmbSharePolicy',
@@ -551,6 +548,12 @@
             LicenseUri   = 'https://github.com/PureStorage-OpenConnect/flashblade-powershell/blob/main/LICENSE'
             # ReleaseNotes carries only the latest-version highlight; full history is in CHANGELOG.md.
             ReleaseNotes = @'
+v2.1.2 - API-drift cleanup. Removes three cmdlets that modeled endpoints that never
+  existed in the FlashBlade API and always returned HTTP 405 (Remove-PfbSession,
+  New-/Remove-PfbNetworkAccessPolicy; network-access policy *rules* remain fully
+  supported via New-/Remove-PfbNetworkAccessRule). Also fixes parameter ValidateSets
+  on Get-PfbArrayPerformance -Protocol and New-PfbAlertWatcher -MinimumSeverity.
+
 v2.1.1 - Cross-platform + Windows PowerShell 5.1 fixes.
   Fixes a SecureString password truncation on Linux/macOS (affected encrypted-key JWT
   signing and native username/password login, which silently used only the first

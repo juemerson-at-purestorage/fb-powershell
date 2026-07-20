@@ -2,6 +2,36 @@
 
 All notable changes to `PureStorageFlashBladePowerShell` are documented in this file.
 
+## [2.1.2] - 2026-07-20
+
+API-drift cleanup: parameter-validation fixes and removal of three cmdlets that
+never worked. Surfaced by the automated API drift report (module cross-checked
+against the FlashBlade OpenAPI specs, REST 2.0-2.27).
+
+### Removed
+
+- Three cmdlets that modeled REST endpoints that **never existed** in any FlashBlade
+  API version (2.0-2.27) and always returned HTTP 405: `Remove-PfbSession`,
+  `New-PfbNetworkAccessPolicy`, `Remove-PfbNetworkAccessPolicy`. FlashBlade sessions
+  are read-only (`puresession` is list-only) and network-access policies are a fixed
+  built-in set (no create/delete) - only their *rules* are mutable, which is already
+  covered by `New-`/`Remove-PfbNetworkAccessRule`. Because these cmdlets never
+  succeeded, no working script depended on them.
+
+### Fixed
+
+- `Get-PfbArrayPerformance -Protocol`: added the documented `all` value (was missing
+  from the ValidateSet, so a valid call was rejected client-side).
+- `New-PfbAlertWatcher -MinimumSeverity`: removed the invalid `error` value (not a
+  valid severity; the array would reject it).
+- `New-PfbQuotaUser`: fixed a test that could hang on an interactive prompt when
+  neither `-UserName` nor `-UserId` was supplied.
+
+### Added
+
+- `Get-PfbArraySpace -Type`: added a ValidateSet (`array`, `file-system`,
+  `object-store`) matching the spec.
+
 ## [2.1.1] - 2026-07-15
 
 Cross-platform and Windows PowerShell 5.1 fixes.
