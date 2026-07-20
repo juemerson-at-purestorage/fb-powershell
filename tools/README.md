@@ -73,6 +73,16 @@ Run in this order:
    ./tools/Build-PfbApiDriftReport.ps1
    ```
 
+   Pass `-SinceVersion` to isolate what a single new REST release actually added instead
+   of the full accumulated backlog -- e.g. after 2.27 ships, `-SinceVersion '2.26'` filters
+   `uncoveredEndpoints`/`parameterGaps` down to just the items introduced by 2.27. Only
+   those two categories support it: `validateSetDrift`/`newValidateSetCandidates` don't
+   carry a per-value introduced-version in the capability map to filter on.
+
+   ```powershell
+   ./tools/Build-PfbApiDriftReport.ps1 -SinceVersion '2.26'
+   ```
+
 ## What's deliberately NOT in the capability map
 
 The FlashBlade OpenAPI spec has no structural JSON Schema `enum` anywhere — verified

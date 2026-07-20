@@ -114,6 +114,16 @@ Describe 'Get-PfbEndpointCoverageGaps' {
         $gaps = Get-PfbEndpointCoverageGaps -CapabilityMap $capabilityMap -CalledEndpoints $calledEndpoints -BespokeAllowlist @('POST /api/login')
         ($gaps | Where-Object { $_.Endpoint -eq 'POST /api/login' }) | Should -BeNullOrEmpty
     }
+
+    It 'with -SinceVersion, excludes a gap endpoint introduced at or before that version' {
+        $gaps = Get-PfbEndpointCoverageGaps -CapabilityMap $capabilityMap -CalledEndpoints $calledEndpoints -SinceVersion '2.20'
+        ($gaps | Where-Object { $_.Endpoint -eq 'GET /gadgets' }) | Should -BeNullOrEmpty
+    }
+
+    It 'with -SinceVersion, keeps a gap endpoint introduced after that version' {
+        $gaps = Get-PfbEndpointCoverageGaps -CapabilityMap $capabilityMap -CalledEndpoints $calledEndpoints -SinceVersion '2.20'
+        ($gaps | Where-Object { $_.Endpoint -eq 'POST /api/login' }) | Should -Not -BeNullOrEmpty
+    }
 }
 
 Describe 'Bespoke auth-endpoint allowlist (real, confirmed by reading Private/ + Connect-PfbArray.ps1)' {
@@ -141,6 +151,19 @@ Describe 'Get-PfbParameterCoverageGaps' {
         $result = Get-PfbParameterCoverageGaps -CapabilityMap $capMapWithWidgets -CmdletInventory $notFullyMappedInventory -CalledEndpoints $endpoints
         $result.ParameterGaps | Where-Object { $_.Endpoint -eq 'GET /widgets' } | Should -BeNullOrEmpty
         ($result.NotVerified | Where-Object { $_.Endpoint -eq 'GET /widgets' }).Reason | Should -Be 'has attributes/unresolved surface'
+    }
+
+    It 'with -SinceVersion, keeps a missing parameter introduced after that version' {
+        $endpoints = @([PSCustomObject]@{ Key = 'GET /arrays/space'; Method = 'GET'; Endpoint = '/arrays/space'; Resolved = $true; Cmdlet = 'Get-PfbFixtureArraySpace'; File = 'x' })
+        $result = Get-PfbParameterCoverageGaps -CapabilityMap $capabilityMap -CmdletInventory $fullyMappedInventory -CalledEndpoints $endpoints -SinceVersion '2.0'
+        $gap = $result.ParameterGaps | Where-Object { $_.Endpoint -eq 'GET /arrays/space' }
+        $gap.MissingParameters | Should -Contain 'new_field'
+    }
+
+    It 'with -SinceVersion, drops a gap whose only missing parameter was introduced at or before that version' {
+        $endpoints = @([PSCustomObject]@{ Key = 'GET /arrays/space'; Method = 'GET'; Endpoint = '/arrays/space'; Resolved = $true; Cmdlet = 'Get-PfbFixtureArraySpace'; File = 'x' })
+        $result = Get-PfbParameterCoverageGaps -CapabilityMap $capabilityMap -CmdletInventory $fullyMappedInventory -CalledEndpoints $endpoints -SinceVersion '2.27'
+        $result.ParameterGaps | Where-Object { $_.Endpoint -eq 'GET /arrays/space' } | Should -BeNullOrEmpty
     }
 }
 
