@@ -1262,26 +1262,6 @@
       "recommendation": null
     },
     {
-      "cmdlet": "Remove-PfbSession",
-      "parameter": "Name",
-      "wireName": "names",
-      "status": "no-spec-enum-found",
-      "matchedKey": null,
-      "specValues": null,
-      "stableSinceOldestVersion": null,
-      "recommendation": null
-    },
-    {
-      "cmdlet": "Remove-PfbSession",
-      "parameter": "Id",
-      "wireName": "ids",
-      "status": "no-spec-enum-found",
-      "matchedKey": null,
-      "specValues": null,
-      "stableSinceOldestVersion": null,
-      "recommendation": null
-    },
-    {
       "cmdlet": "Test-PfbSaml2Idp",
       "parameter": "Name",
       "wireName": "names",
@@ -2000,20 +1980,6 @@
       "specValues": null,
       "stableSinceOldestVersion": null,
       "recommendation": null
-    },
-    {
-      "cmdlet": "Get-PfbArraySpace",
-      "parameter": "Type",
-      "wireName": "type",
-      "status": "matched",
-      "matchedKey": "GET arrays/space#type",
-      "specValues": [
-        "array",
-        "file-system",
-        "object-store"
-      ],
-      "stableSinceOldestVersion": true,
-      "recommendation": "ValidateSet"
     },
     {
       "cmdlet": "Get-PfbArraySshCaPolicy",
@@ -12456,26 +12422,6 @@
       "recommendation": null
     },
     {
-      "cmdlet": "Remove-PfbNetworkAccessPolicy",
-      "parameter": "Name",
-      "wireName": "names",
-      "status": "no-spec-enum-found",
-      "matchedKey": null,
-      "specValues": null,
-      "stableSinceOldestVersion": null,
-      "recommendation": null
-    },
-    {
-      "cmdlet": "Remove-PfbNetworkAccessPolicy",
-      "parameter": "Id",
-      "wireName": "ids",
-      "status": "no-spec-enum-found",
-      "matchedKey": null,
-      "specValues": null,
-      "stableSinceOldestVersion": null,
-      "recommendation": null
-    },
-    {
       "cmdlet": "Remove-PfbNetworkAccessRule",
       "parameter": "PolicyName",
       "wireName": "policy_names",
@@ -15755,14 +15701,6 @@
     },
     {
       "cmdlet": "New-PfbAuditObjectStorePolicy",
-      "parameter": "Enabled"
-    },
-    {
-      "cmdlet": "New-PfbNetworkAccessPolicy",
-      "parameter": "Name"
-    },
-    {
-      "cmdlet": "New-PfbNetworkAccessPolicy",
       "parameter": "Enabled"
     },
     {

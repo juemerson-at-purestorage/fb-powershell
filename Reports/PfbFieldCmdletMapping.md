@@ -6,18 +6,19 @@ Reporting only -- no `Public/` cmdlet is edited by this script. Every `matched` 
 
 ## Summary
 
-- matched: 1
+- matched: 0
 - collision: 0
 - not-found-in-resource: 2
-- no-spec-enum-found: 1537
+- no-spec-enum-found: 1533
+
+No `matched` candidates this run -- this can be a genuinely correct result (most typed parameters without a `ValidateSet` are generic non-enum fields like filter/sort/limit/names/ids, not spec-documented enums) rather than a sign the tool found nothing useful. See the `collision`/`not-found-in-resource` rows below for what *is* actionable.
 
 | Cmdlet | Parameter | Wire name | Status | Spec values | Recommendation |
 |---|---|---|---|---|---|
-| `Get-PfbArraySpace` | `-Type` | type | matched | array, file-system, object-store | ValidateSet |
 | `Update-PfbDataEvictionPolicy` | `-NewName` | name | not-found-in-resource |  |  |
 | `Update-PfbWorkload` | `-NewName` | name | not-found-in-resource |  |  |
 
-## Attributes-only parameters (no typed field to attach either mechanism to): 131
+## Attributes-only parameters (no typed field to attach either mechanism to): 129
 
 - `New-PfbApiClient -Name`
 - `New-PfbManagementAccessPolicy -Name`
@@ -99,8 +100,6 @@ Reporting only -- no `Public/` cmdlet is edited by this script. Every `matched` 
 - `New-PfbAuditFileSystemPolicy -Enabled`
 - `New-PfbAuditObjectStorePolicy -Name`
 - `New-PfbAuditObjectStorePolicy -Enabled`
-- `New-PfbNetworkAccessPolicy -Name`
-- `New-PfbNetworkAccessPolicy -Enabled`
 - `New-PfbNfsExportPolicy -Name`
 - `New-PfbNfsExportPolicy -Enabled`
 - `New-PfbPolicy -Name`

@@ -267,15 +267,6 @@
       "kind": "schema",
       "name": "version"
     },
-    "SnmpManager.version": {
-      "values": [
-        "v2c",
-        "v3"
-      ],
-      "minVersion": "2.0",
-      "kind": "schema",
-      "name": "version"
-    },
     "SnmpManager.notification": {
       "values": [
         "inform",
@@ -284,6 +275,15 @@
       "minVersion": "2.0",
       "kind": "schema",
       "name": "notification"
+    },
+    "SnmpManager.version": {
+      "values": [
+        "v2c",
+        "v3"
+      ],
+      "minVersion": "2.0",
+      "kind": "schema",
+      "name": "version"
     },
     "Support.remote_assist_status": {
       "values": [
@@ -410,15 +410,6 @@
       "kind": "inline-parameter",
       "name": "member_types"
     },
-    "NfsExportPolicyRule.permission": {
-      "values": [
-        "rw",
-        "ro"
-      ],
-      "minVersion": "2.3",
-      "kind": "schema",
-      "name": "permission"
-    },
     "NfsExportPolicyRule.access": {
       "values": [
         "root-squash",
@@ -428,6 +419,28 @@
       "minVersion": "2.3",
       "kind": "schema",
       "name": "access"
+    },
+    "NfsExportPolicyRule.permission": {
+      "values": [
+        "rw",
+        "ro"
+      ],
+      "minVersion": "2.3",
+      "kind": "schema",
+      "name": "permission"
+    },
+    "Session.event": {
+      "values": [
+        "failed authentication",
+        "user session",
+        "login",
+        "logout",
+        "API token obtained",
+        "request without session"
+      ],
+      "minVersion": "2.3",
+      "kind": "schema",
+      "name": "event"
     },
     "Session.method": {
       "values": [
@@ -449,19 +462,6 @@
       "minVersion": "2.3",
       "kind": "schema",
       "name": "user_interface"
-    },
-    "Session.event": {
-      "values": [
-        "failed authentication",
-        "user session",
-        "login",
-        "logout",
-        "API token obtained",
-        "request without session"
-      ],
-      "minVersion": "2.3",
-      "kind": "schema",
-      "name": "event"
     },
     "Drive.status": {
       "values": [
@@ -542,15 +542,6 @@
       "kind": "schema",
       "name": "access_type"
     },
-    "FileSession.protocol": {
-      "values": [
-        "nfs",
-        "smb"
-      ],
-      "minVersion": "2.10",
-      "kind": "schema",
-      "name": "protocol"
-    },
     "FileSession.authentication": {
       "values": [
         "KRB",
@@ -559,6 +550,15 @@
       "minVersion": "2.10",
       "kind": "schema",
       "name": "authentication"
+    },
+    "FileSession.protocol": {
+      "values": [
+        "nfs",
+        "smb"
+      ],
+      "minVersion": "2.10",
+      "kind": "schema",
+      "name": "protocol"
     },
     "SmbClientPolicyRule.permission": {
       "values": [
@@ -643,6 +643,15 @@
       "kind": "schema",
       "name": "group_ownership"
     },
+    "NetworkAccessPolicyRule.effect": {
+      "values": [
+        "allow",
+        "deny"
+      ],
+      "minVersion": "2.13",
+      "kind": "schema",
+      "name": "effect"
+    },
     "NetworkAccessPolicyRule.interfaces": {
       "values": [
         "management-ssh",
@@ -654,15 +663,6 @@
       "minVersion": "2.13",
       "kind": "schema",
       "name": "interfaces"
-    },
-    "NetworkAccessPolicyRule.effect": {
-      "values": [
-        "allow",
-        "deny"
-      ],
-      "minVersion": "2.13",
-      "kind": "schema",
-      "name": "effect"
     },
     "AuditFileSystemsPolicies.policy_type": {
       "values": [
@@ -705,15 +705,6 @@
       "kind": "schema",
       "name": "encryption_mode"
     },
-    "WormDataPolicy.retention_lock": {
-      "values": [
-        "unlocked",
-        "locked"
-      ],
-      "minVersion": "2.15",
-      "kind": "schema",
-      "name": "retention_lock"
-    },
     "WormDataPolicy.policy_type": {
       "values": [
         "snapshot",
@@ -722,6 +713,15 @@
       "minVersion": "2.15",
       "kind": "schema",
       "name": "policy_type"
+    },
+    "WormDataPolicy.retention_lock": {
+      "values": [
+        "unlocked",
+        "locked"
+      ],
+      "minVersion": "2.15",
+      "kind": "schema",
+      "name": "retention_lock"
     },
     "FileSystemExport.status": {
       "values": [
@@ -778,15 +778,6 @@
       "kind": "schema",
       "name": "effect"
     },
-    "NfsExportPolicyRuleInPolicy.permission": {
-      "values": [
-        "rw",
-        "ro"
-      ],
-      "minVersion": "2.17",
-      "kind": "schema",
-      "name": "permission"
-    },
     "NfsExportPolicyRuleInPolicy.access": {
       "values": [
         "root-squash",
@@ -797,7 +788,7 @@
       "kind": "schema",
       "name": "access"
     },
-    "NfsExportPolicyRuleBase.permission": {
+    "NfsExportPolicyRuleInPolicy.permission": {
       "values": [
         "rw",
         "ro"
@@ -816,18 +807,18 @@
       "kind": "schema",
       "name": "access"
     },
-    "TrustPolicyRuleWithContext.effect": {
+    "NfsExportPolicyRuleBase.permission": {
       "values": [
-        "allow"
+        "rw",
+        "ro"
       ],
       "minVersion": "2.17",
       "kind": "schema",
-      "name": "effect"
+      "name": "permission"
     },
-    "NetworkAccessPolicyRulePostBase.effect": {
+    "TrustPolicyRuleWithContext.effect": {
       "values": [
-        "allow",
-        "deny"
+        "allow"
       ],
       "minVersion": "2.17",
       "kind": "schema",
@@ -844,6 +835,15 @@
       "minVersion": "2.17",
       "kind": "schema",
       "name": "interfaces"
+    },
+    "NetworkAccessPolicyRulePostBase.effect": {
+      "values": [
+        "allow",
+        "deny"
+      ],
+      "minVersion": "2.17",
+      "kind": "schema",
+      "name": "effect"
     },
     "NetworkAccessPolicyRuleBase.interfaces": {
       "values": [
@@ -954,15 +954,6 @@
       "kind": "schema",
       "name": "effect"
     },
-    "SnmpManagerPost.version": {
-      "values": [
-        "v2c",
-        "v3"
-      ],
-      "minVersion": "2.17",
-      "kind": "schema",
-      "name": "version"
-    },
     "SnmpManagerPost.notification": {
       "values": [
         "inform",
@@ -972,14 +963,14 @@
       "kind": "schema",
       "name": "notification"
     },
-    "SmbSharePolicyRulePost.change": {
+    "SnmpManagerPost.version": {
       "values": [
-        "allow",
-        "deny"
+        "v2c",
+        "v3"
       ],
       "minVersion": "2.17",
       "kind": "schema",
-      "name": "change"
+      "name": "version"
     },
     "SmbSharePolicyRulePost.full_control": {
       "values": [
@@ -998,6 +989,15 @@
       "minVersion": "2.17",
       "kind": "schema",
       "name": "read"
+    },
+    "SmbSharePolicyRulePost.change": {
+      "values": [
+        "allow",
+        "deny"
+      ],
+      "minVersion": "2.17",
+      "kind": "schema",
+      "name": "change"
     },
     "SyslogServerContext.services": {
       "values": [
@@ -1026,15 +1026,6 @@
       "kind": "schema",
       "name": "promotion_status"
     },
-    "FileSystemPatch.group_ownership": {
-      "values": [
-        "creator",
-        "parent-directory"
-      ],
-      "minVersion": "2.17",
-      "kind": "schema",
-      "name": "group_ownership"
-    },
     "FileSystemPatch.requested_promotion_state": {
       "values": [
         "promoted",
@@ -1043,6 +1034,15 @@
       "minVersion": "2.17",
       "kind": "schema",
       "name": "requested_promotion_state"
+    },
+    "FileSystemPatch.group_ownership": {
+      "values": [
+        "creator",
+        "parent-directory"
+      ],
+      "minVersion": "2.17",
+      "kind": "schema",
+      "name": "group_ownership"
     },
     "SmbClientPolicyRuleBase.encryption": {
       "values": [
@@ -1124,15 +1124,6 @@
       "kind": "schema",
       "name": "resource_type"
     },
-    "SmbClientPolicyRulePostBase.permission": {
-      "values": [
-        "rw",
-        "ro"
-      ],
-      "minVersion": "2.17",
-      "kind": "schema",
-      "name": "permission"
-    },
     "SmbClientPolicyRulePostBase.encryption": {
       "values": [
         "required",
@@ -1143,14 +1134,14 @@
       "kind": "schema",
       "name": "encryption"
     },
-    "_snmp_v3.privacy_protocol": {
+    "SmbClientPolicyRulePostBase.permission": {
       "values": [
-        "AES",
-        "DES"
+        "rw",
+        "ro"
       ],
       "minVersion": "2.17",
       "kind": "schema",
-      "name": "privacy_protocol"
+      "name": "permission"
     },
     "_snmp_v3.auth_protocol": {
       "values": [
@@ -1160,6 +1151,15 @@
       "minVersion": "2.17",
       "kind": "schema",
       "name": "auth_protocol"
+    },
+    "_snmp_v3.privacy_protocol": {
+      "values": [
+        "AES",
+        "DES"
+      ],
+      "minVersion": "2.17",
+      "kind": "schema",
+      "name": "privacy_protocol"
     },
     "_supportDiagnosticsSeverityCount.severity": {
       "values": [
@@ -1211,15 +1211,6 @@
       "kind": "schema",
       "name": "status"
     },
-    "_bucketEradicationConfig.manual_eradication": {
-      "values": [
-        "disabled",
-        "enabled"
-      ],
-      "minVersion": "2.17",
-      "kind": "schema",
-      "name": "manual_eradication"
-    },
     "_bucketEradicationConfig.eradication_mode": {
       "values": [
         "permission-based",
@@ -1228,6 +1219,15 @@
       "minVersion": "2.17",
       "kind": "schema",
       "name": "eradication_mode"
+    },
+    "_bucketEradicationConfig.manual_eradication": {
+      "values": [
+        "disabled",
+        "enabled"
+      ],
+      "minVersion": "2.17",
+      "kind": "schema",
+      "name": "manual_eradication"
     },
     "ActiveDirectoryPost.encryption_types": {
       "values": [
@@ -1257,15 +1257,6 @@
       "kind": "schema",
       "name": "group_ownership"
     },
-    "NetworkInterfacesConnectorsSettingRoce.trust_mode": {
-      "values": [
-        "pcp",
-        "dscp"
-      ],
-      "minVersion": "2.17",
-      "kind": "schema",
-      "name": "trust_mode"
-    },
     "NetworkInterfacesConnectorsSettingRoce.network_congestion_mode": {
       "values": [
         "lossy",
@@ -1274,6 +1265,15 @@
       "minVersion": "2.17",
       "kind": "schema",
       "name": "network_congestion_mode"
+    },
+    "NetworkInterfacesConnectorsSettingRoce.trust_mode": {
+      "values": [
+        "pcp",
+        "dscp"
+      ],
+      "minVersion": "2.17",
+      "kind": "schema",
+      "name": "trust_mode"
     },
     "_multiProtocolPost.access_control_style": {
       "values": [
@@ -1337,15 +1337,6 @@
       "kind": "schema",
       "name": "default_retention_mode"
     },
-    "_snmp_v3_post.privacy_protocol": {
-      "values": [
-        "AES",
-        "DES"
-      ],
-      "minVersion": "2.17",
-      "kind": "schema",
-      "name": "privacy_protocol"
-    },
     "_snmp_v3_post.auth_protocol": {
       "values": [
         "MD5",
@@ -1355,14 +1346,14 @@
       "kind": "schema",
       "name": "auth_protocol"
     },
-    "_objectLockConfigResponse.default_retention": {
+    "_snmp_v3_post.privacy_protocol": {
       "values": [
-        "86400000",
-        "3153600000000"
+        "AES",
+        "DES"
       ],
       "minVersion": "2.17",
       "kind": "schema",
-      "name": "default_retention"
+      "name": "privacy_protocol"
     },
     "_objectLockConfigResponse.default_retention_mode": {
       "values": [
@@ -1372,6 +1363,15 @@
       "minVersion": "2.17",
       "kind": "schema",
       "name": "default_retention_mode"
+    },
+    "_objectLockConfigResponse.default_retention": {
+      "values": [
+        "86400000",
+        "3153600000000"
+      ],
+      "minVersion": "2.17",
+      "kind": "schema",
+      "name": "default_retention"
     },
     "ArrayConnection.type": {
       "values": [
@@ -1411,15 +1411,6 @@
       "kind": "schema",
       "name": "minimum_notification_severity"
     },
-    "CertificatePost.status": {
-      "values": [
-        "self-signed",
-        "imported"
-      ],
-      "minVersion": "2.17",
-      "kind": "schema",
-      "name": "status"
-    },
     "CertificatePost.certificate_type": {
       "values": [
         "appliance",
@@ -1428,6 +1419,15 @@
       "minVersion": "2.17",
       "kind": "schema",
       "name": "certificate_type"
+    },
+    "CertificatePost.status": {
+      "values": [
+        "self-signed",
+        "imported"
+      ],
+      "minVersion": "2.17",
+      "kind": "schema",
+      "name": "status"
     },
     "SmbClientPolicyRulePostInPolicy.encryption": {
       "values": [
@@ -1474,15 +1474,6 @@
       "kind": "schema",
       "name": "retention_lock"
     },
-    "SmbSharePolicyRuleWithContext.change": {
-      "values": [
-        "allow",
-        "deny"
-      ],
-      "minVersion": "2.17",
-      "kind": "schema",
-      "name": "change"
-    },
     "SmbSharePolicyRuleWithContext.full_control": {
       "values": [
         "allow",
@@ -1500,6 +1491,15 @@
       "minVersion": "2.17",
       "kind": "schema",
       "name": "read"
+    },
+    "SmbSharePolicyRuleWithContext.change": {
+      "values": [
+        "allow",
+        "deny"
+      ],
+      "minVersion": "2.17",
+      "kind": "schema",
+      "name": "change"
     },
     "_arrayEradicationConfig.eradication_delay": {
       "values": [
@@ -1560,15 +1560,6 @@
       "kind": "schema",
       "name": "services"
     },
-    "_objectLockConfigRequestBody.default_retention": {
-      "values": [
-        "86400000",
-        "3153600000000"
-      ],
-      "minVersion": "2.17",
-      "kind": "schema",
-      "name": "default_retention"
-    },
     "_objectLockConfigRequestBody.default_retention_mode": {
       "values": [
         "compliance",
@@ -1577,6 +1568,15 @@
       "minVersion": "2.17",
       "kind": "schema",
       "name": "default_retention_mode"
+    },
+    "_objectLockConfigRequestBody.default_retention": {
+      "values": [
+        "86400000",
+        "3153600000000"
+      ],
+      "minVersion": "2.17",
+      "kind": "schema",
+      "name": "default_retention"
     },
     "SmbClientPolicyRulePost.encryption": {
       "values": [
@@ -1802,15 +1802,6 @@
       "kind": "parameter",
       "name": "protocol"
     },
-    "CertificatePatch.status": {
-      "values": [
-        "self-signed",
-        "imported"
-      ],
-      "minVersion": "2.20",
-      "kind": "schema",
-      "name": "status"
-    },
     "CertificatePatch.certificate_type": {
       "values": [
         "appliance",
@@ -1819,6 +1810,15 @@
       "minVersion": "2.20",
       "kind": "schema",
       "name": "certificate_type"
+    },
+    "CertificatePatch.status": {
+      "values": [
+        "self-signed",
+        "imported"
+      ],
+      "minVersion": "2.20",
+      "kind": "schema",
+      "name": "status"
     },
     "_certificateBase.certificate_type": {
       "values": [
@@ -1864,15 +1864,6 @@
       "kind": "schema",
       "name": "type"
     },
-    "NfsExportPolicyRulePatch.permission": {
-      "values": [
-        "rw",
-        "ro"
-      ],
-      "minVersion": "2.22",
-      "kind": "schema",
-      "name": "permission"
-    },
     "NfsExportPolicyRulePatch.access": {
       "values": [
         "root-squash",
@@ -1883,16 +1874,16 @@
       "kind": "schema",
       "name": "access"
     },
-    "PolicyPost.retention_lock": {
+    "NfsExportPolicyRulePatch.permission": {
       "values": [
-        "locked",
-        "unlocked"
+        "rw",
+        "ro"
       ],
       "minVersion": "2.22",
       "kind": "schema",
-      "name": "retention_lock"
+      "name": "permission"
     },
-    "SnapshotPolicyPatch.retention_lock": {
+    "PolicyPost.retention_lock": {
       "values": [
         "locked",
         "unlocked"
@@ -1910,14 +1901,14 @@
       "kind": "schema",
       "name": "policy_type"
     },
-    "NfsExportPolicyPatchRuleInPolicy.permission": {
+    "SnapshotPolicyPatch.retention_lock": {
       "values": [
-        "rw",
-        "ro"
+        "locked",
+        "unlocked"
       ],
       "minVersion": "2.22",
       "kind": "schema",
-      "name": "permission"
+      "name": "retention_lock"
     },
     "NfsExportPolicyPatchRuleInPolicy.access": {
       "values": [
@@ -1928,6 +1919,15 @@
       "minVersion": "2.22",
       "kind": "schema",
       "name": "access"
+    },
+    "NfsExportPolicyPatchRuleInPolicy.permission": {
+      "values": [
+        "rw",
+        "ro"
+      ],
+      "minVersion": "2.22",
+      "kind": "schema",
+      "name": "permission"
     },
     "NfsExportPolicyRuleBasePatchRequest.access": {
       "values": [
@@ -1975,28 +1975,6 @@
       "kind": "schema",
       "name": "status"
     },
-    "PresetWorkload.workload_type": {
-      "values": [
-        "Clarity",
-        "Epic",
-        "Exchange",
-        "File",
-        "MsSQL",
-        "MySQL",
-        "Oracle",
-        "PostgreSQL",
-        "SAP-Hana",
-        "SAP",
-        "VDI",
-        "VSI",
-        "Wfs",
-        "Zerto",
-        "Custom"
-      ],
-      "minVersion": "2.23",
-      "kind": "schema",
-      "name": "workload_type"
-    },
     "PresetWorkload.platform_features": {
       "values": [
         "fa_block",
@@ -2007,7 +1985,7 @@
       "kind": "schema",
       "name": "platform_features"
     },
-    "PresetWorkloadPost.workload_type": {
+    "PresetWorkload.workload_type": {
       "values": [
         "Clarity",
         "Epic",
@@ -2038,6 +2016,28 @@
       "minVersion": "2.23",
       "kind": "schema",
       "name": "platform_features"
+    },
+    "PresetWorkloadPost.workload_type": {
+      "values": [
+        "Clarity",
+        "Epic",
+        "Exchange",
+        "File",
+        "MsSQL",
+        "MySQL",
+        "Oracle",
+        "PostgreSQL",
+        "SAP-Hana",
+        "SAP",
+        "VDI",
+        "VSI",
+        "Wfs",
+        "Zerto",
+        "Custom"
+      ],
+      "minVersion": "2.23",
+      "kind": "schema",
+      "name": "workload_type"
     },
     "WorkloadPlacementRecommendation.recommendation_engine": {
       "values": [
@@ -2332,14 +2332,15 @@
       "kind": "schema",
       "name": "message"
     },
-    "_presetWorkloadExportConfigurationNfsRule.permission": {
+    "_presetWorkloadExportConfigurationNfsRule.access": {
       "values": [
-        "rw",
-        "ro"
+        "root-squash",
+        "all-squash",
+        "no-root-squash"
       ],
       "minVersion": "2.23",
       "kind": "schema",
-      "name": "permission"
+      "name": "access"
     },
     "_presetWorkloadExportConfigurationNfsRule.nfs_version": {
       "values": [
@@ -2350,15 +2351,14 @@
       "kind": "schema",
       "name": "nfs_version"
     },
-    "_presetWorkloadExportConfigurationNfsRule.access": {
+    "_presetWorkloadExportConfigurationNfsRule.permission": {
       "values": [
-        "root-squash",
-        "all-squash",
-        "no-root-squash"
+        "rw",
+        "ro"
       ],
       "minVersion": "2.23",
       "kind": "schema",
-      "name": "access"
+      "name": "permission"
     },
     "_presetWorkloadExportConfigurationSmbRule.encryption": {
       "values": [
@@ -2388,15 +2388,6 @@
       "kind": "schema",
       "name": "change"
     },
-    "_presetWorkloadExportConfigurationSmbShareRule.read": {
-      "values": [
-        "allow",
-        "deny"
-      ],
-      "minVersion": "2.23",
-      "kind": "schema",
-      "name": "read"
-    },
     "_presetWorkloadExportConfigurationSmbShareRule.full_control": {
       "values": [
         "allow",
@@ -2405,6 +2396,15 @@
       "minVersion": "2.23",
       "kind": "schema",
       "name": "full_control"
+    },
+    "_presetWorkloadExportConfigurationSmbShareRule.read": {
+      "values": [
+        "allow",
+        "deny"
+      ],
+      "minVersion": "2.23",
+      "kind": "schema",
+      "name": "read"
     },
     "_presetWorkloadConstraintsResourceReferenceAllowedValues.resource_type": {
       "values": [
@@ -2508,17 +2508,6 @@
       "kind": "schema",
       "name": "control_type"
     },
-    "UserGroupQuotaPolicyRuleInPolicy.quota_type": {
-      "values": [
-        "user",
-        "group",
-        "user-default",
-        "group-default"
-      ],
-      "minVersion": "2.25",
-      "kind": "schema",
-      "name": "quota_type"
-    },
     "UserGroupQuotaPolicyRuleInPolicy.notifications": {
       "values": [
         "None",
@@ -2528,7 +2517,7 @@
       "kind": "schema",
       "name": "notifications"
     },
-    "UserGroupQuotaPolicyRule.quota_type": {
+    "UserGroupQuotaPolicyRuleInPolicy.quota_type": {
       "values": [
         "user",
         "group",
@@ -2547,6 +2536,17 @@
       "minVersion": "2.25",
       "kind": "schema",
       "name": "notifications"
+    },
+    "UserGroupQuotaPolicyRule.quota_type": {
+      "values": [
+        "user",
+        "group",
+        "user-default",
+        "group-default"
+      ],
+      "minVersion": "2.25",
+      "kind": "schema",
+      "name": "quota_type"
     },
     "UserGroupQuotaPolicyRuleBase.notifications": {
       "values": [
@@ -2804,18 +2804,18 @@
       "triggerText": "Valid values include `alert`, `audit`, `bucket-access`,\n`cross-origin-resource-sharing`, `network-access`, `nfs`, `object-access`,\n`s3-export`, smb-client`, `smb-share`, `ssh-certificate-authority`, and\n`telemetry-metrics`."
     },
     {
-      "key": "PolicyBaseContext.context",
-      "kind": "schema",
-      "name": "context",
-      "version": "2.17",
-      "triggerText": "Valid values include a reference to any array which is a member of the same fleet\nor to the fleet itself."
-    },
-    {
       "key": "PolicyBaseContext.policy_type",
       "kind": "schema",
       "name": "policy_type",
       "version": "2.17",
       "triggerText": "Valid values include `alert`, `audit`, `bucket-access`,\n`cross-origin-resource-sharing`, `network-access`, `nfs`, `object-access`,\n`s3-export`, smb-client`, `smb-share`, `ssh-certificate-authority`, and\n`telemetry-metrics`."
+    },
+    {
+      "key": "PolicyBaseContext.context",
+      "kind": "schema",
+      "name": "context",
+      "version": "2.17",
+      "triggerText": "Valid values include a reference to any array which is a member of the same fleet\nor to the fleet itself."
     },
     {
       "key": "AuditFileSystemsPoliciesPost.policy_type",
@@ -3028,18 +3028,18 @@
       "triggerText": "Valid values include `alert`, `audit`, `bucket-access`,\n`cross-origin-resource-sharing`, `network-access`, `nfs`, `object-access`,\n`s3-export`, smb-client`, `smb-share`, `ssh-certificate-authority`, and\n`telemetry-metrics`."
     },
     {
-      "key": "PolicyPatch.context",
-      "kind": "schema",
-      "name": "context",
-      "version": "2.17",
-      "triggerText": "Valid values include a reference to any array which is a member of the same fleet."
-    },
-    {
       "key": "PolicyPatch.policy_type",
       "kind": "schema",
       "name": "policy_type",
       "version": "2.17",
       "triggerText": "Valid values include `alert`, `audit`, `bucket-access`,\n`cross-origin-resource-sharing`, `network-access`, `nfs`, `object-access`,\n`s3-export`, smb-client`, `smb-share`, `snapshot`, `ssh-certificate-authority`,\nand `worm-data`."
+    },
+    {
+      "key": "PolicyPatch.context",
+      "kind": "schema",
+      "name": "context",
+      "version": "2.17",
+      "triggerText": "Valid values include a reference to any array which is a member of the same fleet."
     },
     {
       "key": "RelationshipPerformanceReplication.context",
@@ -3063,18 +3063,18 @@
       "triggerText": "Valid values include `alert`, `audit`, `bucket-access`,\n`cross-origin-resource-sharing`, `network-access`, `nfs`, `object-access`,\n`s3-export`, smb-client`, `smb-share`, `ssh-certificate-authority`, and\n`telemetry-metrics`."
     },
     {
-      "key": "AuditFileSystemsPolicy.context",
-      "kind": "schema",
-      "name": "context",
-      "version": "2.17",
-      "triggerText": "Valid values include a reference to any array which is a member of the same fleet\nor to the fleet itself."
-    },
-    {
       "key": "AuditFileSystemsPolicy.policy_type",
       "kind": "schema",
       "name": "policy_type",
       "version": "2.17",
       "triggerText": "Valid values include `alert`, `audit`, `bucket-access`,\n`cross-origin-resource-sharing`, `network-access`, `nfs`, `object-access`,\n`s3-export`, smb-client`, `smb-share`, `ssh-certificate-authority`, and\n`telemetry-metrics`."
+    },
+    {
+      "key": "AuditFileSystemsPolicy.context",
+      "kind": "schema",
+      "name": "context",
+      "version": "2.17",
+      "triggerText": "Valid values include a reference to any array which is a member of the same fleet\nor to the fleet itself."
     },
     {
       "key": "NfsExportPolicy.context",
@@ -3098,18 +3098,18 @@
       "triggerText": "Valid values include a reference to any array which is a member of the same fleet\nor to the fleet itself."
     },
     {
-      "key": "TlsPolicyPost.min_tls_version",
-      "kind": "schema",
-      "name": "min_tls_version",
-      "version": "2.17",
-      "triggerText": "Valid values include `default`, `TLSv1."
-    },
-    {
       "key": "TlsPolicyPost.policy_type",
       "kind": "schema",
       "name": "policy_type",
       "version": "2.17",
       "triggerText": "Valid values include `alert`, `audit`, `bucket-access`,\n`cross-origin-resource-sharing`, `network-access`, `nfs`, `object-access`,\n`s3-export`, smb-client`, `smb-share`, `ssh-certificate-authority`, and\n`telemetry-metrics`."
+    },
+    {
+      "key": "TlsPolicyPost.min_tls_version",
+      "kind": "schema",
+      "name": "min_tls_version",
+      "version": "2.17",
+      "triggerText": "Valid values include `default`, `TLSv1."
     },
     {
       "key": "PolicyMemberContext.context",
@@ -3119,13 +3119,6 @@
       "triggerText": "Valid values include a reference to any array which is a member of the same fleet\nor to the fleet itself."
     },
     {
-      "key": "TlsPolicy.min_tls_version",
-      "kind": "schema",
-      "name": "min_tls_version",
-      "version": "2.17",
-      "triggerText": "Valid values include `default`, `TLSv1."
-    },
-    {
       "key": "TlsPolicy.policy_type",
       "kind": "schema",
       "name": "policy_type",
@@ -3133,7 +3126,21 @@
       "triggerText": "Valid values include `alert`, `audit`, `bucket-access`,\n`cross-origin-resource-sharing`, `network-access`, `nfs`, `object-access`,\n`s3-export`, smb-client`, `smb-share`, `ssh-certificate-authority`, and\n`telemetry-metrics`."
     },
     {
+      "key": "TlsPolicy.min_tls_version",
+      "kind": "schema",
+      "name": "min_tls_version",
+      "version": "2.17",
+      "triggerText": "Valid values include `default`, `TLSv1."
+    },
+    {
       "key": "NfsExportPolicyPost.policy_type",
+      "kind": "schema",
+      "name": "policy_type",
+      "version": "2.17",
+      "triggerText": "Valid values include `alert`, `audit`, `bucket-access`,\n`cross-origin-resource-sharing`, `network-access`, `nfs`, `object-access`,\n`s3-export`, smb-client`, `smb-share`, `ssh-certificate-authority`, and\n`telemetry-metrics`."
+    },
+    {
+      "key": "ObjectStoreTrustPolicy.policy_type",
       "kind": "schema",
       "name": "policy_type",
       "version": "2.17",
@@ -3145,13 +3152,6 @@
       "name": "context",
       "version": "2.17",
       "triggerText": "Valid values include a reference to any array which is a member of the same fleet\nor to the fleet itself."
-    },
-    {
-      "key": "ObjectStoreTrustPolicy.policy_type",
-      "kind": "schema",
-      "name": "policy_type",
-      "version": "2.17",
-      "triggerText": "Valid values include `alert`, `audit`, `bucket-access`,\n`cross-origin-resource-sharing`, `network-access`, `nfs`, `object-access`,\n`s3-export`, smb-client`, `smb-share`, `ssh-certificate-authority`, and\n`telemetry-metrics`."
     },
     {
       "key": "ObjectStoreAccount.context",
@@ -3392,18 +3392,18 @@
       "triggerText": "Valid values include a reference to any array which is a member of the same fleet\nor to the fleet itself."
     },
     {
-      "key": "S3ExportPolicy.context",
-      "kind": "schema",
-      "name": "context",
-      "version": "2.20",
-      "triggerText": "Valid values include a reference to any array which is a member of the same fleet\nor to the fleet itself."
-    },
-    {
       "key": "S3ExportPolicy.policy_type",
       "kind": "schema",
       "name": "policy_type",
       "version": "2.20",
       "triggerText": "Valid values include `alert`, `audit`, `bucket-access`,\n`cross-origin-resource-sharing`, `network-access`, `nfs`, `object-access`,\n`s3-export`, smb-client`, `smb-share`, `ssh-certificate-authority`, and\n`telemetry-metrics`."
+    },
+    {
+      "key": "S3ExportPolicy.context",
+      "kind": "schema",
+      "name": "context",
+      "version": "2.20",
+      "triggerText": "Valid values include a reference to any array which is a member of the same fleet\nor to the fleet itself."
     },
     {
       "key": "S3ExportPolicyRule.context",
@@ -3483,18 +3483,18 @@
       "triggerText": "Valid values include `alert`, `audit`, `bucket-access`,\n`cross-origin-resource-sharing`, `network-access`, `nfs`, `object-access`,\n`s3-export`, smb-client`, `smb-share`, `ssh-certificate-authority`, and\n`telemetry-metrics`."
     },
     {
-      "key": "DataEvictionPolicy.context",
-      "kind": "schema",
-      "name": "context",
-      "version": "2.21",
-      "triggerText": "Valid values include a reference to any array which is a member of the same fleet\nor to the fleet itself."
-    },
-    {
       "key": "DataEvictionPolicy.policy_type",
       "kind": "schema",
       "name": "policy_type",
       "version": "2.21",
       "triggerText": "Valid values include `alert`, `audit`, `bucket-access`,\n`cross-origin-resource-sharing`, `network-access`, `nfs`, `object-access`,\n`s3-export`, smb-client`, `smb-share`, `ssh-certificate-authority`, and\n`telemetry-metrics`."
+    },
+    {
+      "key": "DataEvictionPolicy.context",
+      "kind": "schema",
+      "name": "context",
+      "version": "2.21",
+      "triggerText": "Valid values include a reference to any array which is a member of the same fleet\nor to the fleet itself."
     },
     {
       "key": "Array.context",
@@ -3525,18 +3525,18 @@
       "triggerText": "Valid values include `alert`, `audit`, `bucket-access`,\n`cross-origin-resource-sharing`, `network-access`, `nfs`, `object-access`,\n`s3-export`, smb-client`, `smb-share`, `ssh-certificate-authority`, and\n`telemetry-metrics`."
     },
     {
-      "key": "ManagementAuthenticationPolicy.context",
-      "kind": "schema",
-      "name": "context",
-      "version": "2.22",
-      "triggerText": "Valid values include a reference to any array which is a member of the same fleet\nor to the fleet itself."
-    },
-    {
       "key": "ManagementAuthenticationPolicy.policy_type",
       "kind": "schema",
       "name": "policy_type",
       "version": "2.22",
       "triggerText": "Valid values include `alert`, `audit`, `bucket-access`,\n`cross-origin-resource-sharing`, `network-access`, `nfs`, `object-access`,\n`s3-export`, smb-client`, `smb-share`, `ssh-certificate-authority`, and\n`telemetry-metrics`."
+    },
+    {
+      "key": "ManagementAuthenticationPolicy.context",
+      "kind": "schema",
+      "name": "context",
+      "version": "2.22",
+      "triggerText": "Valid values include a reference to any array which is a member of the same fleet\nor to the fleet itself."
     },
     {
       "key": "NfsExportPolicyPatch.policy_type",
@@ -3763,18 +3763,18 @@
       "triggerText": "Valid values include `alert`, `audit`, `bucket-access`,\n`cross-origin-resource-sharing`, `network-access`, `nfs`, `object-access`,\n`s3-export`, smb-client`, `smb-share`, `ssh-certificate-authority`, and\n`telemetry-metrics`."
     },
     {
-      "key": "UserGroupQuotaPolicy.context",
-      "kind": "schema",
-      "name": "context",
-      "version": "2.25",
-      "triggerText": "Valid values include a reference to any array which is a member of the same fleet\nor to the fleet itself."
-    },
-    {
       "key": "UserGroupQuotaPolicy.policy_type",
       "kind": "schema",
       "name": "policy_type",
       "version": "2.25",
       "triggerText": "Valid values include `alert`, `audit`, `bucket-access`,\n`cross-origin-resource-sharing`, `network-access`, `nfs`, `object-access`,\n`s3-export`, smb-client`, `smb-share`, `ssh-certificate-authority`, and\n`telemetry-metrics`."
+    },
+    {
+      "key": "UserGroupQuotaPolicy.context",
+      "kind": "schema",
+      "name": "context",
+      "version": "2.25",
+      "triggerText": "Valid values include a reference to any array which is a member of the same fleet\nor to the fleet itself."
     },
     {
       "key": "UserGroupQuotaPolicyRule.context",
