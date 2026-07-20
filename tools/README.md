@@ -232,7 +232,8 @@ parameters/fields. Requires the repository's Actions settings to permit workflow
 pull requests. The `EVERPURE_SUPPORT_TOKEN` secret is optional — when absent, the
 version-map step is skipped and only the capability map updates.
 
-`Build-PfbValueEnumMap.ps1` is **not yet wired into this (or any) CI workflow** — run it
-manually against a local `tools/specs/` cache for now. Folding it into the weekly job is a
-natural follow-on once its output has a runtime consumer worth keeping fresh on a
-schedule.
+`Build-PfbValueEnumMap.ps1`, `Build-PfbFieldCmdletMap.ps1`, and `Build-PfbApiDriftReport.ps1`
+all run as part of the same weekly/dispatch job, right after the capability map is rebuilt,
+so `Reports/PfbValueEnumMap.json`, `Reports/PfbFieldCmdletMap.json`, and
+`Reports/PfbApiDriftReport.json` (+ their Markdown companions) stay fresh alongside
+`Data/PfbCapabilityMap.json`.
