@@ -208,7 +208,13 @@ function Get-PfbSchemaPropertyDescriptions {
         [int]$MaxDepth = 8
     )
 
-    $result = @{}
+    # [ordered], not a plain Hashtable: this dictionary's .Keys enumeration order flows
+    # straight through to Reports/PfbValueEnumMap.json's entry order (via
+    # Get-PfbSpecValueEnums's "foreach ($propName in $descriptions.Keys)" pass) -- a
+    # plain Hashtable's enumeration order depends on .NET's per-process-randomized
+    # string hash codes, so without [ordered] the report's entry order silently
+    # reshuffles run-to-run on identical input.
+    $result = [ordered]@{}
     if ($null -eq $Schema -or $MaxDepth -le 0) { return $result }
 
     $resolved = Resolve-PfbRef -Node $Schema -Spec $Spec
@@ -230,7 +236,7 @@ function Get-PfbSchemaPropertyDescriptions {
                 }
             }
 
-            if ($desc -and -not $result.ContainsKey($propName)) {
+            if ($desc -and -not $result.Contains($propName)) {
                 $result[$propName] = $desc
             }
         }
@@ -240,7 +246,7 @@ function Get-PfbSchemaPropertyDescriptions {
         foreach ($branch in $resolved.allOf) {
             $branchResult = Get-PfbSchemaPropertyDescriptions -Schema $branch -Spec $Spec -MaxDepth ($MaxDepth - 1)
             foreach ($k in $branchResult.Keys) {
-                if (-not $result.ContainsKey($k)) { $result[$k] = $branchResult[$k] }
+                if (-not $result.Contains($k)) { $result[$k] = $branchResult[$k] }
             }
         }
     }

@@ -262,7 +262,12 @@ function Get-PfbParameterCoverageGaps {
         $knownFieldNames = [System.Collections.Generic.List[string]]::new()
         $knownFieldNames.AddRange([string[]]@($fieldVersions.Keys))
 
-        $missing = @($knownFieldNames | Select-Object -Unique | Where-Object { -not $exposedWireNames.Contains($_) })
+        # Sort-Object here is load-bearing, not cosmetic: $fieldVersions above is a plain
+        # Hashtable, whose .Keys enumeration order depends on .NET's per-process-randomized
+        # string hash codes -- without this sort, MissingParameters silently reorders itself
+        # run-to-run on identical input (confirmed live: regenerating the drift report twice
+        # produced two byte-different files for the same underlying content).
+        $missing = @($knownFieldNames | Select-Object -Unique | Where-Object { -not $exposedWireNames.Contains($_) } | Sort-Object)
         if ($SinceVersion) {
             $missing = @($missing | Where-Object { Test-PfbApiVersionNewerThan -Version $fieldVersions[$_] -Baseline $SinceVersion })
         }
