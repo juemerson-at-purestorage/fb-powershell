@@ -174,7 +174,7 @@ function New-PfbWidget {
     $script:manifest = Get-Content -Path $manifestPath -Raw | ConvertFrom-Json -Depth 20
 }
 
-Describe 'Build-PfbFieldCmdletMap' {
+Describe 'Build-PfbFieldCmdletMap' -Skip:($PSVersionTable.PSVersion.Major -lt 7) {
     It 'recommends ValidateSet only for a field with full version history and no value-set changes' {
         $rec = $manifest.entries | Where-Object { $_.parameter -eq 'StableField' }
         $rec.status | Should -Be 'matched'
@@ -282,7 +282,7 @@ Describe 'Build-PfbFieldCmdletMap' {
     }
 }
 
-Describe 'Build-PfbFieldCmdletMap (real generated artifacts, skips gracefully if absent)' {
+Describe 'Build-PfbFieldCmdletMap (real generated artifacts, skips gracefully if absent)' -Skip:($PSVersionTable.PSVersion.Major -lt 7) {
     It 'produces a manifest against the real Public/ tree and tools/specs/ cache' {
         $realSpecsDir = Join-Path $repoRoot 'tools/specs'
         $realPublicDir = Join-Path $repoRoot 'Public'

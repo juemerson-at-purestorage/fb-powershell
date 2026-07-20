@@ -11,7 +11,7 @@ BeforeAll {
     $script:builderScript = Join-Path $repoRoot 'tools/Build-PfbCapabilityMap.ps1'
 }
 
-Describe 'Build-PfbCapabilityMap: introduced-in diffing' {
+Describe 'Build-PfbCapabilityMap: introduced-in diffing' -Skip:($PSVersionTable.PSVersion.Major -lt 7) {
     BeforeAll {
         New-Item -ItemType Directory -Path 'TestDrive:\specs' -Force | Out-Null
 
@@ -110,7 +110,7 @@ Describe 'Build-PfbCapabilityMap: introduced-in diffing' {
     }
 }
 
-Describe 'Build-PfbCapabilityMap: manifest shape' {
+Describe 'Build-PfbCapabilityMap: manifest shape' -Skip:($PSVersionTable.PSVersion.Major -lt 7) {
     BeforeAll {
         New-Item -ItemType Directory -Path 'TestDrive:\shapeSpecs' -Force | Out-Null
         $spec = [ordered]@{
@@ -148,7 +148,7 @@ Describe 'Build-PfbCapabilityMap: manifest shape' {
     }
 }
 
-Describe 'Real committed capability map (skips gracefully if not yet generated)' {
+Describe 'Real committed capability map (skips gracefully if not yet generated)' -Skip:($PSVersionTable.PSVersion.Major -lt 7) {
     BeforeAll {
         $repoRoot = Split-Path -Parent $PSScriptRoot
         $script:realManifestPath = Join-Path $repoRoot 'Data/PfbCapabilityMap.json'

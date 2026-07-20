@@ -16,7 +16,7 @@ BeforeAll {
     $script:builderScript = Join-Path $repoRoot 'tools/Build-PfbValueEnumMap.ps1'
 }
 
-Describe 'Build-PfbValueEnumMap: introduced-in diffing and value tracking' {
+Describe 'Build-PfbValueEnumMap: introduced-in diffing and value tracking' -Skip:($PSVersionTable.PSVersion.Major -lt 7) {
     BeforeAll {
         New-Item -ItemType Directory -Path 'TestDrive:\specs' -Force | Out-Null
 
@@ -131,7 +131,7 @@ Describe 'Build-PfbValueEnumMap: introduced-in diffing and value tracking' {
     }
 }
 
-Describe 'Build-PfbValueEnumMap: manifest shape' {
+Describe 'Build-PfbValueEnumMap: manifest shape' -Skip:($PSVersionTable.PSVersion.Major -lt 7) {
     BeforeAll {
         New-Item -ItemType Directory -Path 'TestDrive:\shapeSpecs' -Force | Out-Null
         $spec = [ordered]@{
@@ -177,7 +177,7 @@ Describe 'Build-PfbValueEnumMap: manifest shape' {
     }
 }
 
-Describe 'Real committed value-enum map (skips gracefully if not yet generated)' {
+Describe 'Real committed value-enum map (skips gracefully if not yet generated)' -Skip:($PSVersionTable.PSVersion.Major -lt 7) {
     BeforeAll {
         $repoRoot = Split-Path -Parent $PSScriptRoot
         $script:realManifestPath = Join-Path $repoRoot 'Reports/PfbValueEnumMap.json'

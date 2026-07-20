@@ -16,6 +16,18 @@ BeforeAll {
     $repoRoot = Split-Path -Parent $PSScriptRoot
     $script:capabilityMapPath = Join-Path $repoRoot 'Data/PfbCapabilityMap.json'
     $script:versionMapPath = Join-Path $repoRoot 'Data/PfbVersionMap.json'
+
+    # ConvertFrom-Json has no -Depth parameter on Windows PowerShell 5.1 (added in PS6) --
+    # 5.1's own recursion limit (100) is already far deeper than either file's shape.
+    function script:ConvertFrom-PfbTestJson {
+        param([Parameter(ValueFromPipeline)] [string]$InputObject)
+        if ($PSVersionTable.PSVersion.Major -ge 6) {
+            $InputObject | ConvertFrom-Json -Depth 5
+        }
+        else {
+            $InputObject | ConvertFrom-Json
+        }
+    }
 }
 
 Describe 'Data/PfbVersionMap.json coverage (skips gracefully if the generated files are not present)' {
@@ -25,8 +37,8 @@ Describe 'Data/PfbVersionMap.json coverage (skips gracefully if the generated fi
             return
         }
 
-        $capabilityMap = Get-Content -Path $capabilityMapPath -Raw | ConvertFrom-Json -Depth 5
-        $versionMap = Get-Content -Path $versionMapPath -Raw | ConvertFrom-Json -Depth 5
+        $capabilityMap = Get-Content -Path $capabilityMapPath -Raw | ConvertFrom-PfbTestJson
+        $versionMap = Get-Content -Path $versionMapPath -Raw | ConvertFrom-PfbTestJson
 
         $expectedVersions = $capabilityMap.generatedFrom
         $expectedVersions | Should -Not -BeNullOrEmpty -Because 'the capability map should record which REST versions it was generated from'
@@ -43,7 +55,7 @@ Describe 'Data/PfbVersionMap.json coverage (skips gracefully if the generated fi
             return
         }
 
-        $versionMap = Get-Content -Path $versionMapPath -Raw | ConvertFrom-Json -Depth 5
+        $versionMap = Get-Content -Path $versionMapPath -Raw | ConvertFrom-PfbTestJson
 
         $emptyEntries = $versionMap.PSObject.Properties | Where-Object { [string]::IsNullOrWhiteSpace($_.Value.purity) } | ForEach-Object { $_.Name }
 

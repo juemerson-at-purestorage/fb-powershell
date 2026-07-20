@@ -21,6 +21,14 @@ function Get-PfbCapabilityMap {
         return $null
     }
 
-    $script:PfbCapabilityMap = Get-Content -Path $path -Raw | ConvertFrom-Json -Depth 20
+    $json = Get-Content -Path $path -Raw
+    # ConvertFrom-Json has no -Depth parameter on Windows PowerShell 5.1 (added in PS6) --
+    # 5.1's own recursion limit (100) is already far deeper than this manifest's shape.
+    $script:PfbCapabilityMap = if ($PSVersionTable.PSVersion.Major -ge 6) {
+        $json | ConvertFrom-Json -Depth 20
+    }
+    else {
+        $json | ConvertFrom-Json
+    }
     return $script:PfbCapabilityMap
 }
