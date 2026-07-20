@@ -6,9 +6,11 @@ name: Update API Capability Map
 # for the overall pipeline this feeds into.
 #
 # Note: tools/specs/ (the raw cached OpenAPI specs) is deliberately NOT committed to the
-# repo — see .gitignore — so every run here starts from an empty cache and re-fetches the
-# full spec history (~28 versions as of 2026-07, a few minutes). Only the small derived
-# Data/PfbCapabilityMap.json is tracked and diffed for the PR below.
+# repo — see .gitignore — instead it's persisted across runs via actions/cache below, keyed
+# per-run-id with a prefix restore-key so each run restores the most recent prior cache.
+# Update-PfbApiSpecs.ps1 skips any version already present on disk, so a cache hit means
+# only newly-published versions get fetched instead of the full ~28-version history. Only
+# the small derived Data/PfbCapabilityMap.json is tracked and diffed for the PR below.
 
 on:
   push:
@@ -41,7 +43,7 @@ jobs:
           "versions=$($versions -join ',')" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Restore cached spec files
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: tools/specs
           key: pfb-specs-${{ github.run_id }}
