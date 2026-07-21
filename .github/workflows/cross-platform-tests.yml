@@ -26,17 +26,31 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install test dependencies
         shell: pwsh
         run: |
-          Install-Module -Name Pester -MinimumVersion 5.0 -Force -SkipPublisherCheck -Scope CurrentUser
+          function Install-PfbModuleWithRetry {
+              param([hashtable]$Params, [int]$MaxAttempts = 3, [int]$DelaySeconds = 15)
+              for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+                  try {
+                      Install-Module @Params -ErrorAction Stop
+                      return
+                  } catch {
+                      if ($attempt -eq $MaxAttempts) { throw }
+                      Write-Warning "Install-Module '$($Params.Name)' attempt $attempt/$MaxAttempts failed: $($_.Exception.Message). Retrying in $DelaySeconds s..."
+                      Start-Sleep -Seconds $DelaySeconds
+                  }
+              }
+          }
+
           # Posh-SSH is an optional runtime dependency (see Private/Get-PfbApiTokenViaSsh.ps1),
           # but Get-PfbApiTokenViaSsh.Tests.ps1 mocks its cmdlets (New-SSHSession, etc.) --
           # Pester can only mock a command that's resolvable, so it must be installed here
           # even though the module under test never actually opens an SSH connection.
-          Install-Module -Name Posh-SSH -Force -SkipPublisherCheck -Scope CurrentUser
+          Install-PfbModuleWithRetry -Params @{ Name = 'Pester';   MinimumVersion = '5.0'; Force = $true; SkipPublisherCheck = $true; Scope = 'CurrentUser' }
+          Install-PfbModuleWithRetry -Params @{ Name = 'Posh-SSH'; Force = $true; SkipPublisherCheck = $true; Scope = 'CurrentUser' }
 
       - name: Run Pester tests
         shell: pwsh
@@ -54,7 +68,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install test dependencies
         shell: powershell
@@ -62,8 +76,27 @@ jobs:
           # Some older Windows PowerShell 5.1 hosts default to TLS 1.0/1.1, which
           # PowerShell Gallery rejects -- force TLS 1.2 before hitting it.
           [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-          Install-Module -Name Pester -MinimumVersion 5.0 -Force -SkipPublisherCheck -Scope CurrentUser
-          Install-Module -Name Posh-SSH -Force -SkipPublisherCheck -Scope CurrentUser
+
+          function Install-PfbModuleWithRetry {
+              param([hashtable]$Params, [int]$MaxAttempts = 3, [int]$DelaySeconds = 15)
+              for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+                  try {
+                      Install-Module @Params -ErrorAction Stop
+                      return
+                  } catch {
+                      if ($attempt -eq $MaxAttempts) { throw }
+                      Write-Warning "Install-Module '$($Params.Name)' attempt $attempt/$MaxAttempts failed: $($_.Exception.Message). Retrying in $DelaySeconds s..."
+                      Start-Sleep -Seconds $DelaySeconds
+                  }
+              }
+          }
+
+          # Posh-SSH is an optional runtime dependency (see Private/Get-PfbApiTokenViaSsh.ps1),
+          # but Get-PfbApiTokenViaSsh.Tests.ps1 mocks its cmdlets (New-SSHSession, etc.) --
+          # Pester can only mock a command that's resolvable, so it must be installed here
+          # even though the module under test never actually opens an SSH connection.
+          Install-PfbModuleWithRetry -Params @{ Name = 'Pester';   MinimumVersion = '5.0'; Force = $true; SkipPublisherCheck = $true; Scope = 'CurrentUser' }
+          Install-PfbModuleWithRetry -Params @{ Name = 'Posh-SSH'; Force = $true; SkipPublisherCheck = $true; Scope = 'CurrentUser' }
 
       - name: Run Pester tests
         shell: powershell
