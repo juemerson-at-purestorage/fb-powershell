@@ -17,6 +17,9 @@ function Get-PfbArrayPerformanceReplication {
         End of the time range for historical data (epoch milliseconds or datetime string).
     .PARAMETER Resolution
         Time resolution for data points in milliseconds (e.g. 30000, 86400000).
+    .PARAMETER Type
+        Restricts results to replication performance for a specific object type. Valid values
+        are "all", "file-system", and "object-store".
     .PARAMETER Array
         The FlashBlade connection object. If not specified, the default connection is used.
     .EXAMPLE
@@ -37,6 +40,9 @@ function Get-PfbArrayPerformanceReplication {
         [Parameter()] [long]$StartTime,
         [Parameter()] [long]$EndTime,
         [Parameter()] [long]$Resolution,
+        [Parameter()]
+        [ValidateSet('all', 'file-system', 'object-store')]
+        [string]$Type,
         [Parameter()] [PSCustomObject]$Array
     )
 
@@ -52,6 +58,7 @@ function Get-PfbArrayPerformanceReplication {
         if ($StartTime)    { $queryParams['start_time'] = $StartTime }
         if ($EndTime)      { $queryParams['end_time']   = $EndTime }
         if ($Resolution)   { $queryParams['resolution'] = $Resolution }
+        if ($Type)         { $queryParams['type']       = $Type }
 
         Invoke-PfbApiRequest -Array $Array -Method GET -Endpoint 'arrays/performance/replication' -QueryParams $queryParams -AutoPaginate
     }
