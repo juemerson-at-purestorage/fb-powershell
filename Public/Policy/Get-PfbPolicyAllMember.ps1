@@ -13,6 +13,11 @@ function Get-PfbPolicyAllMember {
         One or more member names to filter by.
     .PARAMETER MemberId
         One or more member IDs to filter by.
+    .PARAMETER MemberType
+        One or more member types to filter by (e.g. "file-systems", "object-store-users").
+        Tab-completes the values documented as of this module's release, but the server's
+        accepted set has grown across REST versions and may include newer values not offered
+        here — any value is passed through as-is, not validated client-side.
     .PARAMETER Filter
         A server-side filter expression to narrow results.
     .PARAMETER Limit
@@ -38,6 +43,18 @@ function Get-PfbPolicyAllMember {
         [Parameter()] [string[]]$PolicyId,
         [Parameter()] [string[]]$MemberName,
         [Parameter()] [string[]]$MemberId,
+        [Parameter()]
+        [ArgumentCompleter({
+            param($CommandName, $ParameterName, $WordToComplete, $CommandAst, $FakeBoundParameters)
+            @(
+                'file-systems',
+                'file-system-snapshots',
+                'file-system-replica-links',
+                'object-store-users',
+                'object-store-accounts'
+            ) | Where-Object { $_ -like "$WordToComplete*" }
+        })]
+        [string[]]$MemberType,
         [Parameter()] [string]$Filter, [Parameter()] [int]$Limit,
         [Parameter()] [PSCustomObject]$Array
     )
@@ -49,6 +66,7 @@ function Get-PfbPolicyAllMember {
     if ($PolicyId) { $queryParams['policy_ids'] = $PolicyId -join ',' }
     if ($MemberName) { $queryParams['member_names'] = $MemberName -join ',' }
     if ($MemberId) { $queryParams['member_ids'] = $MemberId -join ',' }
+    if ($MemberType) { $queryParams['member_types'] = $MemberType -join ',' }
     if ($Filter) { $queryParams['filter'] = $Filter }
     if ($Limit -gt 0) { $queryParams['limit'] = $Limit }
 
