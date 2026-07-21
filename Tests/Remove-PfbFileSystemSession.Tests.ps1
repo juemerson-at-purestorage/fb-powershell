@@ -11,6 +11,10 @@ Describe 'Remove-PfbFileSystemSession' {
         Mock -ModuleName PureStorageFlashBladePowerShell Invoke-PfbApiRequest { }
     }
 
+    It 'has no -Id parameter (the endpoint has no ids query parameter in any spec version)' {
+        (Get-Command Remove-PfbFileSystemSession).Parameters.ContainsKey('Id') | Should -BeFalse
+    }
+
     It 'restricts -Protocol to the two real spec-documented values' {
         $attr = (Get-Command Remove-PfbFileSystemSession).Parameters['Protocol'].Attributes |
             Where-Object { $_ -is [System.Management.Automation.ValidateSetAttribute] }
@@ -19,40 +23,45 @@ Describe 'Remove-PfbFileSystemSession' {
     }
 
     It 'rejects an invalid -Protocol value before making any API call' {
-        { Remove-PfbFileSystemSession -Name 'fs01' -Protocol 'bogus' -Confirm:$false -Array $fakeArray } | Should -Throw
+        { Remove-PfbFileSystemSession -Protocol 'bogus' -Confirm:$false -Array $fakeArray } | Should -Throw
         Should -Invoke Invoke-PfbApiRequest -ModuleName PureStorageFlashBladePowerShell -Times 0 -Exactly
     }
 
-    It 'still requires -Name or -Id even with -Protocol supplied' {
-        { Remove-PfbFileSystemSession -Protocol 'nfs' -Confirm:$false -Array $fakeArray } | Should -Throw
+    It 'rejects combining -Name and -Protocol (true mutual exclusivity, matching the server)' {
+        { Remove-PfbFileSystemSession -Name 'some-session-name' -Protocol 'nfs' -Confirm:$false -Array $fakeArray } | Should -Throw
         Should -Invoke Invoke-PfbApiRequest -ModuleName PureStorageFlashBladePowerShell -Times 0 -Exactly
     }
 
-    It 'passes valid -Protocol values through to the query string, comma-joined, alongside -Name' {
-        Remove-PfbFileSystemSession -Name 'fs01' -Protocol 'nfs', 'smb' -Confirm:$false -Array $fakeArray
+    It 'terminates a single session by its own session name via -Name, sending only names' {
+        Remove-PfbFileSystemSession -Name '22517998136858346-smb' -Confirm:$false -Array $fakeArray
         Should -Invoke Invoke-PfbApiRequest -ModuleName PureStorageFlashBladePowerShell -Times 1 -Exactly -ParameterFilter {
             $Method -eq 'DELETE' -and $Endpoint -eq 'file-systems/sessions' -and
-            $QueryParams['names'] -eq 'fs01' -and $QueryParams['protocols'] -eq 'nfs,smb'
+            $QueryParams['names'] -eq '22517998136858346-smb' -and
+            -not $QueryParams.ContainsKey('protocols') -and -not $QueryParams.ContainsKey('disruptive')
         }
     }
 
-    It 'passes valid -Protocol values through to the query string alongside -Id' {
-        Remove-PfbFileSystemSession -Id 'abc-123' -Protocol 'smb' -Confirm:$false -Array $fakeArray
+    It 'bulk-terminates by -Protocol, sending protocols comma-joined plus the required disruptive flag' {
+        Remove-PfbFileSystemSession -Protocol 'nfs', 'smb' -Force -Confirm:$false -Array $fakeArray
         Should -Invoke Invoke-PfbApiRequest -ModuleName PureStorageFlashBladePowerShell -Times 1 -Exactly -ParameterFilter {
             $Method -eq 'DELETE' -and $Endpoint -eq 'file-systems/sessions' -and
-            $QueryParams['ids'] -eq 'abc-123' -and $QueryParams['protocols'] -eq 'smb'
+            $QueryParams['protocols'] -eq 'nfs,smb' -and $QueryParams['disruptive'] -eq 'true' -and
+            -not $QueryParams.ContainsKey('names')
         }
     }
 
-    It 'omits -Protocol from the query string when not specified' {
-        Remove-PfbFileSystemSession -Name 'fs01' -Confirm:$false -Array $fakeArray
-        Should -Invoke Invoke-PfbApiRequest -ModuleName PureStorageFlashBladePowerShell -Times 1 -Exactly -ParameterFilter {
-            -not $QueryParams.ContainsKey('protocols')
-        }
+    It 'requires -Force for the -Protocol bulk path, independent of $ConfirmPreference (rejects -Protocol without -Force even with -Confirm:$false)' {
+        { Remove-PfbFileSystemSession -Protocol 'smb' -Confirm:$false -Array $fakeArray } | Should -Throw
+        Should -Invoke Invoke-PfbApiRequest -ModuleName PureStorageFlashBladePowerShell -Times 0 -Exactly
     }
 
-    It 'honors -WhatIf (no call made)' {
-        Remove-PfbFileSystemSession -Name 'fs01' -Protocol 'nfs' -WhatIf -Array $fakeArray
+    It 'honors -WhatIf for the -Name path (no call made)' {
+        Remove-PfbFileSystemSession -Name '22517998136858346-smb' -WhatIf -Array $fakeArray
+        Should -Invoke Invoke-PfbApiRequest -ModuleName PureStorageFlashBladePowerShell -Times 0 -Exactly
+    }
+
+    It 'honors -WhatIf for the -Protocol bulk path (no call made)' {
+        Remove-PfbFileSystemSession -Protocol 'smb' -Force -WhatIf -Array $fakeArray
         Should -Invoke Invoke-PfbApiRequest -ModuleName PureStorageFlashBladePowerShell -Times 0 -Exactly
     }
 }
