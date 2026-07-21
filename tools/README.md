@@ -40,18 +40,17 @@ Run in this order:
    ```
 
 3. **`Update-PfbVersionMap.ps1`** — builds `Data/PfbVersionMap.json`, the REST-version to
-   Purity//FB-version pairing, from the per-version release notes on the Everpure support
-   site. **Currently a skeleton**: the release-notes pages require a service-key token
-   (`$env:EVERPURE_SUPPORT_TOKEN`) that isn't wired up yet, so without one this script
-   just reports which versions need lookup and exits without failing. See the script's
-   header comment for the Glean-assisted manual fallback.
+   Purity//FB-version pairing, from a single SSOT (Single Source of Truth) API call: a
+   scoped proxy in front of Fluid Topics (owner: ***REMOVED***), delta-synced nightly, that
+   returns the full REST<->Purity//FB mapping table for every version in one HTML
+   response. Requires an API key (`$env:SSOT_API_KEY`, sent as an `x-api-key` header);
+   without one, this script just reports which versions need lookup and exits without
+   failing.
 
-   `Data/PfbVersionMap.json` is currently populated as a **static, hand-curated file**
-   (sourced via the Glean-assisted flow above, cross-checked against the FlashBlade
-   Management REST API Reference table and per-version release-notes pages) rather than
-   by this script. The automated generator above remains deferred until a non-token data
-   path is wired up; when it lands, it should overwrite this file using the same
-   `{ "<version>": { "purity": "<version>" } }` shape it already emits.
+   ```powershell
+   $env:SSOT_API_KEY = '...'
+   ./tools/Update-PfbVersionMap.ps1
+   ```
 
 4. **`Build-PfbValueEnumMap.ps1`** — a separate, later phase (see "Value-enum extraction"
    below): loads the same cached specs and extracts prose-documented value enumerations

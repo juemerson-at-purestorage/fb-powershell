@@ -3,12 +3,10 @@
 .SYNOPSIS
     Unit tests for tools/lib/PfbVersionMapTools.ps1.
 .DESCRIPTION
-    Only the fully-specified, network-independent piece (URL derivation) is meaningfully
-    testable right now. Get-PfbVersionMapEntryFromHtml's real parsing logic is an
-    unverified placeholder (see its header comment) pending a working service-key
-    credential for the Everpure support site, which 401s without one — these tests cover
-    its documented placeholder behavior (a "Purity//FB X.Y.Z" text scan) so regressions
-    are caught, not its correctness against a real page.
+    Covers the SSOT (Fluid Topics proxy) fetch-URL builder and the HTML table parser,
+    both fully-specified and network-independent. The orchestration in
+    tools/Update-PfbVersionMap.ps1 itself (the live HTTP fetch) is not unit tested here,
+    consistent with the rest of this module's tools/ scripts.
 #>
 
 BeforeAll {
@@ -16,39 +14,75 @@ BeforeAll {
     . (Join-Path $repoRoot 'tools/lib/PfbVersionMapTools.ps1')
 }
 
-Describe 'ConvertTo-PfbSupportNotesUrl' {
-    It 'derives the confirmed URL pattern, stripping the dot from the version' {
-        ConvertTo-PfbSupportNotesUrl -RestVersion '2.27' |
-            Should -Be 'https://support.everpuredata.com/r/flashblade-release/purityfb-management-rest-api-227-release-notes'
+Describe 'Get-PfbSsotVersionMapUri' {
+    It 'builds the default SSOT topic-content URL' {
+        Get-PfbSsotVersionMapUri |
+            Should -Be 'https://***REMOVED***/v1/topics/***REMOVED***/content'
     }
 
-    It 'handles double-digit minor versions correctly' {
-        ConvertTo-PfbSupportNotesUrl -RestVersion '2.10' |
-            Should -Be 'https://support.everpuredata.com/r/flashblade-release/purityfb-management-rest-api-210-release-notes'
-    }
-
-    It 'rejects a malformed version string' {
-        { ConvertTo-PfbSupportNotesUrl -RestVersion 'not-a-version' } | Should -Throw
+    It 'honors overrides for base URI and topic ID' {
+        Get-PfbSsotVersionMapUri -BaseUri 'https://example.test' -TopicId 'abc123' |
+            Should -Be 'https://example.test/v1/topics/abc123/content'
     }
 }
 
-Describe 'Get-PfbVersionMapEntryFromHtml (placeholder parsing)' {
-    It 'extracts a Purity//FB version when the pattern is present' {
-        $html = '<html><body>See Purity//FB 4.8.1 for details.</body></html>'
-        $entry = Get-PfbVersionMapEntryFromHtml -Html $html -RestVersion '2.26'
-        $entry.purity | Should -Be '4.8.1'
+Describe 'ConvertFrom-PfbSsotVersionMapHtml' {
+    It 'parses a data row into a REST version -> purity entry' {
+        $html = @'
+<table>
+<tr><th>REST API Version</th><th>HTML</th><th>Introduced in Purity//FB</th><th>Ships with Purity//FB</th></tr>
+<tr><td>REST API 2.27</td><td><a href="#">html</a></td><td>4.8.3</td><td>4.8.3</td></tr>
+<tr><td>REST API 2.26</td><td><a href="#">html</a></td><td>4.8.1</td><td>4.8.1</td></tr>
+</table>
+'@
+        $map = ConvertFrom-PfbSsotVersionMapHtml -Html $html
+
+        $map['2.27'].purity | Should -Be '4.8.3'
+        $map['2.26'].purity | Should -Be '4.8.1'
     }
 
-    It 'tolerates spacing variations around the double slash' {
-        $html = 'Purity // FB 4.9.0 release'
-        $entry = Get-PfbVersionMapEntryFromHtml -Html $html -RestVersion '2.27'
-        $entry.purity | Should -Be '4.9.0'
+    It 'uses the "Introduced in Purity//FB" column, not "Ships with", when they differ' {
+        $html = '<tr><td>REST API 2.12</td><td>x</td><td>4.3.4</td><td>4.3.3</td></tr>'
+        $map = ConvertFrom-PfbSsotVersionMapHtml -Html $html
+
+        $map['2.12'].purity | Should -Be '4.3.4'
     }
 
-    It 'returns $null and warns when no pattern is found' {
-        $warnings = $null
-        $entry = Get-PfbVersionMapEntryFromHtml -Html '<html>nothing relevant here</html>' -RestVersion '2.26' -WarningVariable warnings -WarningAction SilentlyContinue
-        $entry | Should -BeNullOrEmpty
-        $warnings | Should -Not -BeNullOrEmpty
+    It 'strips nested tags and trims whitespace inside cells' {
+        $html = '<tr><td>  <b>REST API 2.20</b>  </td><td>x</td><td> <span>4.6.3</span> </td><td>4.6.3</td></tr>'
+        $map = ConvertFrom-PfbSsotVersionMapHtml -Html $html
+
+        $map['2.20'].purity | Should -Be '4.6.3'
+    }
+
+    It 'decodes HTML entities inside cells' {
+        $html = '<tr><td>REST API 2.9</td><td>x</td><td>4.2.0&nbsp;</td><td>4.2.0</td></tr>'
+        $map = ConvertFrom-PfbSsotVersionMapHtml -Html $html
+
+        $map['2.9'].purity | Should -Be '4.2.0'
+    }
+
+    It 'skips header/non-version rows that do not match the "REST API X.Y" pattern' {
+        $html = @'
+<tr><th>REST API Version</th><th>HTML</th><th>Introduced in Purity//FB</th><th>Ships with Purity//FB</th></tr>
+<tr><td>REST API 2.27</td><td>x</td><td>4.8.3</td><td>4.8.3</td></tr>
+'@
+        $map = ConvertFrom-PfbSsotVersionMapHtml -Html $html
+
+        $map.Count | Should -Be 1
+        $map.Contains('2.27') | Should -BeTrue
+    }
+
+    It 'skips rows with fewer than 4 cells' {
+        $html = '<tr><td>REST API 2.27</td><td>only two cells</td></tr>'
+        $map = ConvertFrom-PfbSsotVersionMapHtml -Html $html
+
+        $map.Count | Should -Be 0
+    }
+
+    It 'returns an empty map when no matching rows are present' {
+        $map = ConvertFrom-PfbSsotVersionMapHtml -Html '<html><body>nothing relevant here</body></html>'
+
+        $map.Count | Should -Be 0
     }
 }

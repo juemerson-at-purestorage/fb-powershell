@@ -1,63 +1,81 @@
 <#
 .SYNOPSIS
     Shared helpers for tools/Update-PfbVersionMap.ps1. Split out from that script so the
-    pure, fully-specified pieces (URL derivation) are unit-testable independent of the
-    network-dependent orchestration and the not-yet-implemented page parsing.
+    pure, fully-specified pieces (URI construction, HTML table parsing) are unit-testable
+    independent of the network-dependent orchestration.
 #>
 
-function ConvertTo-PfbSupportNotesUrl {
+function Get-PfbSsotVersionMapUri {
     <#
     .SYNOPSIS
-        Derives the Everpure support-site URL for a REST version's release notes.
+        Builds the SSOT (Single Source of Truth) API URI for the FlashBlade REST API
+        version <-> Purity//FB mapping topic.
     .DESCRIPTION
-        Pattern confirmed by the user against a real page for 2.27:
-        https://support.everpuredata.com/r/flashblade-release/purityfb-management-rest-api-227-release-notes
-        The dot in the REST version is stripped (2.27 -> 227). The page itself is
-        confirmed to require authentication (401 without a token as of 2026-07-08).
+        The SSOT API is a scoped proxy in front of Fluid Topics (owner: ***REMOVED*** /
+        ***REMOVED***), delta-synced nightly. This one endpoint returns the full REST-version-
+        to-Purity//FB mapping table as HTML in a single call - no per-version fetches
+        needed. Auth is an `x-api-key` header (see tools/Update-PfbVersionMap.ps1), not a
+        bearer token.
     .EXAMPLE
-        ConvertTo-PfbSupportNotesUrl -RestVersion '2.27'
+        Get-PfbSsotVersionMapUri
     #>
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory)]
-        [ValidatePattern('^\d+\.\d+$')]
-        [string]$RestVersion
+        [string]$BaseUri = 'https://***REMOVED***',
+        [string]$TopicId = '***REMOVED***'
     )
 
-    $compact = $RestVersion -replace '\.', ''
-    return "https://support.everpuredata.com/r/flashblade-release/purityfb-management-rest-api-$compact-release-notes"
+    return "$BaseUri/v1/topics/$TopicId/content"
 }
 
-function Get-PfbVersionMapEntryFromHtml {
+function ConvertFrom-PfbSsotVersionMapHtml {
     <#
     .SYNOPSIS
-        Parses a fetched release-notes page into a { purity } entry.
+        Parses the SSOT version-mapping topic's HTML into a REST-version -> { purity }
+        map covering every row in the table.
     .DESCRIPTION
-        TODO(unblocked-by-service-key): this parsing logic is UNVERIFIED against a real
-        page. As of 2026-07-08 the release-notes page 401s without a service-key token,
-        so no authenticated sample has been seen. This is a best-effort placeholder that
-        scans the page text for a "Purity//FB X.Y.Z" pattern; replace with real selectors
-        (or a structured content API, if the support platform has one) once a service key
-        is available and a real page can be fetched.
+        The table has (at least) four columns: REST API Version | HTML | Introduced in
+        Purity//FB | Ships with Purity//FB. This uses the "Introduced in" column, matching
+        the existing hand-maintained Data/PfbVersionMap.json convention. Rows that don't
+        have a "REST API X.Y" first cell (e.g. the header row) or that have fewer than 4
+        cells are skipped rather than erroring, since the table also carries the legacy
+        REST 1.x line, which this module doesn't track.
+
+        Parsed with regex rather than a DOM parser so this runs identically on Windows and
+        the ubuntu-latest CI runner (no HTMLFile COM object, which is Windows-only).
     .OUTPUTS
-        [PSCustomObject]@{ purity = '4.8.1' }, or $null if no pattern was found.
+        [ordered] hashtable keyed by bare REST version (e.g. '2.27') -> @{ purity = '4.8.3' }
     #>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
-        [string]$Html,
-
-        [Parameter(Mandatory)]
-        [string]$RestVersion
+        [string]$Html
     )
 
-    $textMatch = [regex]::Match($Html, 'Purity\s*//\s*FB\s+(\d+\.\d+\.\d+)')
-    if (-not $textMatch.Success) {
-        Write-Warning "Could not find a 'Purity//FB X.Y.Z' pattern on the release-notes page for REST $RestVersion. Page format is unconfirmed - see the TODO in this function."
-        return $null
+    $map = [ordered]@{}
+
+    $rowMatches = [regex]::Matches($Html, '<tr[^>]*>(.*?)</tr>', 'Singleline, IgnoreCase')
+    foreach ($rowMatch in $rowMatches) {
+        $cellMatches = [regex]::Matches($rowMatch.Groups[1].Value, '<t[dh][^>]*>(.*?)</t[dh]>', 'Singleline, IgnoreCase')
+        if ($cellMatches.Count -lt 4) {
+            continue
+        }
+
+        $cells = $cellMatches | ForEach-Object {
+            $text = [regex]::Replace($_.Groups[1].Value, '<[^>]+>', '')
+            $text = [System.Net.WebUtility]::HtmlDecode($text)
+            $text.Trim()
+        }
+
+        $versionMatch = [regex]::Match($cells[0], 'REST API (\d+\.\d+)')
+        if (-not $versionMatch.Success) {
+            continue
+        }
+
+        $map[$versionMatch.Groups[1].Value] = [PSCustomObject]@{
+            purity = $cells[2]
+        }
     }
 
-    return [PSCustomObject]@{
-        purity = $textMatch.Groups[1].Value
-    }
+    return $map
 }

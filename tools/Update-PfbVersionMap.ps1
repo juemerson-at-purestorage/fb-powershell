@@ -1,32 +1,21 @@
 #Requires -Version 7.0
 <#
 .SYNOPSIS
-    Builds/updates the REST-API-version <-> Purity//FB-version map from per-version
-    release notes.
+    Builds/updates the REST-API-version <-> Purity//FB-version map from the SSOT
+    (Single Source of Truth) API.
 .DESCRIPTION
-    Each FlashBlade REST API version has a corresponding "Purity//FB Management REST API
-    X.Y Release Notes" page. This script derives that pairing (plus, best-effort, a short
-    human-readable summary of changes) and writes Data/PfbVersionMap.json, so runtime code
-    (Phase 2's capability check) can render messages like "requires REST 2.26 / Purity//FB
-    4.8.1" without a live lookup.
+    Each FlashBlade REST API version has a corresponding row in a single "FlashBlade
+    Management REST API Reference" table, exposed by a scoped SSOT API proxy in front of
+    Fluid Topics (owner: ***REMOVED*** / ***REMOVED***, delta-synced nightly from FT). This
+    fetches that table in one call and derives the REST<->Purity//FB pairing, writing
+    Data/PfbVersionMap.json so runtime code (Phase 2's capability check) can render
+    messages like "requires REST 2.26 / Purity//FB 4.8.1" without a live lookup.
 
-    STATUS: skeleton pending a working credential. The release-notes pages live behind
-    auth at https://support.everpuredata.com/r/flashblade-release/... — confirmed
-    returning HTTP 401 without a service-key token. The URL-derivation logic below (dot
-    stripped, e.g. "2.27" -> ".../purityfb-management-rest-api-227-release-notes") and the
-    token-gated fetch plumbing are implemented and tested; the actual page-content parsing
-    is NOT yet implemented because no authenticated sample page has been seen. Once a
-    service-key secret is available, fetch one real page and replace the TODO in
-    Get-PfbVersionMapEntryFromHtml below with real selectors.
-
-    When no token is configured (local dev without a key, or CI without the secret set),
-    this script does not fail — it reports which versions still need lookup and exits,
-    leaving PfbVersionMap.json untouched. In that case, populate entries via the
-    Glean-assisted flow instead (ask an agent with Glean access to look up "Purity//FB
-    Management REST API 2.N Release Notes" and merge results manually) - this path is
-    interactive/local-only and cannot run in headless CI.
-.PARAMETER SupportToken
-    Bearer token for the Everpure support site. Defaults to $env:EVERPURE_SUPPORT_TOKEN.
+    When no API key is configured (local dev without a key, or CI without the secret
+    set), this script does not fail - it reports which versions still need lookup and
+    exits, leaving PfbVersionMap.json untouched.
+.PARAMETER SsotApiKey
+    API key for the SSOT proxy (`x-api-key` header). Defaults to $env:SSOT_API_KEY.
 .PARAMETER Versions
     REST versions to look up (e.g. '2.26','2.27'). Defaults to every version discovered
     under tools/specs/ that is not yet present in Data/PfbVersionMap.json.
@@ -35,7 +24,7 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$SupportToken = $env:EVERPURE_SUPPORT_TOKEN,
+    [string]$SsotApiKey = $env:SSOT_API_KEY,
 
     [string[]]$Versions,
 
@@ -75,41 +64,34 @@ if (-not $Versions) {
     return
 }
 
-if (-not $SupportToken) {
+if (-not $SsotApiKey) {
     Write-Warning @"
-No support-site token configured (`$env:EVERPURE_SUPPORT_TOKEN` / -SupportToken not set).
-This step is skipped in that case rather than failing — CI will proceed without updating
-the version map, and Data/PfbVersionMap.json is left untouched.
+No SSOT API key configured (`$env:SSOT_API_KEY` / -SsotApiKey not set). This step is
+skipped in that case rather than failing - CI will proceed without updating the version
+map, and Data/PfbVersionMap.json is left untouched.
 
 Versions still needing a REST<->Purity mapping: $($Versions -join ', ')
-
-To fill these in without a service key, ask an agent with Glean access to look up
-"Purity//FB Management REST API <version> Release Notes" for each and merge the results
-into $OutputPath by hand.
 "@
     return
 }
 
-# --- Fetch + parse (best-effort; see STATUS note above) ---
+# --- Fetch + parse the full mapping table in one call ---
+
+$uri = Get-PfbSsotVersionMapUri
+Write-Host "Fetching $uri..." -ForegroundColor Cyan
+
+$response = Invoke-WebRequest -Uri $uri -Headers @{ 'x-api-key' = $SsotApiKey } -UseBasicParsing
+$parsed = ConvertFrom-PfbSsotVersionMapHtml -Html $response.Content
 
 $updated = $false
 foreach ($version in $Versions) {
-    $url = ConvertTo-PfbSupportNotesUrl -RestVersion $version
-    Write-Host "Fetching $url..." -ForegroundColor Cyan
-
-    try {
-        $response = Invoke-WebRequest -Uri $url -Headers @{ Authorization = "Bearer $SupportToken" } -UseBasicParsing
-    }
-    catch {
-        Write-Warning "Failed to fetch release notes for REST $version : $($_.Exception.Message)"
-        continue
-    }
-
-    $entry = Get-PfbVersionMapEntryFromHtml -Html $response.Content -RestVersion $version
-    if ($entry) {
-        $existingMap[$version] = $entry
+    if ($parsed.Contains($version)) {
+        $existingMap[$version] = $parsed[$version]
         $updated = $true
-        Write-Host "  -> REST $version = Purity//FB $($entry.purity)" -ForegroundColor Green
+        Write-Host "  -> REST $version = Purity//FB $($parsed[$version].purity)" -ForegroundColor Green
+    }
+    else {
+        Write-Warning "SSOT table has no row for REST $version."
     }
 }
 
