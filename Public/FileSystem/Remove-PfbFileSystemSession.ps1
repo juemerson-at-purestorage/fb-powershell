@@ -10,6 +10,10 @@ function Remove-PfbFileSystemSession {
         The name of the file system whose session should be terminated.
     .PARAMETER Id
         The ID of the session to terminate.
+    .PARAMETER Protocol
+        Narrows termination to sessions using one or more specific protocols, in addition to
+        the required -Name or -Id target. Valid values are "nfs" and "smb". Does not replace
+        -Name/-Id as the target selector.
     .PARAMETER Array
         The FlashBlade connection object. If not specified, uses the default connection.
     .EXAMPLE
@@ -31,6 +35,10 @@ function Remove-PfbFileSystemSession {
         [string]$Id,
 
         [Parameter()]
+        [ValidateSet('nfs', 'smb')]
+        [string[]]$Protocol,
+
+        [Parameter()]
         [PSCustomObject]$Array
     )
 
@@ -40,8 +48,9 @@ function Remove-PfbFileSystemSession {
 
     process {
         $queryParams = @{}
-        if ($Name) { $queryParams['names'] = $Name }
-        if ($Id)   { $queryParams['ids']   = $Id }
+        if ($Name)     { $queryParams['names']     = $Name }
+        if ($Id)       { $queryParams['ids']       = $Id }
+        if ($Protocol) { $queryParams['protocols'] = $Protocol -join ',' }
 
         $target = if ($Name) { $Name } else { $Id }
 
