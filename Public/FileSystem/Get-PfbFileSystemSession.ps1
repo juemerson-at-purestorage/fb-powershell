@@ -18,6 +18,9 @@ function Get-PfbFileSystemSession {
         Maximum number of items to return.
     .PARAMETER TotalOnly
         Return only the total count, not the items.
+    .PARAMETER Protocol
+        Restricts results to sessions using one or more specific protocols. Valid values are
+        "nfs" and "smb".
     .PARAMETER Array
         The FlashBlade connection object. If not specified, uses the default connection.
     .EXAMPLE
@@ -54,6 +57,10 @@ function Get-PfbFileSystemSession {
         [switch]$TotalOnly,
 
         [Parameter()]
+        [ValidateSet('nfs', 'smb')]
+        [string[]]$Protocol,
+
+        [Parameter()]
         [PSCustomObject]$Array
     )
 
@@ -76,6 +83,7 @@ function Get-PfbFileSystemSession {
         if ($Sort)                 { $queryParams['sort']       = $Sort }
         if ($Limit -gt 0)         { $queryParams['limit']      = $Limit }
         if ($TotalOnly)            { $queryParams['total_only'] = 'true' }
+        if ($Protocol)             { $queryParams['protocols']  = $Protocol -join ',' }
 
         Invoke-PfbApiRequest -Array $Array -Method GET -Endpoint 'file-systems/sessions' -QueryParams $queryParams -AutoPaginate
     }
