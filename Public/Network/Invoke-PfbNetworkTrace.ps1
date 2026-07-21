@@ -10,6 +10,8 @@ function Invoke-PfbNetworkTrace {
         The hostname or IP address to trace the route to. This parameter is mandatory.
     .PARAMETER SourceName
         The name of the network interface to use as the source of the trace.
+    .PARAMETER Method
+        The trace protocol to use. Valid values are "icmp", "tcp", and "udp".
     .PARAMETER Array
         The FlashBlade connection object. If not specified, the default connection is used.
     .EXAMPLE
@@ -29,12 +31,16 @@ function Invoke-PfbNetworkTrace {
     param(
         [Parameter(Mandatory, Position = 0)] [string]$Destination,
         [Parameter()] [string]$SourceName,
+        [Parameter()]
+        [ValidateSet('icmp', 'tcp', 'udp')]
+        [string]$Method,
         [Parameter()] [PSCustomObject]$Array
     )
     begin { Assert-PfbConnection -Array ([ref]$Array) }
     process {
         $queryParams = @{ 'destination' = $Destination }
         if ($SourceName) { $queryParams['source.name'] = $SourceName }
+        if ($Method)     { $queryParams['method']       = $Method }
         Invoke-PfbApiRequest -Array $Array -Method GET -Endpoint 'network-interfaces/trace' -QueryParams $queryParams
     }
 }
