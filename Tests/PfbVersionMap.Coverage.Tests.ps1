@@ -4,12 +4,12 @@
     Data-integrity guard: every REST version the capability map was generated from must
     have a corresponding entry in Data/PfbVersionMap.json.
 .DESCRIPTION
-    Data/PfbVersionMap.json is currently hand-maintained (Glean-sourced) rather than
-    produced by the still-deferred tools/Update-PfbVersionMap.ps1 generator -- see that
-    script's header and tools/README.md Sec.3. This test does not care how the file was
-    produced; it only catches drift, e.g. a new REST version landing in
-    Data/PfbCapabilityMap.json (via the weekly CI refresh) without a matching Purity//FB
-    pairing being added, either by hand or by the generator once it is unblocked.
+    Data/PfbVersionMap.json is currently a static, hand-curated file rather than one kept
+    fresh by tools/Update-PfbVersionMap.ps1's CI run (see that script's header and
+    tools/README.md Sec.3). This test does not care how the file was produced; it only
+    catches drift, e.g. a new REST version landing in Data/PfbCapabilityMap.json (via the
+    weekly CI refresh) without a matching Purity//FB pairing being added, either by hand
+    or by the generator.
 #>
 
 BeforeAll {

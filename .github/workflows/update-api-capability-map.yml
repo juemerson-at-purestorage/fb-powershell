@@ -1,6 +1,6 @@
 name: Update API Capability Map
 
-# Keeps Data/PfbCapabilityMap.json (and, when a support-site token is configured,
+# Keeps Data/PfbCapabilityMap.json (and, when an SSOT API key is configured,
 # Data/PfbVersionMap.json) in sync with newly-published FlashBlade REST API versions.
 # See tools/lib/PfbSpecTools.ps1 for how the manifest is derived, and tools/README.md
 # for the overall pipeline this feeds into.
@@ -65,10 +65,10 @@ jobs:
         shell: pwsh
         run: ./tools/Build-PfbCapabilityMap.ps1
 
-      - name: Update REST<->Purity version map (skips gracefully if no token configured)
+      - name: Update REST<->Purity version map (skips gracefully if no key configured)
         shell: pwsh
         env:
-          EVERPURE_SUPPORT_TOKEN: ${{ secrets.EVERPURE_SUPPORT_TOKEN }}
+          SSOT_API_KEY: ${{ secrets.SSOT_API_KEY }}
         run: ./tools/Update-PfbVersionMap.ps1
 
       - name: Build value-enum map
@@ -135,13 +135,13 @@ jobs:
             - Re-fetched every published REST API spec version from the FlashBlade
               swagger index (not committed - see `.gitignore`) and rebuilt
               `Data/PfbCapabilityMap.json` from the full history.
-            - Updated `Data/PfbVersionMap.json` if an `EVERPURE_SUPPORT_TOKEN` secret is
+            - Updated `Data/PfbVersionMap.json` if an `SSOT_API_KEY` secret is
               configured; otherwise left untouched (see `tools/Update-PfbVersionMap.ps1`).
             - Rebuilt `Reports/PfbValueEnumMap.json`, `Reports/PfbFieldCmdletMap.json`, and
               `Reports/PfbApiDriftReport.json` (+ their Markdown companions) -- see
               `Reports/README.md` for what each answers.
 
-            New REST versions detected: ${{ steps.summary.outputs.new_versions || 'none - see diff (e.g. a version-map-only update once a support-site token was configured, or new parameters/fields added to existing endpoints in a point release)' }}
+            New REST versions detected: ${{ steps.summary.outputs.new_versions || 'none - see diff (e.g. a version-map-only update once an SSOT_API_KEY secret was configured, or new parameters/fields added to existing endpoints in a point release)' }}
 
             API drift report: ${{ steps.summary.outputs.drift_summary || 'no drift-report changes this run' }}
           branch: automated/update-api-capability-map
