@@ -4,12 +4,12 @@ function Get-PfbFileSystemSession {
         Retrieves file system sessions from the FlashBlade.
     .DESCRIPTION
         Returns active client sessions connected to file systems on the FlashBlade.
-        Supports filtering by file system name, ID, or advanced filter expressions.
+        Supports filtering by session name, protocol, or advanced filter expressions.
         Auto-paginates by default.
     .PARAMETER Name
-        One or more file system names to retrieve sessions for. Accepts pipeline input.
-    .PARAMETER Id
-        One or more session IDs to retrieve.
+        One or more session names to filter by -- the session's own generated identifier
+        (e.g. as returned in a prior Get-PfbFileSystemSession call's Name property), NOT the
+        name of a file system. Accepts pipeline input.
     .PARAMETER Filter
         A server-side filter expression to narrow results.
     .PARAMETER Sort
@@ -27,8 +27,8 @@ function Get-PfbFileSystemSession {
         Get-PfbFileSystemSession
         Returns all file system sessions on the FlashBlade.
     .EXAMPLE
-        Get-PfbFileSystemSession -Name "fs01"
-        Returns all sessions connected to file system 'fs01'.
+        Get-PfbFileSystemSession -Name "22517998136858346-smb"
+        Returns the single session with that session name.
     .EXAMPLE
         Get-PfbFileSystemSession -Filter "protocol='NFS'" -Limit 50
         Returns up to 50 NFS sessions.
@@ -38,10 +38,6 @@ function Get-PfbFileSystemSession {
         [Parameter(ParameterSetName = 'ByName', ValueFromPipeline, ValueFromPipelineByPropertyName)]
         [ValidateNotNullOrEmpty()]
         [string[]]$Name,
-
-        [Parameter(ParameterSetName = 'ById')]
-        [ValidateNotNullOrEmpty()]
-        [string[]]$Id,
 
         [Parameter()]
         [string]$Filter,
@@ -67,18 +63,15 @@ function Get-PfbFileSystemSession {
     begin {
         Assert-PfbConnection -Array ([ref]$Array)
         $allNames = [System.Collections.Generic.List[string]]::new()
-        $allIds = [System.Collections.Generic.List[string]]::new()
     }
 
     process {
         if ($Name) { foreach ($n in $Name) { $allNames.Add($n) } }
-        if ($Id)   { foreach ($i in $Id)   { $allIds.Add($i) } }
     }
 
     end {
         $queryParams = @{}
         if ($allNames.Count -gt 0) { $queryParams['names']      = $allNames -join ',' }
-        if ($allIds.Count -gt 0)   { $queryParams['ids']        = $allIds -join ',' }
         if ($Filter)               { $queryParams['filter']     = $Filter }
         if ($Sort)                 { $queryParams['sort']       = $Sort }
         if ($Limit -gt 0)         { $queryParams['limit']      = $Limit }

@@ -36,4 +36,15 @@ Describe 'Get-PfbFileSystemSession' {
             -not $QueryParams.ContainsKey('protocols')
         }
     }
+
+    It 'has no -Id parameter (the endpoint has no ids query parameter in any spec version)' {
+        (Get-Command Get-PfbFileSystemSession).Parameters.ContainsKey('Id') | Should -BeFalse
+    }
+
+    It 'passes -Name through to the query string as the session''s own name filter' {
+        Get-PfbFileSystemSession -Name '22517998136858346-smb' -Array $fakeArray
+        Should -Invoke Invoke-PfbApiRequest -ModuleName PureStorageFlashBladePowerShell -Times 1 -Exactly -ParameterFilter {
+            $QueryParams['names'] -eq '22517998136858346-smb'
+        }
+    }
 }
