@@ -38,8 +38,13 @@ function ConvertFrom-PfbSsotVersionMapHtml {
         Purity//FB | Ships with Purity//FB. This uses the "Introduced in" column, matching
         the existing hand-maintained Data/PfbVersionMap.json convention. Rows that don't
         have a "REST API X.Y" first cell (e.g. the header row) or that have fewer than 4
-        cells are skipped rather than erroring, since the table also carries the legacy
-        REST 1.x line, which this module doesn't track.
+        cells are skipped rather than erroring.
+
+        Note: the table also carries the legacy REST 1.x line (e.g. "REST API 1.11"),
+        which matches the same "REST API X.Y" pattern and so IS included in the returned
+        map - this function doesn't filter by major version. Callers that only care about
+        the 2.x line (e.g. Update-PfbVersionMap.ps1, which only requests versions found in
+        tools/specs/) simply never ask for those keys; they aren't dropped here.
 
         Parsed with regex rather than a DOM parser so this runs identically on Windows and
         the ubuntu-latest CI runner (no HTMLFile COM object, which is Windows-only).
