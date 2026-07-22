@@ -3,8 +3,8 @@
 .SYNOPSIS
     Unit tests for tools/lib/PfbVersionMapTools.ps1.
 .DESCRIPTION
-    Covers the SSOT (Fluid Topics proxy) fetch-URL builder and the HTML table parser,
-    both fully-specified and network-independent. The orchestration in
+    Covers the internal SSOT (Single Source of Truth) API's fetch-URL builder and the
+    HTML table parser, both fully-specified and network-independent. The orchestration in
     tools/Update-PfbVersionMap.ps1 itself (the live HTTP fetch) is not unit tested here,
     consistent with the rest of this module's tools/ scripts.
 #>
@@ -15,14 +15,17 @@ BeforeAll {
 }
 
 Describe 'Get-PfbSsotVersionMapUri' {
-    It 'builds the default SSOT topic-content URL' {
-        Get-PfbSsotVersionMapUri |
-            Should -Be 'https://***REMOVED***/v1/topics/***REMOVED***/content'
-    }
-
-    It 'honors overrides for base URI and topic ID' {
+    It 'builds the topic-content URL from the given base URI and topic ID' {
         Get-PfbSsotVersionMapUri -BaseUri 'https://example.test' -TopicId 'abc123' |
             Should -Be 'https://example.test/v1/topics/abc123/content'
+    }
+
+    It 'requires -BaseUri' {
+        { Get-PfbSsotVersionMapUri -TopicId 'abc123' } | Should -Throw
+    }
+
+    It 'requires -TopicId' {
+        { Get-PfbSsotVersionMapUri -BaseUri 'https://example.test' } | Should -Throw
     }
 }
 

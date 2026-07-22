@@ -11,18 +11,28 @@ function Get-PfbSsotVersionMapUri {
         Builds the SSOT (Single Source of Truth) API URI for the FlashBlade REST API
         version <-> Purity//FB mapping topic.
     .DESCRIPTION
-        The SSOT API is a scoped proxy in front of Fluid Topics (owner: ***REMOVED*** /
-        ***REMOVED***), delta-synced nightly. This one endpoint returns the full REST-version-
-        to-Purity//FB mapping table as HTML in a single call - no per-version fetches
-        needed. Auth is an `x-api-key` header (see tools/Update-PfbVersionMap.ps1), not a
-        bearer token.
+        Each FlashBlade REST API version has a corresponding row in a single "FlashBlade
+        Management REST API Reference" table. This one endpoint returns the full
+        REST-version-to-Purity//FB mapping table as HTML in a single call - no per-
+        version fetches needed. Auth is an `x-api-key` header (see
+        tools/Update-PfbVersionMap.ps1), not a bearer token.
+
+        -BaseUri and -TopicId are both required, are internal details and are not
+        hardcoded in this repo. Callers should source both from their own configuration
+        (e.g. environment variables), the same way tools/Update-PfbVersionMap.ps1 sources
+        the API key from $env:SSOT_API_KEY.
     .EXAMPLE
-        Get-PfbSsotVersionMapUri
+        Get-PfbSsotVersionMapUri -BaseUri $env:SSOT_BASE_URI -TopicId $env:SSOT_TOPIC_ID
     #>
     [CmdletBinding()]
     param(
-        [string]$BaseUri = 'https://***REMOVED***',
-        [string]$TopicId = '***REMOVED***'
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]$BaseUri,
+
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]$TopicId
     )
 
     return "$BaseUri/v1/topics/$TopicId/content"
