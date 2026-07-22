@@ -113,6 +113,19 @@ if (Test-Path $licenseSource) {
     Write-Host "  Copied LICENSE" -ForegroundColor Green
 }
 
+# --- Copy Data/ (runtime-consumed only: Get-PfbCapabilityMap.ps1 / Get-PfbVersionMap.ps1
+# read Data/PfbCapabilityMap.json and Data/PfbVersionMap.json relative to the installed
+# module root via $script:PfbModuleRoot -- omitting this directory doesn't crash anything
+# (both loaders treat a missing file as a graceful no-op), it just silently makes the
+# entire "fail fast on an unsupported API version" feature inert for every real Gallery
+# install. Reports/ is deliberately NEVER copied here -- it's maintainer/agent-facing
+# advisory output only, dead weight for an end user's install.
+$dataSource = Join-Path $repoRoot 'Data'
+if (Test-Path $dataSource) {
+    Copy-Item -Path $dataSource -Destination $OutputPath -Recurse
+    Write-Host "  Copied Data/" -ForegroundColor Green
+}
+
 # --- Summary ---
 Write-Host ''
 Write-Host "Build complete!" -ForegroundColor Green

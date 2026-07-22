@@ -1,0 +1,4946 @@
+{
+  "schemaVersion": 1,
+  "generatedFrom": [
+    "2.0",
+    "2.1",
+    "2.2",
+    "2.3",
+    "2.4",
+    "2.5",
+    "2.6",
+    "2.7",
+    "2.8",
+    "2.9",
+    "2.10",
+    "2.11",
+    "2.12",
+    "2.13",
+    "2.14",
+    "2.15",
+    "2.16",
+    "2.17",
+    "2.18",
+    "2.19",
+    "2.20",
+    "2.21",
+    "2.22",
+    "2.23",
+    "2.24",
+    "2.25",
+    "2.26",
+    "2.27"
+  ],
+  "sinceVersion": null,
+  "uncoveredEndpoints": [
+    {
+      "endpoint": "GET /api/login-banner",
+      "minVersion": "2.0"
+    },
+    {
+      "endpoint": "POST /bucket-replica-links",
+      "minVersion": "2.0"
+    },
+    {
+      "endpoint": "PATCH /bucket-replica-links",
+      "minVersion": "2.0"
+    },
+    {
+      "endpoint": "DELETE /bucket-replica-links",
+      "minVersion": "2.0"
+    },
+    {
+      "endpoint": "POST /certificate-groups/certificates",
+      "minVersion": "2.0"
+    },
+    {
+      "endpoint": "DELETE /certificate-groups/certificates",
+      "minVersion": "2.0"
+    },
+    {
+      "endpoint": "PATCH /directory-services/test",
+      "minVersion": "2.0"
+    },
+    {
+      "endpoint": "GET /file-systems/performance",
+      "minVersion": "2.0"
+    },
+    {
+      "endpoint": "PATCH /object-store-access-keys",
+      "minVersion": "2.0"
+    },
+    {
+      "endpoint": "DELETE /policies/file-system-snapshots",
+      "minVersion": "2.0"
+    },
+    {
+      "endpoint": "GET /policies/members",
+      "minVersion": "2.0"
+    },
+    {
+      "endpoint": "PATCH /smtp-servers",
+      "minVersion": "2.0"
+    },
+    {
+      "endpoint": "POST /kmip",
+      "minVersion": "2.1"
+    },
+    {
+      "endpoint": "DELETE /kmip",
+      "minVersion": "2.1"
+    },
+    {
+      "endpoint": "PATCH /object-store-access-policies",
+      "minVersion": "2.2"
+    },
+    {
+      "endpoint": "GET /file-systems/policies-all",
+      "minVersion": "2.3"
+    },
+    {
+      "endpoint": "PATCH /object-store-accounts",
+      "minVersion": "2.8"
+    },
+    {
+      "endpoint": "POST /admins",
+      "minVersion": "2.15"
+    },
+    {
+      "endpoint": "DELETE /admins",
+      "minVersion": "2.15"
+    },
+    {
+      "endpoint": "PATCH /sso/saml2/idps/test",
+      "minVersion": "2.16"
+    },
+    {
+      "endpoint": "GET /tls-policies/network-interfaces",
+      "minVersion": "2.17"
+    },
+    {
+      "endpoint": "POST /tls-policies/network-interfaces",
+      "minVersion": "2.17"
+    },
+    {
+      "endpoint": "DELETE /tls-policies/network-interfaces",
+      "minVersion": "2.17"
+    },
+    {
+      "endpoint": "PATCH /file-system-replica-links",
+      "minVersion": "2.17"
+    },
+    {
+      "endpoint": "PATCH /object-store-roles/object-store-trust-policies/upload",
+      "minVersion": "2.17"
+    },
+    {
+      "endpoint": "GET /object-store-roles/object-store-trust-policies/download",
+      "minVersion": "2.17"
+    },
+    {
+      "endpoint": "POST /nodes/batch",
+      "minVersion": "2.18"
+    },
+    {
+      "endpoint": "POST /resource-accesses/batch",
+      "minVersion": "2.19"
+    },
+    {
+      "endpoint": "GET /file-systems/data-eviction-policies",
+      "minVersion": "2.21"
+    },
+    {
+      "endpoint": "POST /file-systems/data-eviction-policies",
+      "minVersion": "2.21"
+    },
+    {
+      "endpoint": "DELETE /file-systems/data-eviction-policies",
+      "minVersion": "2.21"
+    },
+    {
+      "endpoint": "GET /admins/management-authentication-policies",
+      "minVersion": "2.22"
+    },
+    {
+      "endpoint": "POST /admins/management-authentication-policies",
+      "minVersion": "2.22"
+    },
+    {
+      "endpoint": "DELETE /admins/management-authentication-policies",
+      "minVersion": "2.22"
+    },
+    {
+      "endpoint": "GET /arrays/management-authentication-policies",
+      "minVersion": "2.22"
+    },
+    {
+      "endpoint": "POST /arrays/management-authentication-policies",
+      "minVersion": "2.22"
+    },
+    {
+      "endpoint": "DELETE /arrays/management-authentication-policies",
+      "minVersion": "2.22"
+    },
+    {
+      "endpoint": "GET /management-authentication-policies",
+      "minVersion": "2.22"
+    },
+    {
+      "endpoint": "POST /management-authentication-policies",
+      "minVersion": "2.22"
+    },
+    {
+      "endpoint": "DELETE /management-authentication-policies",
+      "minVersion": "2.22"
+    },
+    {
+      "endpoint": "PATCH /management-authentication-policies",
+      "minVersion": "2.22"
+    },
+    {
+      "endpoint": "GET /management-authentication-policies/members",
+      "minVersion": "2.22"
+    },
+    {
+      "endpoint": "POST /management-authentication-policies/members",
+      "minVersion": "2.22"
+    },
+    {
+      "endpoint": "DELETE /management-authentication-policies/members",
+      "minVersion": "2.22"
+    },
+    {
+      "endpoint": "PUT /presets/workload",
+      "minVersion": "2.23"
+    },
+    {
+      "endpoint": "GET /resiliency-groups/members",
+      "minVersion": "2.23"
+    },
+    {
+      "endpoint": "PUT /workloads/tags/batch",
+      "minVersion": "2.23"
+    },
+    {
+      "endpoint": "DELETE /directory-services/local/directory-services",
+      "minVersion": "2.24"
+    },
+    {
+      "endpoint": "PATCH /directory-services/local/directory-services",
+      "minVersion": "2.24"
+    },
+    {
+      "endpoint": "PATCH /directory-services/local/groups",
+      "minVersion": "2.24"
+    },
+    {
+      "endpoint": "GET /directory-services/local/users",
+      "minVersion": "2.24"
+    },
+    {
+      "endpoint": "POST /directory-services/local/users",
+      "minVersion": "2.24"
+    },
+    {
+      "endpoint": "DELETE /directory-services/local/users",
+      "minVersion": "2.24"
+    },
+    {
+      "endpoint": "PATCH /directory-services/local/users",
+      "minVersion": "2.24"
+    },
+    {
+      "endpoint": "GET /directory-services/local/users/members",
+      "minVersion": "2.24"
+    },
+    {
+      "endpoint": "POST /directory-services/local/users/members",
+      "minVersion": "2.24"
+    },
+    {
+      "endpoint": "DELETE /directory-services/local/users/members",
+      "minVersion": "2.24"
+    },
+    {
+      "endpoint": "GET /support-diagnostics/settings",
+      "minVersion": "2.24"
+    },
+    {
+      "endpoint": "PATCH /support-diagnostics/settings",
+      "minVersion": "2.24"
+    },
+    {
+      "endpoint": "GET /software-bundle",
+      "minVersion": "2.24"
+    },
+    {
+      "endpoint": "POST /software-bundle",
+      "minVersion": "2.24"
+    },
+    {
+      "endpoint": "GET /software-patches",
+      "minVersion": "2.24"
+    },
+    {
+      "endpoint": "POST /software-patches",
+      "minVersion": "2.24"
+    },
+    {
+      "endpoint": "GET /file-systems/user-group-quota-policies",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "POST /file-systems/user-group-quota-policies",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "DELETE /file-systems/user-group-quota-policies",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "GET /file-system-junctions",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "POST /file-system-junctions",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "DELETE /file-system-junctions",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "GET /file-system-group-quotas",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "GET /file-systems/groups",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "GET /file-system-user-quotas",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "GET /file-systems/users",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "GET /realm-connections",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "POST /realm-connections",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "DELETE /realm-connections",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "GET /realm-connections/connection-key",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "POST /realm-connections/connection-key",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "DELETE /realm-connections/connection-key",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "GET /remote-realms",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "GET /user-group-quota-policies",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "POST /user-group-quota-policies",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "PATCH /user-group-quota-policies",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "DELETE /user-group-quota-policies",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "GET /user-group-quota-policies/rules",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "POST /user-group-quota-policies/rules",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "DELETE /user-group-quota-policies/rules",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "PATCH /user-group-quota-policies/rules",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "GET /user-group-quota-policies/file-systems",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "POST /user-group-quota-policies/file-systems",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "DELETE /user-group-quota-policies/file-systems",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "GET /user-group-quota-policies/members",
+      "minVersion": "2.25"
+    },
+    {
+      "endpoint": "GET /management-access-policies/roles",
+      "minVersion": "2.26"
+    },
+    {
+      "endpoint": "POST /management-access-policies/roles",
+      "minVersion": "2.26"
+    },
+    {
+      "endpoint": "DELETE /management-access-policies/roles",
+      "minVersion": "2.26"
+    },
+    {
+      "endpoint": "GET /management-access-policies/roles/permissions",
+      "minVersion": "2.26"
+    },
+    {
+      "endpoint": "POST /management-access-policies/roles/permissions",
+      "minVersion": "2.26"
+    },
+    {
+      "endpoint": "DELETE /management-access-policies/roles/permissions",
+      "minVersion": "2.26"
+    },
+    {
+      "endpoint": "PATCH /management-access-policies/roles/permissions",
+      "minVersion": "2.26"
+    },
+    {
+      "endpoint": "GET /management-access-policies/roles/permissions/supported-resources",
+      "minVersion": "2.26"
+    },
+    {
+      "endpoint": "GET /management-access-policies/rules",
+      "minVersion": "2.26"
+    },
+    {
+      "endpoint": "POST /management-access-policies/rules",
+      "minVersion": "2.26"
+    },
+    {
+      "endpoint": "DELETE /management-access-policies/rules",
+      "minVersion": "2.26"
+    },
+    {
+      "endpoint": "PATCH /management-access-policies/rules",
+      "minVersion": "2.26"
+    },
+    {
+      "endpoint": "PATCH /remote-arrays",
+      "minVersion": "2.26"
+    },
+    {
+      "endpoint": "GET /support/system-manifest",
+      "minVersion": "2.26"
+    },
+    {
+      "endpoint": "GET /topology-groups",
+      "minVersion": "2.26"
+    },
+    {
+      "endpoint": "POST /topology-groups",
+      "minVersion": "2.26"
+    },
+    {
+      "endpoint": "PATCH /topology-groups",
+      "minVersion": "2.26"
+    },
+    {
+      "endpoint": "DELETE /topology-groups",
+      "minVersion": "2.26"
+    },
+    {
+      "endpoint": "GET /topology-groups/arrays",
+      "minVersion": "2.26"
+    },
+    {
+      "endpoint": "GET /topology-groups/members",
+      "minVersion": "2.26"
+    },
+    {
+      "endpoint": "POST /topology-groups/members",
+      "minVersion": "2.26"
+    },
+    {
+      "endpoint": "DELETE /topology-groups/members",
+      "minVersion": "2.26"
+    },
+    {
+      "endpoint": "PATCH /active-directory/test",
+      "minVersion": "2.27"
+    },
+    {
+      "endpoint": "POST /fleets/members/batch",
+      "minVersion": "2.27"
+    },
+    {
+      "endpoint": "GET /storage-classes/members",
+      "minVersion": "2.27"
+    }
+  ],
+  "parameterGaps": [
+    {
+      "endpoint": "DELETE /active-directory",
+      "cmdlets": [
+        "Remove-PfbActiveDirectory"
+      ],
+      "missingParameters": [
+        "local_only"
+      ]
+    },
+    {
+      "endpoint": "DELETE /admins/api-tokens",
+      "cmdlets": [
+        "Remove-PfbApiToken"
+      ],
+      "missingParameters": [
+        "admin_ids",
+        "admin_names",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /admins/cache",
+      "cmdlets": [
+        "Remove-PfbAdminCache"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /admins/management-access-policies",
+      "cmdlets": [
+        "Remove-PfbAdminManagementAccessPolicy"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /admins/ssh-certificate-authority-policies",
+      "cmdlets": [
+        "Remove-PfbAdminSshCaPolicy"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /array-connections",
+      "cmdlets": [
+        "Remove-PfbArrayConnection"
+      ],
+      "missingParameters": [
+        "context_names",
+        "remote_ids",
+        "remote_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /arrays/ssh-certificate-authority-policies",
+      "cmdlets": [
+        "Remove-PfbArraySshCaPolicy"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /audit-file-systems-policies",
+      "cmdlets": [
+        "Remove-PfbAuditFileSystemPolicy"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /audit-file-systems-policies/members",
+      "cmdlets": [
+        "Remove-PfbAuditFileSystemPolicyMember"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /audit-object-store-policies",
+      "cmdlets": [
+        "Remove-PfbAuditObjectStorePolicy"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /audit-object-store-policies/members",
+      "cmdlets": [
+        "Remove-PfbAuditObjectStorePolicyMember"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /buckets/audit-filters",
+      "cmdlets": [
+        "Remove-PfbBucketAuditFilter"
+      ],
+      "missingParameters": [
+        "bucket_ids",
+        "bucket_names",
+        "context_names",
+        "names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /buckets/cross-origin-resource-sharing-policies",
+      "cmdlets": [
+        "Remove-PfbBucketCorsPolicy"
+      ],
+      "missingParameters": [
+        "bucket_ids",
+        "bucket_names",
+        "context_names",
+        "names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /certificates/certificate-groups",
+      "cmdlets": [
+        "Remove-PfbCertificateCertificateGroup"
+      ],
+      "missingParameters": [
+        "certificate_group_ids",
+        "certificate_ids"
+      ]
+    },
+    {
+      "endpoint": "DELETE /data-eviction-policies",
+      "cmdlets": [
+        "Remove-PfbDataEvictionPolicy"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /data-eviction-policies/file-systems",
+      "cmdlets": [
+        "Remove-PfbDataEvictionPolicyFileSystem"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /directory-services/local/groups",
+      "cmdlets": [
+        "Remove-PfbLocalGroup"
+      ],
+      "missingParameters": [
+        "context_names",
+        "gids",
+        "local_directory_service_ids",
+        "local_directory_service_names",
+        "sids"
+      ]
+    },
+    {
+      "endpoint": "DELETE /dns",
+      "cmdlets": [
+        "Remove-PfbDns"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /file-system-exports",
+      "cmdlets": [
+        "Remove-PfbFileSystemExport"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /file-system-replica-links",
+      "cmdlets": [
+        "Remove-PfbFileSystemReplicaLink"
+      ],
+      "missingParameters": [
+        "context_names",
+        "local_file_system_ids",
+        "remote_file_system_ids",
+        "remote_ids"
+      ]
+    },
+    {
+      "endpoint": "DELETE /file-system-replica-links/policies",
+      "cmdlets": [
+        "Remove-PfbFileSystemReplicaLinkPolicy"
+      ],
+      "missingParameters": [
+        "context_names",
+        "local_file_system_ids",
+        "local_file_system_names",
+        "remote_ids",
+        "remote_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /file-system-snapshots/policies",
+      "cmdlets": [
+        "Remove-PfbFileSystemSnapshotPolicy"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /file-system-snapshots/transfer",
+      "cmdlets": [
+        "Remove-PfbFileSystemSnapshotTransfer"
+      ],
+      "missingParameters": [
+        "context_names",
+        "remote_ids",
+        "remote_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /file-systems/audit-policies",
+      "cmdlets": [
+        "Remove-PfbFileSystemAuditPolicy"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /file-systems/locks",
+      "cmdlets": [
+        "Remove-PfbFileLock"
+      ],
+      "missingParameters": [
+        "client_names",
+        "context_names",
+        "file_system_ids",
+        "file_system_names",
+        "inodes",
+        "paths",
+        "recursive"
+      ]
+    },
+    {
+      "endpoint": "DELETE /file-systems/policies",
+      "cmdlets": [
+        "Remove-PfbFileSystemPolicy"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /file-systems/sessions",
+      "cmdlets": [
+        "Remove-PfbFileSystemSession"
+      ],
+      "missingParameters": [
+        "client_names",
+        "context_names",
+        "disruptive",
+        "protocols",
+        "user_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /fleets/members",
+      "cmdlets": [
+        "Remove-PfbFleetMember"
+      ],
+      "missingParameters": [
+        "member_ids",
+        "unreachable"
+      ]
+    },
+    {
+      "endpoint": "DELETE /lifecycle-rules",
+      "cmdlets": [
+        "Remove-PfbLifecycleRule"
+      ],
+      "missingParameters": [
+        "bucket_ids",
+        "bucket_names",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /log-targets/file-systems",
+      "cmdlets": [
+        "Remove-PfbLogTargetFileSystem"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /log-targets/object-store",
+      "cmdlets": [
+        "Remove-PfbLogTargetObjectStore"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /management-access-policies",
+      "cmdlets": [
+        "Remove-PfbManagementAccessPolicy"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /management-access-policies/admins",
+      "cmdlets": [
+        "Remove-PfbManagementAccessPolicyAdmin"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /network-interfaces/tls-policies",
+      "cmdlets": [
+        "Remove-PfbNetworkInterfaceTlsPolicy"
+      ],
+      "missingParameters": [
+        "member_ids",
+        "policy_ids"
+      ]
+    },
+    {
+      "endpoint": "DELETE /nfs-export-policies",
+      "cmdlets": [
+        "Remove-PfbNfsExportPolicy"
+      ],
+      "missingParameters": [
+        "context_names",
+        "versions"
+      ]
+    },
+    {
+      "endpoint": "DELETE /node-groups/nodes",
+      "cmdlets": [
+        "Remove-PfbNodeGroupNode"
+      ],
+      "missingParameters": [
+        "node_group_ids",
+        "node_group_names",
+        "node_ids",
+        "node_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /object-store-access-keys",
+      "cmdlets": [
+        "Remove-PfbObjectStoreAccessKey"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /object-store-access-policies",
+      "cmdlets": [
+        "Remove-PfbObjectStoreAccessPolicy"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /object-store-account-exports",
+      "cmdlets": [
+        "Remove-PfbObjectStoreAccountExport"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /object-store-accounts",
+      "cmdlets": [
+        "Remove-PfbObjectStoreAccount"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /object-store-remote-credentials",
+      "cmdlets": [
+        "Remove-PfbObjectStoreRemoteCredential"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /object-store-roles",
+      "cmdlets": [
+        "Remove-PfbObjectStoreRole"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /object-store-users",
+      "cmdlets": [
+        "Remove-PfbObjectStoreUser"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /object-store-virtual-hosts",
+      "cmdlets": [
+        "Remove-PfbObjectStoreVirtualHost"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /policies",
+      "cmdlets": [
+        "Remove-PfbPolicy"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /policies/file-system-replica-links",
+      "cmdlets": [
+        "Remove-PfbPolicyFileSystemReplicaLink"
+      ],
+      "missingParameters": [
+        "context_names",
+        "local_file_system_ids",
+        "local_file_system_names",
+        "remote_ids",
+        "remote_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /policies/file-systems",
+      "cmdlets": [
+        "Remove-PfbPolicyFileSystem"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /presets/workload",
+      "cmdlets": [
+        "Remove-PfbPresetWorkload"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /qos-policies",
+      "cmdlets": [
+        "Remove-PfbQosPolicy"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /qos-policies/members",
+      "cmdlets": [
+        "Remove-PfbQosPolicyMember"
+      ],
+      "missingParameters": [
+        "context_names",
+        "member_types"
+      ]
+    },
+    {
+      "endpoint": "DELETE /s3-export-policies",
+      "cmdlets": [
+        "Remove-PfbS3ExportPolicy"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /smb-client-policies",
+      "cmdlets": [
+        "Remove-PfbSmbClientPolicy"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /smb-share-policies",
+      "cmdlets": [
+        "Remove-PfbSmbSharePolicy"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /ssh-certificate-authority-policies/admins",
+      "cmdlets": [
+        "Remove-PfbSshCaPolicyAdmin"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /ssh-certificate-authority-policies/arrays",
+      "cmdlets": [
+        "Remove-PfbSshCaPolicyArray"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /workloads",
+      "cmdlets": [
+        "Remove-PfbWorkload"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "DELETE /worm-data-policies",
+      "cmdlets": [
+        "Remove-PfbWormPolicy"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /active-directory",
+      "cmdlets": [
+        "Get-PfbActiveDirectory"
+      ],
+      "missingParameters": [
+        "ids",
+        "limit",
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /active-directory/test",
+      "cmdlets": [
+        "Test-PfbActiveDirectory"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "filter",
+        "limit",
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /admins",
+      "cmdlets": [
+        "Get-PfbAdmin"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "expose_api_token"
+      ]
+    },
+    {
+      "endpoint": "GET /admins/api-tokens",
+      "cmdlets": [
+        "Get-PfbApiToken"
+      ],
+      "missingParameters": [
+        "admin_ids",
+        "admin_names",
+        "allow_errors",
+        "context_names",
+        "expose_api_token"
+      ]
+    },
+    {
+      "endpoint": "GET /admins/cache",
+      "cmdlets": [
+        "Get-PfbAdminCache"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "refresh"
+      ]
+    },
+    {
+      "endpoint": "GET /admins/management-access-policies",
+      "cmdlets": [
+        "Get-PfbAdminManagementAccessPolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /admins/ssh-certificate-authority-policies",
+      "cmdlets": [
+        "Get-PfbAdminSshCaPolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /alert-watchers/test",
+      "cmdlets": [
+        "Test-PfbAlertWatcher"
+      ],
+      "missingParameters": [
+        "filter",
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /array-connections",
+      "cmdlets": [
+        "Get-PfbArrayConnection"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "remote_ids",
+        "remote_names"
+      ]
+    },
+    {
+      "endpoint": "GET /array-connections/connection-key",
+      "cmdlets": [
+        "Get-PfbArrayConnectionKey"
+      ],
+      "missingParameters": [
+        "ids"
+      ]
+    },
+    {
+      "endpoint": "GET /array-connections/path",
+      "cmdlets": [
+        "Get-PfbArrayConnectionPath"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "ids",
+        "remote_ids",
+        "remote_names"
+      ]
+    },
+    {
+      "endpoint": "GET /array-connections/performance/replication",
+      "cmdlets": [
+        "Get-PfbArrayConnectionPerformanceReplication"
+      ],
+      "missingParameters": [
+        "ids",
+        "remote_ids",
+        "remote_names",
+        "total_only",
+        "type"
+      ]
+    },
+    {
+      "endpoint": "GET /arrays/clients/performance",
+      "cmdlets": [
+        "Get-PfbArrayClientPerformance"
+      ],
+      "missingParameters": [
+        "names",
+        "protocol",
+        "total_only"
+      ]
+    },
+    {
+      "endpoint": "GET /arrays/clients/s3-specific-performance",
+      "cmdlets": [
+        "Get-PfbArrayClientS3Performance"
+      ],
+      "missingParameters": [
+        "names",
+        "total_only"
+      ]
+    },
+    {
+      "endpoint": "GET /arrays/http-specific-performance",
+      "cmdlets": [
+        "Get-PfbArrayHttpPerformance"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /arrays/nfs-specific-performance",
+      "cmdlets": [
+        "Get-PfbArrayNfsPerformance"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /arrays/performance",
+      "cmdlets": [
+        "Get-PfbArrayPerformance"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /arrays/performance/replication",
+      "cmdlets": [
+        "Get-PfbArrayPerformanceReplication"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "type"
+      ]
+    },
+    {
+      "endpoint": "GET /arrays/s3-specific-performance",
+      "cmdlets": [
+        "Get-PfbArrayS3Performance"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /arrays/space",
+      "cmdlets": [
+        "Get-PfbArraySpace"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "end_time",
+        "resolution",
+        "start_time"
+      ]
+    },
+    {
+      "endpoint": "GET /arrays/space/storage-classes",
+      "cmdlets": [
+        "Get-PfbArrayStorageClass"
+      ],
+      "missingParameters": [
+        "end_time",
+        "resolution",
+        "start_time",
+        "storage_class_names",
+        "total_only"
+      ]
+    },
+    {
+      "endpoint": "GET /arrays/ssh-certificate-authority-policies",
+      "cmdlets": [
+        "Get-PfbArraySshCaPolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /arrays/supported-time-zones",
+      "cmdlets": [
+        "Get-PfbArraySupportedTimeZone"
+      ],
+      "missingParameters": [
+        "names"
+      ]
+    },
+    {
+      "endpoint": "GET /audit-file-systems-policies",
+      "cmdlets": [
+        "Get-PfbAuditFileSystemPolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /audit-file-systems-policies/members",
+      "cmdlets": [
+        "Get-PfbAuditFileSystemPolicyMember"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /audit-file-systems-policy-operations",
+      "cmdlets": [
+        "Get-PfbAuditFileSystemPolicyOperation"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "names"
+      ]
+    },
+    {
+      "endpoint": "GET /audit-object-store-policies",
+      "cmdlets": [
+        "Get-PfbAuditObjectStorePolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /audit-object-store-policies/members",
+      "cmdlets": [
+        "Get-PfbAuditObjectStorePolicyMember"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /blades",
+      "cmdlets": [
+        "Get-PfbBlade",
+        "Get-PfbNode"
+      ],
+      "missingParameters": [
+        "total_only"
+      ]
+    },
+    {
+      "endpoint": "GET /bucket-audit-filter-actions",
+      "cmdlets": [
+        "Get-PfbBucketAuditFilterAction"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "names"
+      ]
+    },
+    {
+      "endpoint": "GET /bucket-replica-links",
+      "cmdlets": [
+        "Get-PfbBucketReplicaLink"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "ids",
+        "local_bucket_ids",
+        "remote_ids",
+        "remote_names",
+        "total_only"
+      ]
+    },
+    {
+      "endpoint": "GET /buckets",
+      "cmdlets": [
+        "Get-PfbBucket"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /buckets/audit-filters",
+      "cmdlets": [
+        "Get-PfbBucketAuditFilter"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "bucket_ids",
+        "bucket_names",
+        "context_names",
+        "names"
+      ]
+    },
+    {
+      "endpoint": "GET /buckets/bucket-access-policies",
+      "cmdlets": [
+        "Get-PfbBucketAccessPolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "bucket_ids",
+        "bucket_names",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /buckets/bucket-access-policies/rules",
+      "cmdlets": [
+        "Get-PfbBucketAccessPolicyRule"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "bucket_ids",
+        "bucket_names",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /buckets/cross-origin-resource-sharing-policies",
+      "cmdlets": [
+        "Get-PfbBucketCorsPolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "bucket_ids",
+        "bucket_names",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /buckets/cross-origin-resource-sharing-policies/rules",
+      "cmdlets": [
+        "Get-PfbBucketCorsPolicyRule"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "bucket_ids",
+        "bucket_names",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /certificate-groups/certificates",
+      "cmdlets": [
+        "Get-PfbCertificateGroupCertificate"
+      ],
+      "missingParameters": [
+        "certificate_group_ids",
+        "certificate_group_names",
+        "certificate_ids",
+        "certificate_names"
+      ]
+    },
+    {
+      "endpoint": "GET /certificate-groups/uses",
+      "cmdlets": [
+        "Get-PfbCertificateGroupUse"
+      ],
+      "missingParameters": [
+        "ids"
+      ]
+    },
+    {
+      "endpoint": "GET /certificates/certificate-groups",
+      "cmdlets": [
+        "Get-PfbCertificateCertificateGroup"
+      ],
+      "missingParameters": [
+        "certificate_group_ids",
+        "certificate_ids",
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /certificates/uses",
+      "cmdlets": [
+        "Get-PfbCertificateUse"
+      ],
+      "missingParameters": [
+        "ids"
+      ]
+    },
+    {
+      "endpoint": "GET /data-eviction-policies",
+      "cmdlets": [
+        "Get-PfbDataEvictionPolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /data-eviction-policies/file-systems",
+      "cmdlets": [
+        "Get-PfbDataEvictionPolicyFileSystem"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /data-eviction-policies/members",
+      "cmdlets": [
+        "Get-PfbDataEvictionPolicyMember"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /directory-services",
+      "cmdlets": [
+        "Get-PfbDirectoryService"
+      ],
+      "missingParameters": [
+        "ids",
+        "limit",
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /directory-services/local/directory-services",
+      "cmdlets": [
+        "Get-PfbLocalDirectoryService"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "destroyed",
+        "total_item_count"
+      ]
+    },
+    {
+      "endpoint": "GET /directory-services/local/groups",
+      "cmdlets": [
+        "Get-PfbLocalGroup"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "gids",
+        "sids",
+        "total_item_count"
+      ]
+    },
+    {
+      "endpoint": "GET /directory-services/local/groups/members",
+      "cmdlets": [
+        "Get-PfbLocalGroupMember"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "group_gids",
+        "group_sids",
+        "member_ids",
+        "member_sids",
+        "member_types",
+        "total_item_count"
+      ]
+    },
+    {
+      "endpoint": "GET /directory-services/roles",
+      "cmdlets": [
+        "Get-PfbDirectoryServiceRole"
+      ],
+      "missingParameters": [
+        "role_ids",
+        "role_names"
+      ]
+    },
+    {
+      "endpoint": "GET /directory-services/roles/management-access-policies",
+      "cmdlets": [
+        "Get-PfbDirectoryServiceRoleManagementPolicy"
+      ],
+      "missingParameters": [
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /drives",
+      "cmdlets": [
+        "Get-PfbDrive"
+      ],
+      "missingParameters": [
+        "total_only"
+      ]
+    },
+    {
+      "endpoint": "GET /file-system-exports",
+      "cmdlets": [
+        "Get-PfbFileSystemExport"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "workload_ids",
+        "workload_names"
+      ]
+    },
+    {
+      "endpoint": "GET /file-system-replica-links",
+      "cmdlets": [
+        "Get-PfbFileSystemReplicaLink"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "ids",
+        "local_file_system_ids",
+        "remote_file_system_ids",
+        "remote_ids",
+        "remote_names"
+      ]
+    },
+    {
+      "endpoint": "GET /file-system-replica-links/policies",
+      "cmdlets": [
+        "Get-PfbFileSystemReplicaLinkPolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "local_file_system_ids",
+        "local_file_system_names",
+        "remote_file_system_ids",
+        "remote_file_system_names",
+        "remote_ids",
+        "remote_names"
+      ]
+    },
+    {
+      "endpoint": "GET /file-system-replica-links/transfer",
+      "cmdlets": [
+        "Get-PfbFileSystemReplicaLinkTransfer"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "names_or_owner_names",
+        "remote_ids",
+        "remote_names"
+      ]
+    },
+    {
+      "endpoint": "GET /file-system-snapshots",
+      "cmdlets": [
+        "Get-PfbFileSystemSnapshot"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "names_or_owner_names",
+        "owner_ids"
+      ]
+    },
+    {
+      "endpoint": "GET /file-system-snapshots/policies",
+      "cmdlets": [
+        "Get-PfbFileSystemSnapshotPolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /file-system-snapshots/transfer",
+      "cmdlets": [
+        "Get-PfbFileSystemSnapshotTransfer"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "names_or_owner_names"
+      ]
+    },
+    {
+      "endpoint": "GET /file-systems",
+      "cmdlets": [
+        "Get-PfbFileSystem"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "workload_ids",
+        "workload_names"
+      ]
+    },
+    {
+      "endpoint": "GET /file-systems/audit-policies",
+      "cmdlets": [
+        "Get-PfbFileSystemAuditPolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /file-systems/groups/performance",
+      "cmdlets": [
+        "Get-PfbFileSystemGroupPerformance"
+      ],
+      "missingParameters": [
+        "gids",
+        "group_names",
+        "names"
+      ]
+    },
+    {
+      "endpoint": "GET /file-systems/locks",
+      "cmdlets": [
+        "Get-PfbFileLock"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "client_names",
+        "context_names",
+        "file_system_ids",
+        "file_system_names",
+        "inodes",
+        "paths"
+      ]
+    },
+    {
+      "endpoint": "GET /file-systems/locks/clients",
+      "cmdlets": [
+        "Get-PfbFileLockClient"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /file-systems/open-files",
+      "cmdlets": [
+        "Get-PfbOpenFile"
+      ],
+      "missingParameters": [
+        "client_names",
+        "file_system_ids",
+        "file_system_names",
+        "paths",
+        "protocols",
+        "session_names",
+        "user_names"
+      ]
+    },
+    {
+      "endpoint": "GET /file-systems/policies",
+      "cmdlets": [
+        "Get-PfbFileSystemPolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /file-systems/sessions",
+      "cmdlets": [
+        "Get-PfbFileSystemSession"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "client_names",
+        "context_names",
+        "protocols",
+        "user_names"
+      ]
+    },
+    {
+      "endpoint": "GET /file-systems/space/storage-classes",
+      "cmdlets": [
+        "Get-PfbFileSystemStorageClass"
+      ],
+      "missingParameters": [
+        "storage_class_names"
+      ]
+    },
+    {
+      "endpoint": "GET /file-systems/users/performance",
+      "cmdlets": [
+        "Get-PfbFileSystemUserPerformance"
+      ],
+      "missingParameters": [
+        "names",
+        "uids",
+        "user_names"
+      ]
+    },
+    {
+      "endpoint": "GET /file-systems/worm-data-policies",
+      "cmdlets": [
+        "Get-PfbFileSystemWormPolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /fleets",
+      "cmdlets": [
+        "Get-PfbFleet"
+      ],
+      "missingParameters": [
+        "total_only"
+      ]
+    },
+    {
+      "endpoint": "GET /fleets/fleet-key",
+      "cmdlets": [
+        "Get-PfbFleetKey"
+      ],
+      "missingParameters": [
+        "total_only"
+      ]
+    },
+    {
+      "endpoint": "GET /fleets/members",
+      "cmdlets": [
+        "Get-PfbFleetMember"
+      ],
+      "missingParameters": [
+        "fleet_ids",
+        "member_ids",
+        "total_only"
+      ]
+    },
+    {
+      "endpoint": "GET /hardware-connectors/performance",
+      "cmdlets": [
+        "Get-PfbHardwareConnectorPerformance"
+      ],
+      "missingParameters": [
+        "ids",
+        "total_only"
+      ]
+    },
+    {
+      "endpoint": "GET /keytabs/download",
+      "cmdlets": [
+        "Get-PfbKeytabDownload"
+      ],
+      "missingParameters": [
+        "keytab_ids",
+        "keytab_names"
+      ]
+    },
+    {
+      "endpoint": "GET /legal-holds/held-entities",
+      "cmdlets": [
+        "Get-PfbLegalHoldEntity"
+      ],
+      "missingParameters": [
+        "file_system_ids",
+        "file_system_names",
+        "ids",
+        "names",
+        "paths"
+      ]
+    },
+    {
+      "endpoint": "GET /lifecycle-rules",
+      "cmdlets": [
+        "Get-PfbLifecycleRule"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "bucket_ids",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /log-targets/file-systems",
+      "cmdlets": [
+        "Get-PfbLogTargetFileSystem"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /log-targets/object-store",
+      "cmdlets": [
+        "Get-PfbLogTargetObjectStore"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /management-access-policies",
+      "cmdlets": [
+        "Get-PfbManagementAccessPolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /management-access-policies/admins",
+      "cmdlets": [
+        "Get-PfbManagementAccessPolicyAdmin"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /management-access-policies/directory-services/roles",
+      "cmdlets": [
+        "Get-PfbManagementAccessPolicyDirectoryRole"
+      ],
+      "missingParameters": [
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /management-access-policies/members",
+      "cmdlets": [
+        "Get-PfbManagementAccessPolicyMember"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /network-access-policies/rules",
+      "cmdlets": [
+        "Get-PfbNetworkAccessRule"
+      ],
+      "missingParameters": [
+        "ids"
+      ]
+    },
+    {
+      "endpoint": "GET /network-interfaces/connectors/performance",
+      "cmdlets": [
+        "Get-PfbNetworkInterfaceConnectorPerformance"
+      ],
+      "missingParameters": [
+        "ids",
+        "total_only"
+      ]
+    },
+    {
+      "endpoint": "GET /network-interfaces/connectors/settings",
+      "cmdlets": [
+        "Get-PfbNetworkInterfaceConnectorSettings"
+      ],
+      "missingParameters": [
+        "ids"
+      ]
+    },
+    {
+      "endpoint": "GET /network-interfaces/neighbors",
+      "cmdlets": [
+        "Get-PfbNetworkInterfaceNeighbor"
+      ],
+      "missingParameters": [
+        "local_port_names",
+        "total_item_count"
+      ]
+    },
+    {
+      "endpoint": "GET /network-interfaces/network-connection-statistics",
+      "cmdlets": [
+        "Get-PfbNetworkConnectionStatistics"
+      ],
+      "missingParameters": [
+        "current_state",
+        "local_host",
+        "local_port",
+        "remote_host",
+        "remote_port"
+      ]
+    },
+    {
+      "endpoint": "GET /nfs-export-policies",
+      "cmdlets": [
+        "Get-PfbNfsExportPolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "workload_ids",
+        "workload_names"
+      ]
+    },
+    {
+      "endpoint": "GET /nfs-export-policies/rules",
+      "cmdlets": [
+        "Get-PfbNfsExportRule"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "ids"
+      ]
+    },
+    {
+      "endpoint": "GET /node-groups/nodes",
+      "cmdlets": [
+        "Get-PfbNodeGroupNode"
+      ],
+      "missingParameters": [
+        "node_group_ids",
+        "node_group_names",
+        "node_ids",
+        "node_names"
+      ]
+    },
+    {
+      "endpoint": "GET /node-groups/uses",
+      "cmdlets": [
+        "Get-PfbNodeGroupUse"
+      ],
+      "missingParameters": [
+        "ids"
+      ]
+    },
+    {
+      "endpoint": "GET /nodes",
+      "cmdlets": [
+        "Get-PfbNode"
+      ],
+      "missingParameters": [
+        "total_only"
+      ]
+    },
+    {
+      "endpoint": "GET /object-store-access-keys",
+      "cmdlets": [
+        "Get-PfbObjectStoreAccessKey"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /object-store-access-policies",
+      "cmdlets": [
+        "Get-PfbObjectStoreAccessPolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "exclude_rules"
+      ]
+    },
+    {
+      "endpoint": "GET /object-store-access-policies/object-store-roles",
+      "cmdlets": [
+        "Get-PfbObjectStoreAccessPolicyRole"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /object-store-access-policies/object-store-users",
+      "cmdlets": [
+        "Get-PfbObjectStoreAccessPolicyUser"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /object-store-access-policies/rules",
+      "cmdlets": [
+        "Get-PfbObjectStoreAccessPolicyRule"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /object-store-access-policy-actions",
+      "cmdlets": [
+        "Get-PfbObjectStoreAccessPolicyAction"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "names"
+      ]
+    },
+    {
+      "endpoint": "GET /object-store-account-exports",
+      "cmdlets": [
+        "Get-PfbObjectStoreAccountExport"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /object-store-accounts",
+      "cmdlets": [
+        "Get-PfbObjectStoreAccount"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /object-store-remote-credentials",
+      "cmdlets": [
+        "Get-PfbObjectStoreRemoteCredential"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /object-store-roles",
+      "cmdlets": [
+        "Get-PfbObjectStoreRole"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /object-store-roles/object-store-access-policies",
+      "cmdlets": [
+        "Get-PfbObjectStoreRoleAccessPolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "policy_ids",
+        "policy_names"
+      ]
+    },
+    {
+      "endpoint": "GET /object-store-roles/object-store-trust-policies",
+      "cmdlets": [
+        "Get-PfbObjectStoreTrustPolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "names"
+      ]
+    },
+    {
+      "endpoint": "GET /object-store-roles/object-store-trust-policies/rules",
+      "cmdlets": [
+        "Get-PfbObjectStoreTrustPolicyRule"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "indices",
+        "role_ids",
+        "role_names"
+      ]
+    },
+    {
+      "endpoint": "GET /object-store-users",
+      "cmdlets": [
+        "Get-PfbObjectStoreUser"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /object-store-users/object-store-access-policies",
+      "cmdlets": [
+        "Get-PfbObjectStoreUserAccessPolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /object-store-virtual-hosts",
+      "cmdlets": [
+        "Get-PfbObjectStoreVirtualHost"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /policies",
+      "cmdlets": [
+        "Get-PfbPolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "workload_ids",
+        "workload_names"
+      ]
+    },
+    {
+      "endpoint": "GET /policies-all",
+      "cmdlets": [
+        "Get-PfbPolicyAll"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /policies-all/members",
+      "cmdlets": [
+        "Get-PfbPolicyAllMember"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "local_file_system_ids",
+        "local_file_system_names",
+        "member_types",
+        "remote_file_system_ids",
+        "remote_file_system_names",
+        "remote_ids",
+        "remote_names",
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /policies/file-system-replica-links",
+      "cmdlets": [
+        "Get-PfbPolicyFileSystemReplicaLink"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "local_file_system_ids",
+        "local_file_system_names",
+        "remote_file_system_ids",
+        "remote_file_system_names",
+        "remote_ids",
+        "remote_names",
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /policies/file-system-snapshots",
+      "cmdlets": [
+        "Get-PfbPolicyFileSystemSnapshot"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /policies/file-systems",
+      "cmdlets": [
+        "Get-PfbPolicyFileSystem"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /presets/workload",
+      "cmdlets": [
+        "Get-PfbPresetWorkload"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /public-keys/uses",
+      "cmdlets": [
+        "Get-PfbPublicKeyUse"
+      ],
+      "missingParameters": [
+        "ids"
+      ]
+    },
+    {
+      "endpoint": "GET /qos-policies",
+      "cmdlets": [
+        "Get-PfbQosPolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /qos-policies/buckets",
+      "cmdlets": [
+        "Get-PfbQosPolicyBucket"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /qos-policies/file-systems",
+      "cmdlets": [
+        "Get-PfbQosPolicyFileSystem"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /qos-policies/members",
+      "cmdlets": [
+        "Get-PfbQosPolicyMember"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "member_types",
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /quotas/groups",
+      "cmdlets": [
+        "Get-PfbQuotaGroup"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "file_system_ids",
+        "gids",
+        "group_names"
+      ]
+    },
+    {
+      "endpoint": "GET /quotas/users",
+      "cmdlets": [
+        "Get-PfbQuotaUser"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "file_system_ids",
+        "uids",
+        "user_names"
+      ]
+    },
+    {
+      "endpoint": "GET /realms",
+      "cmdlets": [
+        "Get-PfbRealm"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /realms/defaults",
+      "cmdlets": [
+        "Get-PfbRealmDefaults"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "realm_ids",
+        "realm_names"
+      ]
+    },
+    {
+      "endpoint": "GET /realms/space",
+      "cmdlets": [
+        "Get-PfbRealmSpace"
+      ],
+      "missingParameters": [
+        "end_time",
+        "ids",
+        "resolution",
+        "start_time",
+        "total_only",
+        "type"
+      ]
+    },
+    {
+      "endpoint": "GET /realms/space/storage-classes",
+      "cmdlets": [
+        "Get-PfbRealmStorageClass"
+      ],
+      "missingParameters": [
+        "end_time",
+        "ids",
+        "resolution",
+        "start_time",
+        "storage_class_names",
+        "total_only"
+      ]
+    },
+    {
+      "endpoint": "GET /remote-arrays",
+      "cmdlets": [
+        "Get-PfbRemoteArray"
+      ],
+      "missingParameters": [
+        "total_only"
+      ]
+    },
+    {
+      "endpoint": "GET /roles",
+      "cmdlets": [
+        "Get-PfbRole"
+      ],
+      "missingParameters": [
+        "ids"
+      ]
+    },
+    {
+      "endpoint": "GET /s3-export-policies",
+      "cmdlets": [
+        "Get-PfbS3ExportPolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /s3-export-policies/rules",
+      "cmdlets": [
+        "Get-PfbS3ExportRule"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /servers",
+      "cmdlets": [
+        "Get-PfbServer"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /smb-client-policies",
+      "cmdlets": [
+        "Get-PfbSmbClientPolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "workload_ids",
+        "workload_names"
+      ]
+    },
+    {
+      "endpoint": "GET /smb-client-policies/rules",
+      "cmdlets": [
+        "Get-PfbSmbClientRule"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "ids"
+      ]
+    },
+    {
+      "endpoint": "GET /smb-share-policies",
+      "cmdlets": [
+        "Get-PfbSmbSharePolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "workload_ids",
+        "workload_names"
+      ]
+    },
+    {
+      "endpoint": "GET /smb-share-policies/rules",
+      "cmdlets": [
+        "Get-PfbSmbShareRule"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "ids"
+      ]
+    },
+    {
+      "endpoint": "GET /snmp-agents",
+      "cmdlets": [
+        "Get-PfbSnmpAgent"
+      ],
+      "missingParameters": [
+        "ids",
+        "limit",
+        "names",
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /snmp-managers/test",
+      "cmdlets": [
+        "Test-PfbSnmpManager"
+      ],
+      "missingParameters": [
+        "filter",
+        "limit",
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /software-check",
+      "cmdlets": [
+        "Get-PfbSoftwareCheck"
+      ],
+      "missingParameters": [
+        "ids",
+        "names",
+        "software_names",
+        "software_versions",
+        "total_item_count"
+      ]
+    },
+    {
+      "endpoint": "GET /ssh-certificate-authority-policies",
+      "cmdlets": [
+        "Get-PfbSshCaPolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /ssh-certificate-authority-policies/admins",
+      "cmdlets": [
+        "Get-PfbSshCaPolicyAdmin"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /ssh-certificate-authority-policies/arrays",
+      "cmdlets": [
+        "Get-PfbSshCaPolicyArray"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /ssh-certificate-authority-policies/members",
+      "cmdlets": [
+        "Get-PfbSshCaPolicyMember"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /sso/saml2/idps/test",
+      "cmdlets": [
+        "Test-PfbSaml2Idp"
+      ],
+      "missingParameters": [
+        "filter",
+        "limit",
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /storage-class-tiering-policies/members",
+      "cmdlets": [
+        "Get-PfbStorageClassTieringPolicyMember"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /support",
+      "cmdlets": [
+        "Get-PfbSupport"
+      ],
+      "missingParameters": [
+        "ids"
+      ]
+    },
+    {
+      "endpoint": "GET /syslog-servers",
+      "cmdlets": [
+        "Get-PfbSyslogServer"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /targets",
+      "cmdlets": [
+        "Get-PfbTarget"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /targets/performance/replication",
+      "cmdlets": [
+        "Get-PfbTargetPerformanceReplication"
+      ],
+      "missingParameters": [
+        "ids",
+        "total_only"
+      ]
+    },
+    {
+      "endpoint": "GET /tls-policies",
+      "cmdlets": [
+        "Get-PfbTlsPolicy"
+      ],
+      "missingParameters": [
+        "effective",
+        "purity_defined"
+      ]
+    },
+    {
+      "endpoint": "GET /tls-policies/members",
+      "cmdlets": [
+        "Get-PfbTlsPolicyMember"
+      ],
+      "missingParameters": [
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "GET /usage/groups",
+      "cmdlets": [
+        "Get-PfbUsageGroup"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "file_system_ids",
+        "gids",
+        "group_names"
+      ]
+    },
+    {
+      "endpoint": "GET /usage/users",
+      "cmdlets": [
+        "Get-PfbUsageUser"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "file_system_ids",
+        "uids",
+        "user_names"
+      ]
+    },
+    {
+      "endpoint": "GET /workloads",
+      "cmdlets": [
+        "Get-PfbWorkload"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /workloads/placement-recommendations",
+      "cmdlets": [
+        "Get-PfbWorkloadPlacementRecommendation"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /workloads/tags",
+      "cmdlets": [
+        "Get-PfbWorkloadTag"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /worm-data-policies",
+      "cmdlets": [
+        "Get-PfbWormPolicy"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "GET /worm-data-policies/members",
+      "cmdlets": [
+        "Get-PfbWormPolicyMember"
+      ],
+      "missingParameters": [
+        "allow_errors",
+        "context_names",
+        "sort"
+      ]
+    },
+    {
+      "endpoint": "PATCH /active-directory",
+      "cmdlets": [
+        "Update-PfbActiveDirectory"
+      ],
+      "missingParameters": [
+        "ca_certificate",
+        "ca_certificate_group",
+        "directory_servers",
+        "encryption_types",
+        "fqdns",
+        "global_catalog_servers",
+        "join_ou",
+        "kerberos_servers",
+        "service_principal_names"
+      ]
+    },
+    {
+      "endpoint": "PATCH /admins",
+      "cmdlets": [
+        "Update-PfbAdmin"
+      ],
+      "missingParameters": [
+        "authorization_model",
+        "context_names",
+        "locked",
+        "management_access_policies",
+        "old_password",
+        "password",
+        "public_key",
+        "role"
+      ]
+    },
+    {
+      "endpoint": "PATCH /api-clients",
+      "cmdlets": [
+        "Update-PfbApiClient"
+      ],
+      "missingParameters": [
+        "access_policies",
+        "access_token_ttl_in_ms",
+        "enabled",
+        "id",
+        "issuer",
+        "key_id",
+        "max_role",
+        "name",
+        "public_key"
+      ]
+    },
+    {
+      "endpoint": "PATCH /array-connections",
+      "cmdlets": [
+        "Update-PfbArrayConnection"
+      ],
+      "missingParameters": [
+        "ca_certificate_group",
+        "context",
+        "context_names",
+        "encrypted",
+        "id",
+        "management_address",
+        "os",
+        "remote",
+        "remote_ids",
+        "remote_names",
+        "replication_addresses",
+        "status",
+        "throttle",
+        "type",
+        "version"
+      ]
+    },
+    {
+      "endpoint": "PATCH /buckets/audit-filters",
+      "cmdlets": [
+        "Update-PfbBucketAuditFilter"
+      ],
+      "missingParameters": [
+        "actions",
+        "bucket_ids",
+        "bucket_names",
+        "context_names",
+        "names",
+        "s3_prefixes"
+      ]
+    },
+    {
+      "endpoint": "PATCH /certificates",
+      "cmdlets": [
+        "Update-PfbCertificate"
+      ],
+      "missingParameters": [
+        "certificate",
+        "certificate_type",
+        "common_name",
+        "country",
+        "days",
+        "email",
+        "generate_new_key",
+        "id",
+        "intermediate_certificate",
+        "issued_by",
+        "issued_to",
+        "key_algorithm",
+        "key_size",
+        "locality",
+        "name",
+        "organization",
+        "organizational_unit",
+        "passphrase",
+        "private_key",
+        "realms",
+        "state",
+        "status",
+        "subject_alternative_names",
+        "valid_from",
+        "valid_to"
+      ]
+    },
+    {
+      "endpoint": "PATCH /directory-services/roles",
+      "cmdlets": [
+        "Update-PfbDirectoryServiceRole"
+      ],
+      "missingParameters": [
+        "group",
+        "group_base",
+        "id",
+        "management_access_policies",
+        "name",
+        "role",
+        "role_ids",
+        "role_names"
+      ]
+    },
+    {
+      "endpoint": "PATCH /dns",
+      "cmdlets": [
+        "Update-PfbDns"
+      ],
+      "missingParameters": [
+        "ca_certificate",
+        "ca_certificate_group",
+        "context",
+        "context_names",
+        "id",
+        "ids",
+        "name",
+        "names",
+        "realms",
+        "services",
+        "sources"
+      ]
+    },
+    {
+      "endpoint": "PATCH /file-system-exports",
+      "cmdlets": [
+        "Update-PfbFileSystemExport"
+      ],
+      "missingParameters": [
+        "context",
+        "context_names",
+        "enabled",
+        "export_name",
+        "id",
+        "member",
+        "name",
+        "policy",
+        "policy_type",
+        "server",
+        "share_policy",
+        "status"
+      ]
+    },
+    {
+      "endpoint": "PATCH /fleets",
+      "cmdlets": [
+        "Update-PfbFleet"
+      ],
+      "missingParameters": [
+        "name"
+      ]
+    },
+    {
+      "endpoint": "PATCH /hardware",
+      "cmdlets": [
+        "Update-PfbHardware"
+      ],
+      "missingParameters": [
+        "data_mac",
+        "details",
+        "id",
+        "identify_enabled",
+        "index",
+        "management_mac",
+        "model",
+        "name",
+        "part_number",
+        "sensor_readings",
+        "serial",
+        "slot",
+        "speed",
+        "status",
+        "temperature",
+        "type"
+      ]
+    },
+    {
+      "endpoint": "PATCH /hardware-connectors",
+      "cmdlets": [
+        "Update-PfbHardwareConnector"
+      ],
+      "missingParameters": [
+        "connector_type",
+        "id",
+        "lane_speed",
+        "lanes_per_port",
+        "name",
+        "port_count",
+        "port_speed",
+        "transceiver_type"
+      ]
+    },
+    {
+      "endpoint": "PATCH /kmip",
+      "cmdlets": [
+        "Update-PfbKmip"
+      ],
+      "missingParameters": [
+        "ca_certificate",
+        "ca_certificate_group",
+        "id",
+        "name",
+        "uris"
+      ]
+    },
+    {
+      "endpoint": "PATCH /legal-holds",
+      "cmdlets": [
+        "Update-PfbLegalHold"
+      ],
+      "missingParameters": [
+        "description",
+        "id",
+        "name",
+        "realms"
+      ]
+    },
+    {
+      "endpoint": "PATCH /legal-holds/held-entities",
+      "cmdlets": [
+        "Update-PfbLegalHoldEntity"
+      ],
+      "missingParameters": [
+        "file_system_ids",
+        "file_system_names",
+        "ids",
+        "paths",
+        "recursive",
+        "released"
+      ]
+    },
+    {
+      "endpoint": "PATCH /lifecycle-rules",
+      "cmdlets": [
+        "Update-PfbLifecycleRule"
+      ],
+      "missingParameters": [
+        "abort_incomplete_multipart_uploads_after",
+        "bucket_ids",
+        "bucket_names",
+        "confirm_date",
+        "context_names",
+        "enabled",
+        "keep_current_version_for",
+        "keep_current_version_until",
+        "keep_previous_version_for",
+        "prefix"
+      ]
+    },
+    {
+      "endpoint": "PATCH /link-aggregation-groups",
+      "cmdlets": [
+        "Update-PfbLag"
+      ],
+      "missingParameters": [
+        "add_ports",
+        "ports",
+        "remove_ports"
+      ]
+    },
+    {
+      "endpoint": "PATCH /log-targets/file-systems",
+      "cmdlets": [
+        "Update-PfbLogTargetFileSystem"
+      ],
+      "missingParameters": [
+        "context_names",
+        "file_system",
+        "id",
+        "keep_for",
+        "keep_size",
+        "name"
+      ]
+    },
+    {
+      "endpoint": "PATCH /log-targets/object-store",
+      "cmdlets": [
+        "Update-PfbLogTargetObjectStore"
+      ],
+      "missingParameters": [
+        "bucket",
+        "context_names",
+        "id",
+        "log_name_prefix",
+        "log_rotate",
+        "name"
+      ]
+    },
+    {
+      "endpoint": "PATCH /logs-async",
+      "cmdlets": [
+        "Update-PfbAsyncLog"
+      ],
+      "missingParameters": [
+        "available_files",
+        "end_time",
+        "hardware_components",
+        "id",
+        "last_request_time",
+        "name",
+        "processing",
+        "progress",
+        "start_time"
+      ]
+    },
+    {
+      "endpoint": "PATCH /management-access-policies",
+      "cmdlets": [
+        "Update-PfbManagementAccessPolicy"
+      ],
+      "missingParameters": [
+        "aggregation_strategy",
+        "context",
+        "context_names",
+        "enabled",
+        "id",
+        "is_local",
+        "location",
+        "name",
+        "policy_type",
+        "realms",
+        "rules",
+        "version"
+      ]
+    },
+    {
+      "endpoint": "PATCH /network-interfaces",
+      "cmdlets": [
+        "Update-PfbNetworkInterface"
+      ],
+      "missingParameters": [
+        "attached_servers",
+        "server",
+        "services"
+      ]
+    },
+    {
+      "endpoint": "PATCH /network-interfaces/connectors",
+      "cmdlets": [
+        "Update-PfbNetworkInterfaceConnector"
+      ],
+      "missingParameters": [
+        "connector_type",
+        "id",
+        "lane_speed",
+        "lanes_per_port",
+        "name",
+        "port_count",
+        "port_speed",
+        "transceiver_type"
+      ]
+    },
+    {
+      "endpoint": "PATCH /node-groups",
+      "cmdlets": [
+        "Update-PfbNodeGroup"
+      ],
+      "missingParameters": [
+        "name"
+      ]
+    },
+    {
+      "endpoint": "PATCH /nodes",
+      "cmdlets": [
+        "Update-PfbNode"
+      ],
+      "missingParameters": [
+        "capacity",
+        "chassis_serial_number",
+        "data_addresses",
+        "details",
+        "id",
+        "management_address",
+        "name",
+        "node_key",
+        "raw_capacity",
+        "serial_number",
+        "status",
+        "unique"
+      ]
+    },
+    {
+      "endpoint": "PATCH /object-store-account-exports",
+      "cmdlets": [
+        "Update-PfbObjectStoreAccountExport"
+      ],
+      "missingParameters": [
+        "context_names",
+        "export_enabled",
+        "policy"
+      ]
+    },
+    {
+      "endpoint": "PATCH /object-store-remote-credentials",
+      "cmdlets": [
+        "Update-PfbObjectStoreRemoteCredential"
+      ],
+      "missingParameters": [
+        "access_key_id",
+        "context",
+        "context_names",
+        "id",
+        "name",
+        "realms",
+        "remote",
+        "secret_access_key"
+      ]
+    },
+    {
+      "endpoint": "PATCH /object-store-roles",
+      "cmdlets": [
+        "Update-PfbObjectStoreRole"
+      ],
+      "missingParameters": [
+        "account",
+        "context",
+        "context_names",
+        "created",
+        "id",
+        "max_session_duration",
+        "name",
+        "prn",
+        "trusted_entities"
+      ]
+    },
+    {
+      "endpoint": "PATCH /object-store-virtual-hosts",
+      "cmdlets": [
+        "Update-PfbObjectStoreVirtualHost"
+      ],
+      "missingParameters": [
+        "add_attached_servers",
+        "attached_servers",
+        "context_names",
+        "hostname",
+        "id",
+        "name",
+        "remove_attached_servers"
+      ]
+    },
+    {
+      "endpoint": "PATCH /qos-policies",
+      "cmdlets": [
+        "Update-PfbQosPolicy"
+      ],
+      "missingParameters": [
+        "context",
+        "context_names",
+        "enabled",
+        "id",
+        "is_local",
+        "location",
+        "max_total_bytes_per_sec",
+        "max_total_ops_per_sec",
+        "name",
+        "policy_type",
+        "realms"
+      ]
+    },
+    {
+      "endpoint": "PATCH /realms/defaults",
+      "cmdlets": [
+        "Update-PfbRealmDefaults"
+      ],
+      "missingParameters": [
+        "context",
+        "context_names",
+        "object_store",
+        "realm",
+        "realm_ids",
+        "realm_names"
+      ]
+    },
+    {
+      "endpoint": "PATCH /snmp-managers",
+      "cmdlets": [
+        "Update-PfbSnmpManager"
+      ],
+      "missingParameters": [
+        "host",
+        "id",
+        "name",
+        "notification",
+        "v2c",
+        "v3",
+        "version"
+      ]
+    },
+    {
+      "endpoint": "PATCH /ssh-certificate-authority-policies",
+      "cmdlets": [
+        "Update-PfbSshCaPolicy"
+      ],
+      "missingParameters": [
+        "context",
+        "enabled",
+        "id",
+        "is_local",
+        "location",
+        "name",
+        "policy_type",
+        "realms",
+        "signing_authority",
+        "static_authorized_principals"
+      ]
+    },
+    {
+      "endpoint": "PATCH /sso/oidc/idps",
+      "cmdlets": [
+        "Update-PfbOidcIdp"
+      ],
+      "missingParameters": [
+        "enabled",
+        "idp",
+        "name",
+        "prn",
+        "services"
+      ]
+    },
+    {
+      "endpoint": "PATCH /sso/saml2/idps",
+      "cmdlets": [
+        "Update-PfbSaml2Idp"
+      ],
+      "missingParameters": [
+        "array_url",
+        "binding",
+        "enabled",
+        "id",
+        "idp",
+        "management",
+        "name",
+        "prn",
+        "services",
+        "sp"
+      ]
+    },
+    {
+      "endpoint": "PATCH /storage-class-tiering-policies",
+      "cmdlets": [
+        "Update-PfbStorageClassTieringPolicy"
+      ],
+      "missingParameters": [
+        "archival_rules",
+        "enabled",
+        "id",
+        "is_local",
+        "location",
+        "name",
+        "policy_type",
+        "realms",
+        "retrieval_rules"
+      ]
+    },
+    {
+      "endpoint": "PATCH /subnets",
+      "cmdlets": [
+        "Update-PfbSubnet"
+      ],
+      "missingParameters": [
+        "enabled",
+        "id",
+        "interfaces",
+        "link_aggregation_group",
+        "name",
+        "services",
+        "vlan"
+      ]
+    },
+    {
+      "endpoint": "PATCH /syslog-servers",
+      "cmdlets": [
+        "Update-PfbSyslogServer"
+      ],
+      "missingParameters": [
+        "services",
+        "sources",
+        "uri"
+      ]
+    },
+    {
+      "endpoint": "PATCH /targets",
+      "cmdlets": [
+        "Update-PfbTarget"
+      ],
+      "missingParameters": [
+        "address",
+        "ca_certificate_group",
+        "id",
+        "name",
+        "status",
+        "status_details"
+      ]
+    },
+    {
+      "endpoint": "PATCH /tls-policies",
+      "cmdlets": [
+        "Update-PfbTlsPolicy"
+      ],
+      "missingParameters": [
+        "appliance_certificate",
+        "client_certificates_required",
+        "disabled_tls_ciphers",
+        "enabled",
+        "enabled_tls_ciphers",
+        "id",
+        "is_local",
+        "location",
+        "min_tls_version",
+        "name",
+        "policy_type",
+        "realms",
+        "trusted_client_certificate_authority",
+        "verify_client_certificate_trust"
+      ]
+    },
+    {
+      "endpoint": "PATCH /worm-data-policies",
+      "cmdlets": [
+        "Update-PfbWormPolicy"
+      ],
+      "missingParameters": [
+        "context",
+        "context_names",
+        "default_retention",
+        "enabled",
+        "id",
+        "is_local",
+        "location",
+        "max_retention",
+        "min_retention",
+        "mode",
+        "name",
+        "policy_type",
+        "realms",
+        "retention_lock"
+      ]
+    },
+    {
+      "endpoint": "POST /admins/api-tokens",
+      "cmdlets": [
+        "New-PfbApiToken"
+      ],
+      "missingParameters": [
+        "admin_ids",
+        "admin_names",
+        "context_names",
+        "timeout"
+      ]
+    },
+    {
+      "endpoint": "POST /admins/management-access-policies",
+      "cmdlets": [
+        "New-PfbAdminManagementAccessPolicy"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "POST /admins/ssh-certificate-authority-policies",
+      "cmdlets": [
+        "New-PfbAdminSshCaPolicy"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "POST /array-connections",
+      "cmdlets": [
+        "New-PfbArrayConnection"
+      ],
+      "missingParameters": [
+        "ca_certificate_group",
+        "context",
+        "context_names",
+        "encrypted",
+        "id",
+        "os",
+        "remote",
+        "status",
+        "throttle",
+        "type",
+        "version"
+      ]
+    },
+    {
+      "endpoint": "POST /arrays/ssh-certificate-authority-policies",
+      "cmdlets": [
+        "New-PfbArraySshCaPolicy"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "POST /audit-file-systems-policies/members",
+      "cmdlets": [
+        "New-PfbAuditFileSystemPolicyMember"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "POST /audit-object-store-policies/members",
+      "cmdlets": [
+        "New-PfbAuditObjectStorePolicyMember"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "POST /certificates/certificate-groups",
+      "cmdlets": [
+        "New-PfbCertificateCertificateGroup"
+      ],
+      "missingParameters": [
+        "certificate_group_ids",
+        "certificate_ids"
+      ]
+    },
+    {
+      "endpoint": "POST /data-eviction-policies/file-systems",
+      "cmdlets": [
+        "Add-PfbDataEvictionPolicyFileSystem"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "POST /file-system-replica-links/policies",
+      "cmdlets": [
+        "New-PfbFileSystemReplicaLinkPolicy"
+      ],
+      "missingParameters": [
+        "context_names",
+        "local_file_system_ids",
+        "local_file_system_names",
+        "remote_ids",
+        "remote_names"
+      ]
+    },
+    {
+      "endpoint": "POST /file-systems/audit-policies",
+      "cmdlets": [
+        "New-PfbFileSystemAuditPolicy"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "POST /file-systems/policies",
+      "cmdlets": [
+        "New-PfbFileSystemPolicy"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "POST /fleets/members",
+      "cmdlets": [
+        "New-PfbFleetMember"
+      ],
+      "missingParameters": [
+        "fleet_ids",
+        "members"
+      ]
+    },
+    {
+      "endpoint": "POST /legal-holds/held-entities",
+      "cmdlets": [
+        "New-PfbLegalHoldEntity"
+      ],
+      "missingParameters": [
+        "file_system_ids",
+        "file_system_names",
+        "ids",
+        "names",
+        "paths",
+        "recursive"
+      ]
+    },
+    {
+      "endpoint": "POST /management-access-policies/admins",
+      "cmdlets": [
+        "New-PfbManagementAccessPolicyAdmin"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "POST /network-access-policies/rules",
+      "cmdlets": [
+        "New-PfbNetworkAccessRule"
+      ],
+      "missingParameters": [
+        "before_rule_id",
+        "before_rule_name",
+        "client",
+        "effect",
+        "id",
+        "index",
+        "interfaces",
+        "name",
+        "versions"
+      ]
+    },
+    {
+      "endpoint": "POST /network-interfaces/tls-policies",
+      "cmdlets": [
+        "New-PfbNetworkInterfaceTlsPolicy"
+      ],
+      "missingParameters": [
+        "member_ids",
+        "policy_ids"
+      ]
+    },
+    {
+      "endpoint": "POST /nfs-export-policies/rules",
+      "cmdlets": [
+        "New-PfbNfsExportRule"
+      ],
+      "missingParameters": [
+        "access",
+        "anongid",
+        "anonuid",
+        "atime",
+        "before_rule_id",
+        "before_rule_name",
+        "client",
+        "context",
+        "context_names",
+        "fileid_32bit",
+        "id",
+        "index",
+        "name",
+        "permission",
+        "policy",
+        "policy_version",
+        "required_transport_security",
+        "secure",
+        "security",
+        "versions"
+      ]
+    },
+    {
+      "endpoint": "POST /node-groups/nodes",
+      "cmdlets": [
+        "New-PfbNodeGroupNode"
+      ],
+      "missingParameters": [
+        "node_group_ids",
+        "node_group_names",
+        "node_ids",
+        "node_names"
+      ]
+    },
+    {
+      "endpoint": "POST /policies/file-system-replica-links",
+      "cmdlets": [
+        "New-PfbPolicyFileSystemReplicaLink"
+      ],
+      "missingParameters": [
+        "context_names",
+        "local_file_system_ids",
+        "local_file_system_names",
+        "remote_ids",
+        "remote_names"
+      ]
+    },
+    {
+      "endpoint": "POST /policies/file-systems",
+      "cmdlets": [
+        "New-PfbPolicyFileSystem"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "POST /qos-policies/members",
+      "cmdlets": [
+        "New-PfbQosPolicyMember"
+      ],
+      "missingParameters": [
+        "context_names",
+        "member_types"
+      ]
+    },
+    {
+      "endpoint": "POST /s3-export-policies/rules",
+      "cmdlets": [
+        "New-PfbS3ExportRule"
+      ],
+      "missingParameters": [
+        "actions",
+        "context_names",
+        "effect",
+        "names",
+        "resources"
+      ]
+    },
+    {
+      "endpoint": "POST /smb-client-policies/rules",
+      "cmdlets": [
+        "New-PfbSmbClientRule"
+      ],
+      "missingParameters": [
+        "before_rule_id",
+        "before_rule_name",
+        "client",
+        "context_names",
+        "encryption",
+        "id",
+        "index",
+        "name",
+        "permission",
+        "versions"
+      ]
+    },
+    {
+      "endpoint": "POST /smb-share-policies/rules",
+      "cmdlets": [
+        "New-PfbSmbShareRule"
+      ],
+      "missingParameters": [
+        "change",
+        "context_names",
+        "full_control",
+        "id",
+        "name",
+        "principal",
+        "read"
+      ]
+    },
+    {
+      "endpoint": "POST /ssh-certificate-authority-policies/admins",
+      "cmdlets": [
+        "New-PfbSshCaPolicyAdmin"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    },
+    {
+      "endpoint": "POST /ssh-certificate-authority-policies/arrays",
+      "cmdlets": [
+        "New-PfbSshCaPolicyArray"
+      ],
+      "missingParameters": [
+        "context_names"
+      ]
+    }
+  ],
+  "notVerifiedEndpoints": [
+    {
+      "endpoint": "DELETE /arrays/erasures",
+      "cmdlets": [
+        "Remove-PfbArrayErasure"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "DELETE /arrays/factory-reset-token",
+      "cmdlets": [
+        "Remove-PfbArrayFactoryResetToken"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "DELETE /buckets",
+      "cmdlets": [
+        "Remove-PfbBucket"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "DELETE /buckets/bucket-access-policies",
+      "cmdlets": [
+        "Remove-PfbBucketAccessPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "DELETE /buckets/bucket-access-policies/rules",
+      "cmdlets": [
+        "Remove-PfbBucketAccessPolicyRule"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "DELETE /buckets/cross-origin-resource-sharing-policies/rules",
+      "cmdlets": [
+        "Remove-PfbBucketCorsPolicyRule"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "DELETE /directory-services/local/groups/members",
+      "cmdlets": [
+        "Remove-PfbLocalGroupMember"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "DELETE /file-system-snapshots",
+      "cmdlets": [
+        "Remove-PfbFileSystemSnapshot"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "DELETE /file-systems",
+      "cmdlets": [
+        "Remove-PfbFileSystem"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "DELETE /network-access-policies/rules",
+      "cmdlets": [
+        "Remove-PfbNetworkAccessRule"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "DELETE /nfs-export-policies/rules",
+      "cmdlets": [
+        "Remove-PfbNfsExportRule"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "DELETE /object-store-access-policies/object-store-roles",
+      "cmdlets": [
+        "Remove-PfbObjectStoreAccessPolicyRole"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "DELETE /object-store-access-policies/object-store-users",
+      "cmdlets": [
+        "Remove-PfbObjectStoreAccessPolicyUser"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "DELETE /object-store-access-policies/rules",
+      "cmdlets": [
+        "Remove-PfbObjectStoreAccessPolicyRule"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "DELETE /object-store-roles/object-store-access-policies",
+      "cmdlets": [
+        "Remove-PfbObjectStoreRoleAccessPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "DELETE /object-store-roles/object-store-trust-policies/rules",
+      "cmdlets": [
+        "Remove-PfbObjectStoreTrustPolicyRule"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "DELETE /object-store-users/object-store-access-policies",
+      "cmdlets": [
+        "Remove-PfbObjectStoreUserAccessPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "DELETE /quotas/groups",
+      "cmdlets": [
+        "Remove-PfbQuotaGroup"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "DELETE /quotas/users",
+      "cmdlets": [
+        "Remove-PfbQuotaUser"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "DELETE /realms",
+      "cmdlets": [
+        "Remove-PfbRealm"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "DELETE /s3-export-policies/rules",
+      "cmdlets": [
+        "Remove-PfbS3ExportRule"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "DELETE /servers",
+      "cmdlets": [
+        "Remove-PfbServer"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "DELETE /smb-client-policies/rules",
+      "cmdlets": [
+        "Remove-PfbSmbClientRule"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "DELETE /smb-share-policies/rules",
+      "cmdlets": [
+        "Remove-PfbSmbShareRule"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "DELETE /workloads/tags",
+      "cmdlets": [
+        "Remove-PfbWorkloadTag"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "GET /admins/settings",
+      "cmdlets": [
+        "Get-PfbAdminSetting"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "GET /alerts",
+      "cmdlets": [
+        "Get-PfbAlert"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "GET /arrays",
+      "cmdlets": [
+        "Get-PfbArray",
+        "Test-PfbConnection"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "GET /arrays/eula",
+      "cmdlets": [
+        "Get-PfbArrayEula"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "GET /arrays/factory-reset-token",
+      "cmdlets": [
+        "Get-PfbArrayFactoryResetToken"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "GET /directory-services/test",
+      "cmdlets": [
+        "Test-PfbDirectoryService"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "GET /dns",
+      "cmdlets": [
+        "Get-PfbDns"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "GET /hardware",
+      "cmdlets": [
+        "Get-PfbHardware",
+        "Get-PfbHardwareTemperature"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "GET /network-interfaces/ping",
+      "cmdlets": [
+        "Invoke-PfbNetworkPing"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "GET /network-interfaces/trace",
+      "cmdlets": [
+        "Invoke-PfbNetworkTrace"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "GET /password-policies",
+      "cmdlets": [
+        "Get-PfbPasswordPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "GET /quotas/settings",
+      "cmdlets": [
+        "Get-PfbQuotaSettings"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "GET /rapid-data-locking",
+      "cmdlets": [
+        "Get-PfbRapidDataLocking"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "GET /rapid-data-locking/test",
+      "cmdlets": [
+        "Test-PfbRapidDataLocking"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "GET /smtp-servers",
+      "cmdlets": [
+        "Get-PfbSmtpServer"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "GET /snmp-agents/mib",
+      "cmdlets": [
+        "Get-PfbSnmpAgentMib"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "GET /support/test",
+      "cmdlets": [
+        "Test-PfbSupport"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "GET /syslog-servers/settings",
+      "cmdlets": [
+        "Get-PfbSyslogServerSettings"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /admins/settings",
+      "cmdlets": [
+        "Update-PfbAdminSetting"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /alert-watchers",
+      "cmdlets": [
+        "Update-PfbAlertWatcher"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /alerts",
+      "cmdlets": [
+        "Update-PfbAlert"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /arrays",
+      "cmdlets": [
+        "Update-PfbArray"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /arrays/erasures",
+      "cmdlets": [
+        "Update-PfbArrayErasure"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /arrays/eula",
+      "cmdlets": [
+        "Update-PfbArrayEula"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /audit-file-systems-policies",
+      "cmdlets": [
+        "Update-PfbAuditFileSystemPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /audit-object-store-policies",
+      "cmdlets": [
+        "Update-PfbAuditObjectStorePolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /buckets",
+      "cmdlets": [
+        "Remove-PfbBucket",
+        "Update-PfbBucket"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /data-eviction-policies",
+      "cmdlets": [
+        "Update-PfbDataEvictionPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /directory-services",
+      "cmdlets": [
+        "Update-PfbDirectoryService"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /file-system-snapshots",
+      "cmdlets": [
+        "Remove-PfbFileSystemSnapshot"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /file-systems",
+      "cmdlets": [
+        "Remove-PfbFileSystem",
+        "Update-PfbFileSystem"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /network-access-policies",
+      "cmdlets": [
+        "Update-PfbNetworkAccessPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /network-access-policies/rules",
+      "cmdlets": [
+        "Update-PfbNetworkAccessRule"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /nfs-export-policies",
+      "cmdlets": [
+        "Update-PfbNfsExportPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /nfs-export-policies/rules",
+      "cmdlets": [
+        "Update-PfbNfsExportRule"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /object-store-access-policies/rules",
+      "cmdlets": [
+        "Update-PfbObjectStoreAccessPolicyRule"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /object-store-roles/object-store-trust-policies/rules",
+      "cmdlets": [
+        "Update-PfbObjectStoreTrustPolicyRule"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /password-policies",
+      "cmdlets": [
+        "Update-PfbPasswordPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /policies",
+      "cmdlets": [
+        "Update-PfbPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /presets/workload",
+      "cmdlets": [
+        "Update-PfbPresetWorkload"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /quotas/groups",
+      "cmdlets": [
+        "Update-PfbQuotaGroup"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /quotas/settings",
+      "cmdlets": [
+        "Update-PfbQuotaSettings"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /quotas/users",
+      "cmdlets": [
+        "Update-PfbQuotaUser"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /rapid-data-locking",
+      "cmdlets": [
+        "Update-PfbRapidDataLocking"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /realms",
+      "cmdlets": [
+        "Remove-PfbRealm",
+        "Update-PfbRealm"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /s3-export-policies",
+      "cmdlets": [
+        "Update-PfbS3ExportPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /s3-export-policies/rules",
+      "cmdlets": [
+        "Update-PfbS3ExportRule"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /servers",
+      "cmdlets": [
+        "Update-PfbServer"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /smb-client-policies",
+      "cmdlets": [
+        "Update-PfbSmbClientPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /smb-client-policies/rules",
+      "cmdlets": [
+        "Update-PfbSmbClientRule"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /smb-share-policies",
+      "cmdlets": [
+        "Update-PfbSmbSharePolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /smb-share-policies/rules",
+      "cmdlets": [
+        "Update-PfbSmbShareRule"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /snmp-agents",
+      "cmdlets": [
+        "Update-PfbSnmpAgent"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /support",
+      "cmdlets": [
+        "Update-PfbSupport"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /support/verification-keys",
+      "cmdlets": [
+        "Update-PfbSupportVerificationKey"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /syslog-servers/settings",
+      "cmdlets": [
+        "Update-PfbSyslogServerSettings"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "PATCH /workloads",
+      "cmdlets": [
+        "Update-PfbWorkload"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /active-directory",
+      "cmdlets": [
+        "New-PfbActiveDirectory"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /alert-watchers",
+      "cmdlets": [
+        "New-PfbAlertWatcher"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /api-clients",
+      "cmdlets": [
+        "New-PfbApiClient"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /array-connections/connection-key",
+      "cmdlets": [
+        "New-PfbArrayConnectionKey"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /arrays/erasures",
+      "cmdlets": [
+        "New-PfbArrayErasure"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /arrays/factory-reset-token",
+      "cmdlets": [
+        "New-PfbArrayFactoryResetToken"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /audit-file-systems-policies",
+      "cmdlets": [
+        "New-PfbAuditFileSystemPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /audit-object-store-policies",
+      "cmdlets": [
+        "New-PfbAuditObjectStorePolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /buckets",
+      "cmdlets": [
+        "New-PfbBucket"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /buckets/audit-filters",
+      "cmdlets": [
+        "New-PfbBucketAuditFilter"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /buckets/bucket-access-policies",
+      "cmdlets": [
+        "New-PfbBucketAccessPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /buckets/bucket-access-policies/rules",
+      "cmdlets": [
+        "New-PfbBucketAccessPolicyRule"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /buckets/cross-origin-resource-sharing-policies",
+      "cmdlets": [
+        "New-PfbBucketCorsPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /buckets/cross-origin-resource-sharing-policies/rules",
+      "cmdlets": [
+        "New-PfbBucketCorsPolicyRule"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /certificate-groups",
+      "cmdlets": [
+        "New-PfbCertificateGroup"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /certificates",
+      "cmdlets": [
+        "New-PfbCertificate"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /certificates/certificate-signing-requests",
+      "cmdlets": [
+        "New-PfbCertificateSigningRequest"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /data-eviction-policies",
+      "cmdlets": [
+        "New-PfbDataEvictionPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /directory-services/local/directory-services",
+      "cmdlets": [
+        "New-PfbLocalDirectoryService"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /directory-services/local/groups",
+      "cmdlets": [
+        "New-PfbLocalGroup"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /directory-services/local/groups/members",
+      "cmdlets": [
+        "New-PfbLocalGroupMember"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /directory-services/roles",
+      "cmdlets": [
+        "New-PfbDirectoryServiceRole"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /dns",
+      "cmdlets": [
+        "New-PfbDns"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /file-system-exports",
+      "cmdlets": [
+        "New-PfbFileSystemExport"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /file-system-replica-links",
+      "cmdlets": [
+        "New-PfbFileSystemReplicaLink"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /file-system-snapshots",
+      "cmdlets": [
+        "New-PfbFileSystemSnapshot"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /file-systems",
+      "cmdlets": [
+        "New-PfbFileSystem"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /file-systems/locks/nlm-reclamations",
+      "cmdlets": [
+        "New-PfbNlmReclamation"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /fleets",
+      "cmdlets": [
+        "New-PfbFleet"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /fleets/fleet-key",
+      "cmdlets": [
+        "New-PfbFleetKey"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /keytabs",
+      "cmdlets": [
+        "New-PfbKeytab"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /keytabs/upload",
+      "cmdlets": [
+        "New-PfbKeytabUpload"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /legal-holds",
+      "cmdlets": [
+        "New-PfbLegalHold"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /lifecycle-rules",
+      "cmdlets": [
+        "New-PfbLifecycleRule"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /link-aggregation-groups",
+      "cmdlets": [
+        "New-PfbLag"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /log-targets/file-systems",
+      "cmdlets": [
+        "New-PfbLogTargetFileSystem"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /log-targets/object-store",
+      "cmdlets": [
+        "New-PfbLogTargetObjectStore"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /maintenance-windows",
+      "cmdlets": [
+        "New-PfbMaintenanceWindow"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /management-access-policies",
+      "cmdlets": [
+        "New-PfbManagementAccessPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /network-interfaces",
+      "cmdlets": [
+        "New-PfbNetworkInterface"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /nfs-export-policies",
+      "cmdlets": [
+        "New-PfbNfsExportPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /node-groups",
+      "cmdlets": [
+        "New-PfbNodeGroup"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /object-store-access-keys",
+      "cmdlets": [
+        "New-PfbObjectStoreAccessKey"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /object-store-access-policies",
+      "cmdlets": [
+        "New-PfbObjectStoreAccessPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /object-store-access-policies/object-store-roles",
+      "cmdlets": [
+        "New-PfbObjectStoreAccessPolicyRole"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /object-store-access-policies/object-store-users",
+      "cmdlets": [
+        "New-PfbObjectStoreAccessPolicyUser"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /object-store-access-policies/rules",
+      "cmdlets": [
+        "New-PfbObjectStoreAccessPolicyRule"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /object-store-account-exports",
+      "cmdlets": [
+        "New-PfbObjectStoreAccountExport"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /object-store-accounts",
+      "cmdlets": [
+        "New-PfbObjectStoreAccount"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /object-store-remote-credentials",
+      "cmdlets": [
+        "New-PfbObjectStoreRemoteCredential"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /object-store-roles",
+      "cmdlets": [
+        "New-PfbObjectStoreRole"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /object-store-roles/object-store-access-policies",
+      "cmdlets": [
+        "New-PfbObjectStoreRoleAccessPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /object-store-roles/object-store-trust-policies/rules",
+      "cmdlets": [
+        "New-PfbObjectStoreTrustPolicyRule"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /object-store-users",
+      "cmdlets": [
+        "New-PfbObjectStoreUser"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /object-store-users/object-store-access-policies",
+      "cmdlets": [
+        "New-PfbObjectStoreUserAccessPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /object-store-virtual-hosts",
+      "cmdlets": [
+        "New-PfbObjectStoreVirtualHost"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /policies",
+      "cmdlets": [
+        "New-PfbPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /presets/workload",
+      "cmdlets": [
+        "New-PfbPresetWorkload"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /public-keys",
+      "cmdlets": [
+        "New-PfbPublicKey"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /qos-policies",
+      "cmdlets": [
+        "New-PfbQosPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /quotas/groups",
+      "cmdlets": [
+        "New-PfbQuotaGroup"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /quotas/users",
+      "cmdlets": [
+        "New-PfbQuotaUser"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /rapid-data-locking/rotate",
+      "cmdlets": [
+        "New-PfbRapidDataLockingRotation"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /realms",
+      "cmdlets": [
+        "New-PfbRealm"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /s3-export-policies",
+      "cmdlets": [
+        "New-PfbS3ExportPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /servers",
+      "cmdlets": [
+        "New-PfbServer"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /smb-client-policies",
+      "cmdlets": [
+        "New-PfbSmbClientPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /smb-share-policies",
+      "cmdlets": [
+        "New-PfbSmbSharePolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /snmp-managers",
+      "cmdlets": [
+        "New-PfbSnmpManager"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /software-check",
+      "cmdlets": [
+        "New-PfbSoftwareCheck"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /ssh-certificate-authority-policies",
+      "cmdlets": [
+        "New-PfbSshCaPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /sso/oidc/idps",
+      "cmdlets": [
+        "New-PfbOidcIdp"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /sso/saml2/idps",
+      "cmdlets": [
+        "New-PfbSaml2Idp"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /storage-class-tiering-policies",
+      "cmdlets": [
+        "New-PfbStorageClassTieringPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /subnets",
+      "cmdlets": [
+        "New-PfbSubnet"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /support-diagnostics",
+      "cmdlets": [
+        "New-PfbSupportDiagnostics"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /syslog-servers",
+      "cmdlets": [
+        "New-PfbSyslogServer"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /targets",
+      "cmdlets": [
+        "New-PfbTarget"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /tls-policies",
+      "cmdlets": [
+        "New-PfbTlsPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /workloads",
+      "cmdlets": [
+        "New-PfbWorkload"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /workloads/placement-recommendations",
+      "cmdlets": [
+        "New-PfbWorkloadPlacementRecommendation"
+      ],
+      "reason": "has attributes/unresolved surface"
+    },
+    {
+      "endpoint": "POST /worm-data-policies",
+      "cmdlets": [
+        "New-PfbWormPolicy"
+      ],
+      "reason": "has attributes/unresolved surface"
+    }
+  ],
+  "validateSetDrift": [],
+  "newValidateSetCandidates": []
+}
