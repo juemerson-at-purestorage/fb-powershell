@@ -2,10 +2,13 @@
 
 Generates `Data/PfbCapabilityMap.json` — a manifest mapping every FlashBlade REST API
 endpoint (and its parameters and request-body fields) to the REST version it was
-introduced in. This is Phase 1 of the version-awareness effort described in the Phase 1
-design doc; it produces the data that later phases (a per-cmdlet capability check, and
-version-aware tab-completion) will consume. It does not itself add any runtime behavior
-to the module.
+introduced in — plus everything built on top of it: `Data/PfbVersionMap.json` (the
+REST-version to Purity//FB-version pairing), prose-extracted value enumerations, a
+field-to-cmdlet recommendation join, and a combined drift report (see the sections
+below). The one runtime consumer is `Private/Assert-PfbApiCapability.ps1`, called from
+`Invoke-PfbApiRequest.ps1`: it fails fast, before any HTTP call, when the connected
+array's REST version can't satisfy an endpoint/parameter/field this toolchain has
+recorded a later minimum version for.
 
 ## Scripts
 
@@ -40,20 +43,25 @@ Run in this order:
    ```
 
 3. **`Update-PfbVersionMap.ps1`** — builds `Data/PfbVersionMap.json`, the REST-version to
-   Purity//FB-version pairing, from a single SSOT (Single Source of Truth) API call: a
-   scoped proxy in front of Fluid Topics (owner: ***REMOVED***), delta-synced nightly, that
-   returns the full REST<->Purity//FB mapping table for every version in one HTML
-   response. Requires an API key (`$env:SSOT_API_KEY`, sent as an `x-api-key` header);
-   without one, this script just reports which versions need lookup and exits without
-   failing.
+   Purity//FB-version pairing, from a single internal SSOT (Single Source of Truth) API
+   call that returns the full REST<->Purity//FB mapping table for every version in one
+   HTML response. This is an internal endpoint, so its base URI, topic ID, and API key
+   are all required inputs with no default or hardcoded value in this repo — sourced
+   from `$env:SSOT_BASE_URI`,
+   `$env:SSOT_TOPIC_ID`, and `$env:SSOT_API_KEY` (sent as an `x-api-key` header)
+   respectively. Without all three configured, this script just reports which versions
+   need lookup and exits without failing.
 
    ```powershell
+   $env:SSOT_BASE_URI = '...'
+   $env:SSOT_TOPIC_ID = '...'
    $env:SSOT_API_KEY = '...'
    ./tools/Update-PfbVersionMap.ps1
    ```
 
-4. **`Build-PfbValueEnumMap.ps1`** — a separate, later phase (see "Value-enum extraction"
-   below): loads the same cached specs and extracts prose-documented value enumerations
+4. **`Build-PfbValueEnumMap.ps1`** — a separate analysis built on top of the capability
+   map (see "Value-enum extraction" below): loads the same cached specs and extracts
+   prose-documented value enumerations
    (e.g. `Bucket.versioning`'s "Valid values are `none`, `enabled`, and `suspended`.")
    into `Reports/PfbValueEnumMap.json`. Also runs entirely offline once specs are cached.
 
@@ -61,7 +69,7 @@ Run in this order:
    ./tools/Build-PfbValueEnumMap.ps1
    ```
 
-5. **`Build-PfbApiDriftReport.ps1`** — the newest phase (see `Reports/README.md`): composes
+5. **`Build-PfbApiDriftReport.ps1`** — the newest addition (see `Reports/README.md`): composes
    the capability map, cmdlet inventory, and value-enum data above into one combined
    "what's changed that we haven't caught up to" report, covering uncovered endpoints, new
    parameters on endpoints we already call, drift on existing `ValidateSet`s, and new
@@ -93,7 +101,7 @@ The FlashBlade OpenAPI spec has no structural JSON Schema `enum` anywhere — ve
 empty across every schema and parameter in both the oldest (fb2.10) and newest (fb2.27)
 cached specs. Allowed values for fields like `Bucket.versioning` exist only as free-text
 prose in `description` fields ("Valid values are `none`, `enabled`, and `suspended`."),
-not as machine-readable constraints, so `Data/PfbCapabilityMap.json` (Phase 1's output)
+not as machine-readable constraints, so `Data/PfbCapabilityMap.json`
 tracks endpoint, parameter, and request-body top-level property *existence* only — not
 their legal values. That prose *is* now extracted, but into a separate file by a separate
 generator — see "Value-enum extraction" below — precisely because it's a different kind
@@ -102,7 +110,14 @@ of claim with a different reliability bar (see that section for why per-*value*
 
 Also out of scope: hardware-model capability (//S vs //E — what the module's existing
 ~12 `-match`-based "not supported on this model" warnings actually gate on). That's a
-separate axis from REST version, handled in a later phase from a different data source.
+separate axis from REST version, handled from a different data source and not part of
+this toolchain.
+
+Also deliberately not built: version-aware `ArgumentCompleter`/`DynamicParam`s that would
+hide a parameter an array's version doesn't support. Evaluated and shelved — completers
+only complete a parameter's *value*, not its *name*, so they can't hide a parameter at
+all; only `DynamicParam` can, and that would require editing every `Public/` cmdlet
+individually for marginal benefit over the capability check above.
 
 ## Value-enum extraction (`Build-PfbValueEnumMap.ps1`)
 
@@ -153,15 +168,16 @@ field elsewhere in the spec). That report is informational only — it does not 
 
 **`Reports/PfbValueEnumMap.json`'s output is not consumed anywhere at runtime yet** — no
 `ArgumentCompleter`, no `Assert-PfbApiCapability` enforcement. Whether/how to consume it
-is a deliberate later decision once real coverage/accuracy numbers exist from this data,
-same as how the capability map above sat idle until its own Phase 2 wired it in.
+is a deliberate follow-on decision once real coverage/accuracy numbers exist from this
+data, same as how the capability map above sat idle until `Assert-PfbApiCapability` was
+built to consume it.
 
 Per-enum-*value* "introduced in version X" tracking (e.g. knowing that `suspended` was
 added to `Bucket.versioning` at some later REST version, as opposed to the field's own
-overall `minVersion`) is intentionally not attempted — the design doc's exploration found
-no reliable way to diff individual values across versions given how often the same prose
-gets reworded without the value set itself changing. The manifest tracks each field's
-current legal value set and the field's own earliest-seen version only.
+overall `minVersion`) is intentionally not attempted — no reliable way was found to diff
+individual values across versions given how often the same prose gets reworded without
+the value set itself changing. The manifest tracks each field's current legal value set
+and the field's own earliest-seen version only.
 
 ## Field-to-cmdlet mapping (`Build-PfbFieldCmdletMap.ps1`)
 
@@ -208,12 +224,16 @@ Whether/how to consume it is a deliberate follow-on decision.
 
 ## Tests
 
-`Tests/PfbSpecTools.Tests.ps1`, `Tests/PfbVersionMapTools.Tests.ps1`, and
-`Tests/Build-PfbCapabilityMap.Tests.ps1` cover the capability-map extraction/diffing logic
-against small synthetic fixtures — no network access required. One additional test in
-`Build-PfbCapabilityMap.Tests.ps1` checks the real committed manifest for coverage gaps
-against the newest locally-cached spec, and skips gracefully if `tools/specs/` (gitignored
-— run `Update-PfbApiSpecs.ps1` first) or `Data/PfbCapabilityMap.json` aren't present.
+`Tests/PfbSpecTools.Tests.ps1` and `Tests/Build-PfbCapabilityMap.Tests.ps1` cover the
+capability-map extraction/diffing logic against small synthetic fixtures — no network
+access required. One additional test in `Build-PfbCapabilityMap.Tests.ps1` checks the
+real committed manifest for coverage gaps against the newest locally-cached spec, and
+skips gracefully if `tools/specs/` (gitignored — run `Update-PfbApiSpecs.ps1` first) or
+`Data/PfbCapabilityMap.json` aren't present.
+
+`Tests/PfbVersionMapTools.Tests.ps1` covers the SSOT URL builder and HTML table parser
+the same way — no network access, and no real base URI/topic ID/key needed, since those
+are just parameters to a pure, synthetic-fixture-driven function.
 
 `Tests/PfbValueEnumTools.Tests.ps1` and `Tests/Build-PfbValueEnumMap.Tests.ps1` cover the
 value-enum extraction/diffing logic the same way, plus a `Bucket.versioning` regression
@@ -228,8 +248,9 @@ manual dispatch): re-fetches the full spec history into an ephemeral (non-commit
 cache, rebuilds `Data/PfbCapabilityMap.json`, and opens a PR if it changed — i.e. the
 swagger index published a new REST version, or an existing endpoint gained new
 parameters/fields. Requires the repository's Actions settings to permit workflow-created
-pull requests. The `EVERPURE_SUPPORT_TOKEN` secret is optional — when absent, the
-version-map step is skipped and only the capability map updates.
+pull requests. The `SSOT_API_KEY`/`SSOT_BASE_URI`/`SSOT_TOPIC_ID` secrets are optional —
+when any are absent, the version-map step is skipped gracefully and only the capability
+map updates (see item 3 above).
 
 `Build-PfbValueEnumMap.ps1`, `Build-PfbFieldCmdletMap.ps1`, and `Build-PfbApiDriftReport.ps1`
 all run as part of the same weekly/dispatch job, right after the capability map is rebuilt,

@@ -65,10 +65,12 @@ jobs:
         shell: pwsh
         run: ./tools/Build-PfbCapabilityMap.ps1
 
-      - name: Update REST<->Purity version map (skips gracefully if no key configured)
+      - name: Update REST<->Purity version map (skips gracefully if not configured)
         shell: pwsh
         env:
           SSOT_API_KEY: ${{ secrets.SSOT_API_KEY }}
+          SSOT_BASE_URI: ${{ secrets.SSOT_BASE_URI }}
+          SSOT_TOPIC_ID: ${{ secrets.SSOT_TOPIC_ID }}
         run: ./tools/Update-PfbVersionMap.ps1
 
       - name: Build value-enum map
