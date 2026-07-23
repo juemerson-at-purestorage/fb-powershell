@@ -88,12 +88,12 @@ Describe 'Invoke-PfbApiRequest - AutoPaginate honors -Limit' {
             }
         } -ParameterFilter { $Uri -like '*file-systems*' }
 
-        InModuleScope PureStorageFlashBladePowerShell {
+        $script:result = InModuleScope PureStorageFlashBladePowerShell {
             $array = [PSCustomObject]@{
                 Endpoint = 'fb.test'; ApiVersion = '2.26'; AuthToken = 'tok'
                 ApiToken = $null; AuthMethod = 'ApiToken'; SkipCertificateCheck = $false
             }
-            $script:result = Invoke-PfbApiRequest -Array $array -Method GET -Endpoint 'file-systems' -QueryParams @{ limit = 10 } -AutoPaginate
+            Invoke-PfbApiRequest -Array $array -Method GET -Endpoint 'file-systems' -QueryParams @{ limit = 10 } -AutoPaginate
         }
 
         $script:result.Count | Should -Be 10
@@ -118,12 +118,12 @@ Describe 'Invoke-PfbApiRequest - AutoPaginate honors -Limit' {
             }
         } -ParameterFilter { $Uri -like '*file-systems*' }
 
-        InModuleScope PureStorageFlashBladePowerShell {
+        $script:result2 = InModuleScope PureStorageFlashBladePowerShell {
             $array = [PSCustomObject]@{
                 Endpoint = 'fb.test'; ApiVersion = '2.26'; AuthToken = 'tok'
                 ApiToken = $null; AuthMethod = 'ApiToken'; SkipCertificateCheck = $false
             }
-            $script:result2 = Invoke-PfbApiRequest -Array $array -Method GET -Endpoint 'file-systems' -QueryParams @{} -AutoPaginate
+            Invoke-PfbApiRequest -Array $array -Method GET -Endpoint 'file-systems' -QueryParams @{} -AutoPaginate
         }
 
         $script:result2.Count | Should -Be 9
