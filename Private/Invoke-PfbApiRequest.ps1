@@ -114,7 +114,7 @@ function Invoke-PfbApiRequest {
     # `limit` as page size only and keeps returning a continuation_token even once the caller's
     # desired item count has been reached, so AutoPaginate must stop itself.
     $requestedLimit = $null
-    if ($QueryParams -and $QueryParams.ContainsKey('limit') -and $QueryParams['limit']) {
+    if ($QueryParams -and $QueryParams.ContainsKey('limit') -and [int]$QueryParams['limit'] -gt 0) {
         $requestedLimit = [int]$QueryParams['limit']
     }
 
